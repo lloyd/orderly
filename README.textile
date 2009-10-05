@@ -93,15 +93,45 @@ Syntactically, numbers in orderly follow the same rules as numbers in JSON.
 
 h3. boolean types
 
+Boolean types are represented in orderly using the @boolean@ type specifier:
+
+bc.     boolean iShouldStay;
+
 h3. object types
 
 h3. array types
 
 h3. null types
 
+The null type in JSONSchema specifies a value that must be null.  The @null@ type specifier in orderly supports this type:
+
+bc. null likeAir;
+
+As explained in the JSONSchema proposal, @null@ is useful "mainly for purpose of being able use union types to define nullability".  For example:
+
+bc.     union {
+        string [ "Sr.", "Jr.", "III" ];
+        null; 
+    } suffix;
+
 h3. any types
 
+"Any types" are represented in orderly using the @any@ type speicifier: 
+
+bc.     any notes;
+
 h3. references
+
+*TODO*.  We'll probably use the @reference@ type specifier and allow the consumer to override the value name.  for example:
+
+bc.      object {
+        string name;
+        string title;
+        ref "http://json-schema.org/card" secretary;
+        array {
+            ref "http://json-schema.org/card";
+        } reports;
+    } employee;
 
 h3. more complex examples
 
