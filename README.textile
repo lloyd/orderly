@@ -78,9 +78,18 @@ Omission of a specification of either minimum or maximum is allowed:
 bc.     string{4,} login; # login requires at least 4 chars
     string{,32} name; # name may not be longer than 32 chars
 
-h3. number types
+Regular expressions are supported in JSONSchema for string values.  In orderly you may directly provide a regular expression using '/' syntax to denote the beginning and end of the regular expression:
 
-h3. integer types
+bc.     string mood /^((happy)|(sad)|(meh))$/;
+
+h3. number & integer types
+
+Numbers are specified in orderly using the @number@ type specifier.  In JSONSchema numbers and integers support ranges, ranges for numbers are specified in the same way we specify ranges for strings:
+
+bc.     number{0.02, 0.98} numNum;
+    integer{0,10} rating;
+
+Syntactically, numbers in orderly follow the same rules as numbers in JSON.
 
 h3. boolean types
 
@@ -105,9 +114,9 @@ An object with enumerated possible values and a default.
 bc.     object {
       string beast;
       number normalTemperature;
-    } [ { "animal": "canine", "normalTemperature": 101.2 },
-        { "animal": "human", "normalTemperature": 98.6 } ]
-    temps = { "animal": "human", "normalTemperature": 101.2 };
+    } temps [ { "beast": "canine", "normalTemperature": 101.2 },
+        { "beast": "human", "normalTemperature": 98.6 } ]
+      = { "beast": "human", "normalTemperature": 101.2 };
 
 
 h2. The normative grammar
