@@ -34,15 +34,27 @@ Orderly supports comments, both '#' and '//'.
 
 Orderly doesn't rely overlymuch on whitespace, leaving the decision of how to format your schema up to you.   
 
+h3. type names
+
+Type names may be anything that is allowed inside "JSON strings":http://json.org/.  Unlike JSON itself, however, orderly provides a shorthand where a subset of strings may be represented without quotes.  For instance these are all valid orderly:
+
+bc.     string foo;
+    string "foo";
+    string "this is a property name with spaces"; 
+
 h3. common properties
 
 From the JSONSchema specification, the following four options exist which apply to all data types:
 
-The @optional@ property indicates a value which is not required in a conformant JSON instance.  Optional values are represented in orderly with square brackets:
+The @optional@ property indicates a value which is not required in a conformant JSON instance.  Optional values are represented in orderly with a trailing question mark:
 
-bc.     [string name];
+bc.     string name?;
+    string "name"?;
 
-The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present. (XXX: any ideas how to better represent requires?)
+
+
+
+The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present. 
 
 bc.     string town <state>;
  
@@ -53,18 +65,18 @@ bc.     string { "happy", "sad", "meh" } mood;
 
 In a JSONSchema document the @default@ property specifies a default value for a property.  One could imagine that as an input object passes validation it will be automatically augmented with default values for required properties missing in the instance object.
 
-bc.     string mood { "happy", "sad", "meh" } = "happy"; # optimistically default to "happy"
+bc.     string mood [ "happy", "sad", "meh" ] = "happy"; # optimistically default to "happy"
 
 h3. string types
 
-Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, this are represented using square brackets immediately after the type:  
+Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, this are represented using curly braces immediately after the type:  
 
-bc.     string[4,12] login;
+bc.     string{4,12} login;
 
 Omission of a specification of either minimum or maximum is allowed:
 
-bc.     string[4,] login; # login requires at least 4 chars
-    string[,32] name; # name may not be longer than 32 chars
+bc.     string{4,} login; # login requires at least 4 chars
+    string{,32} name; # name may not be longer than 32 chars
 
 h3. number types
 
@@ -81,6 +93,22 @@ h3. null types
 h3. any types
 
 h3. references
+
+h3. more complex examples
+
+A number with a range, and enumerated possible values, and a default:
+
+bc. integer powerOfTwo{0,256} [1,2,4,8,16,32,64,128,256] = 1;
+
+An object with enumerated possible values and a default.
+
+bc.     object {
+      string beast;
+      number normalTemperature;
+    } [ { "animal": "canine", "normalTemperature": 101.2 },
+        { "animal": "human", "normalTemperature": 98.6 } ]
+    temps = { "animal": "human", "normalTemperature": 101.2 };
+
 
 h2. The normative grammar
 
