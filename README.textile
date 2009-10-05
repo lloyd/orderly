@@ -169,9 +169,24 @@ bc.     object {
         { "beast": "human", "normalTemperature": 98.6 } ]
       = { "beast": "human", "normalTemperature": 101.2 };
 
+
+h3. gotchas
+
+When you stare hard enough at the grammar of a non-trival language you usually learn quite a deal.  Sometimes what you learn can be surprising or downright confusing.  Here's a tour of the darker parts alleys of orderly:
+
+Brackets and braces --  it's not immediately clear what's going on here:
+
+bc. integer secretOfLife{7,42}[7,42];
+
+
+
 h2. The normative grammar...
 
 ... doesn't yet exist.
+
+h2. Contributing
+
+This specification, and this site are all <a href="http://github.com/lloyd/orderly">hosted on github</a>, you may fork all you like.
 
 h2. Contributors
 
