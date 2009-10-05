@@ -1,4 +1,4 @@
-h1. Orderly JSON
+h1. Orderly JSON -- v0 -- 05.10.2009
 
 Orderly is an ergonomic micro-language that can represent a subset of "JSONSchema":http://json-schema.org.  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.
 
@@ -178,7 +178,7 @@ Brackets and braces --  it's not immediately clear what's going on here:
 
 bc. integer secretOfLife{7,42}[7,42];
 
-
+... add ugly stuff here ...
 
 h2. The normative grammar...
 
@@ -186,7 +186,7 @@ h2. The normative grammar...
 
 h2. Contributing
 
-This specification, and this site are all <a href="http://github.com/lloyd/orderly">hosted on github</a>, you may fork all you like.
+This specification, orderly-json.org, and the orderly reference implementation are all <a href="http://github.com/lloyd/orderly">hosted on github</a>, you may fork all you like.
 
 h2. Contributors
 
@@ -197,6 +197,11 @@ Many people have offered feedback and ideas which shaped this project.  Those pe
 * Steve Spencer
 * Tatu Saloranta
 * Toby Inkster
+
+h2. History
+
+* (02.10.2009) "v-1" -- The idea for orderly was "first uttered":http://trickyco.de/2009/10/02/orderly-jsonschema
+* (05.10.2009) "v0" -- "orderly-json.org":http://orderly-json.org was erected and a more fully baked proposal put together thanks to feedback.
 
 h2. License
 
