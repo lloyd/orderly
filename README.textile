@@ -1,4 +1,10 @@
-h1. Orderly JSON -- v0 -- 05.10.2009
+<html>
+<head><title> orderly </title></head>
+<body>
+
+h1. orderly -- v0 -- 05.10.2009
+
+h2. abstract
 
 Orderly is an ergonomic micro-language that can represent a subset of "JSONSchema":http://json-schema.org.  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.
 
@@ -6,7 +12,7 @@ h2. WARNING
 
 This proposal is HIGHLY subject to change and evolve in drastic ways.  This is not yet real, do not believe it in.
 
-h2. A Subset of JSONSchema
+h2. a subset of JSONSchema
 
 JSONSchema is good in many ways, but not perfect.  JSONSchema attempts to provide a representation for three distinct types of information about JSON structures:
 * Data structure (for documentation and validation purposes)
@@ -24,7 +30,7 @@ Orderly ignores all features of JSONSchema which aren't useful for validation, i
 * extends
 * identity
 
-h2. A non-normative tutorial
+h2. a non-normative tutorial
 
 A collection of Non-normative examples of Orderly:
 
@@ -238,3 +244,16 @@ All the cruft you find here is covered under a BSD style license, even if it's n
  IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  POSSIBILITY OF SUCH DAMAGE.
 </pre>
+
+<script type="text/javascript">
+var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+</script>
+<script type="text/javascript">
+try {
+var pageTracker = _gat._getTracker("UA-10971932-1");
+pageTracker._trackPageview();
+} catch(err) {}</script>
+
+</body>
+</html>
