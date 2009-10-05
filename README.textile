@@ -2,6 +2,10 @@ h1. Orderly JSON
 
 Orderly is an ergonomic micro-language that can represent a subset of "JSONSchema":http://json-schema.org.  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.
 
+h2. WARNING
+
+This proposal is HIGHLY subject to change and evolve in drastic ways.  This is not yet real, do not believe it in.
+
 h2. A Subset of JSONSchema
 
 JSONSchema is good in many ways, but not perfect.  JSONSchema attempts to provide a representation for three distinct types of information about JSON structures:
@@ -40,12 +44,12 @@ bc.     [string name];
 
 The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present. (XXX: any ideas how to better represent requires?)
 
-bc.     string town (state);
+bc.     string town <state>;
  
 The @enum@ propery specifies a set of allowable values for a key in the json document.
 
-bc.     string mood { "happy", "sad", "meh" };
-    integer secretOfLife { 7, 42 };
+bc.     string { "happy", "sad", "meh" } mood;
+    integer { 7, 42 } secretOfLife;
 
 In a JSONSchema document the @default@ property specifies a default value for a property.  One could imagine that as an input object passes validation it will be automatically augmented with default values for required properties missing in the instance object.
 
@@ -53,14 +57,14 @@ bc.     string mood { "happy", "sad", "meh" } = "happy"; # optimistically defaul
 
 h3. string types
 
-Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, this are represented using square brackets immediately after the type name:  
+Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, this are represented using square brackets immediately after the type:  
 
-bc.     string login[4,12];
+bc.     string[4,12] login;
 
 Omission of a specification of either minimum or maximum is allowed:
 
-bc.     string login[4,]; # login requires at least 4 chars
-    string name[,32]; # name may not be longer than 32 chars
+bc.     string[4,] login; # login requires at least 4 chars
+    string[,32] name; # name may not be longer than 32 chars
 
 h3. number types
 
