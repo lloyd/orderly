@@ -97,7 +97,30 @@ bc.     boolean iShouldStay;
 
 h3. object types
 
+XXX
+
 h3. array types
+
+Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members:
+
+bc.     array {
+        numbers{0.00, 1.00};
+    } weights; # an array of floating point weights between 0 and 1.
+
+The second way of specifying sub-structure is via "tuple typing", where you may specify a list of schemas that apply to each member of the array in sequence:
+
+bc.     array {
+        integer;
+        string;
+        number;
+    } artificial;
+
+*NOTE to self*: we must figure out @additionalProperties@ for both array and object...
+
+Finally, array types also support range semantics, for min/max number of elements:
+
+bc.     array { integer; } {0,10} myArrayOfSmallInts;
+
 
 h3. null types
 
