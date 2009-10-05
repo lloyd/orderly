@@ -52,16 +52,14 @@ bc.     string name?;
     string "name"?;
 
 
-
-
 The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present. 
 
 bc.     string town <state>;
  
 The @enum@ propery specifies a set of allowable values for a key in the json document.
 
-bc.     string { "happy", "sad", "meh" } mood;
-    integer { 7, 42 } secretOfLife;
+bc.     string mood [ "happy", "sad", "meh" ];
+    integer secretOfLife [ 7, 42 ];
 
 In a JSONSchema document the @default@ property specifies a default value for a property.  One could imagine that as an input object passes validation it will be automatically augmented with default values for required properties missing in the instance object.
 
