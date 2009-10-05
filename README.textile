@@ -146,10 +146,19 @@ bc.     object {
         { "beast": "human", "normalTemperature": 98.6 } ]
       = { "beast": "human", "normalTemperature": 101.2 };
 
+h2. The normative grammar...
 
-h2. The normative grammar
+... doesn't yet exist.
 
-In JSONSchema strings  
+h2. Contributors
+
+Many people have offered feedback and ideas which shaped this project.  Those people include (in alphabetical order):
+
+* Alexandre Morgaut  	 	
+* David Grigsby
+* Steve Spencer
+* Tatu Saloranta
+* Toby Inkster
 
 h2. License
 
