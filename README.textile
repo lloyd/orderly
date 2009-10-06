@@ -180,9 +180,15 @@ h3. gotchas
 
 When you stare hard enough at the grammar of a non-trival language you usually learn quite a deal.  Sometimes what you learn can be surprising or downright confusing.  Here's a tour of the darker parts alleys of orderly:
 
-Brackets and braces --  it's not immediately clear what's going on here:
+Brackets and braces -- visually a tad confusing:
 
-bc. integer secretOfLife{7,42}[7,42];
+bc. integer{7,42} secretOfLife[7,42];
+
+and a little bit more confusing:
+
+bc. array { integer{7,42}[7,42]; } secretOfLife;
+
+
 
 ... add ugly stuff here ...
 
