@@ -182,13 +182,11 @@ When you stare hard enough at the grammar of a non-trival language you usually l
 
 Brackets and braces -- visually a tad confusing:
 
-bc. integer{7,42} secretOfLife[7,42];
+bc.     integer{7,42} secretOfLife[7,42];
 
 and a little bit more confusing:
 
-bc. array { integer{7,42}[7,42]; } secretOfLife;
-
-
+bc.     array { integer{7,42}[7,42]; } secretOfLife;
 
 ... add ugly stuff here ...
 
