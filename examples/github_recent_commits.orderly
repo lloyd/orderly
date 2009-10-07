@@ -1,0 +1,23 @@
+# a orderly schema describing github's WSAPI for commits:
+# http://github.com/api/v1/json/lloyd/orderly/commits/master
+
+# why the outer object, github?
+object {
+  array {
+    array { object { string id; }; } parents;
+    object {
+      string name;
+      string email;
+    } author;
+    string url; // we could use a regex here
+    string id;
+    string committed_date;
+    string authored_date;
+    string message; 
+    string tree; 
+    object {
+      string name;
+      string email;
+    } committer;
+  } commits;
+}

@@ -1,0 +1,338 @@
+{
+  "commits": [
+    {
+      "parents": [
+        {
+          "id": "c611fe841236255b8c8c3fd47f3c00ff6d4b8034"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/31a6f19baf2ef36caefc89f6dac501538920ae47",
+      "id": "31a6f19baf2ef36caefc89f6dac501538920ae47",
+      "committed_date": "2009-10-06T10:32:34-07:00",
+      "authored_date": "2009-10-06T10:32:34-07:00",
+      "message": "indenting of sample code.",
+      "tree": "9e61bd81fc2e08a1e46e271e1358e63093ad4e29",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "8256f621fcafea0dd6fb085e7093d75b4583a931"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/c611fe841236255b8c8c3fd47f3c00ff6d4b8034",
+      "id": "c611fe841236255b8c8c3fd47f3c00ff6d4b8034",
+      "committed_date": "2009-10-06T09:45:41-07:00",
+      "authored_date": "2009-10-06T09:45:41-07:00",
+      "message": "add an example of orderly generated from an existing WSAPI",
+      "tree": "20992456ad27d1b8723b10523eed0e7a72ac1cf1",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "793373f9b0c4606ad7a96904b068f2100d7381db"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/8256f621fcafea0dd6fb085e7093d75b4583a931",
+      "id": "8256f621fcafea0dd6fb085e7093d75b4583a931",
+      "committed_date": "2009-10-06T09:44:50-07:00",
+      "authored_date": "2009-10-06T09:44:50-07:00",
+      "message": "add a name",
+      "tree": "464ea49bb94907e7f1908b7c0aa845b456b9592f",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "3bdd4ab2b59418b5fa084cd25aae89beadc33344"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/793373f9b0c4606ad7a96904b068f2100d7381db",
+      "id": "793373f9b0c4606ad7a96904b068f2100d7381db",
+      "committed_date": "2009-10-06T09:43:42-07:00",
+      "authored_date": "2009-10-06T09:43:42-07:00",
+      "message": "fix syntax error in the exploration of syntactical oddities",
+      "tree": "0c25197741cb4372199f67939feae7a3850aa241",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "766de7a9b64ea3faeba1cd74640b53dae7af9cbd"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/3bdd4ab2b59418b5fa084cd25aae89beadc33344",
+      "id": "3bdd4ab2b59418b5fa084cd25aae89beadc33344",
+      "committed_date": "2009-10-05T16:43:31-07:00",
+      "authored_date": "2009-10-05T16:43:31-07:00",
+      "message": "administrative crap, add tracking code, page container",
+      "tree": "8b8176539b0b30d30add0144209c670013128394",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "a2d0542f6b85e5693a6ee5ad5d70b41304e04c15"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/766de7a9b64ea3faeba1cd74640b53dae7af9cbd",
+      "id": "766de7a9b64ea3faeba1cd74640b53dae7af9cbd",
+      "committed_date": "2009-10-05T16:31:19-07:00",
+      "authored_date": "2009-10-05T16:31:19-07:00",
+      "message": "add history, dates, notes",
+      "tree": "184598c813b1a12d1770bea8193d0c80772fb57f",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "cee94f607f9f70178e8013f66292a1e0755214ad"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/a2d0542f6b85e5693a6ee5ad5d70b41304e04c15",
+      "id": "a2d0542f6b85e5693a6ee5ad5d70b41304e04c15",
+      "committed_date": "2009-10-05T16:12:52-07:00",
+      "authored_date": "2009-10-05T16:12:52-07:00",
+      "message": "contributing section",
+      "tree": "8862dc23c8dc42a88be6f00b052598bf1e35c8e8",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "4b5e2b7047e1af52f068ff0051a02eb0c6c72633"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/cee94f607f9f70178e8013f66292a1e0755214ad",
+      "id": "cee94f607f9f70178e8013f66292a1e0755214ad",
+      "committed_date": "2009-10-05T15:08:41-07:00",
+      "authored_date": "2009-10-05T15:08:41-07:00",
+      "message": "first pass at array",
+      "tree": "6b3d09a198fd1f55a1b740e85ff9f9b830c40ca7",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "e06d1ba384fe6cb205309aec81c5f08cd0d14333"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/4b5e2b7047e1af52f068ff0051a02eb0c6c72633",
+      "id": "4b5e2b7047e1af52f068ff0051a02eb0c6c72633",
+      "committed_date": "2009-10-05T14:56:02-07:00",
+      "authored_date": "2009-10-05T14:56:02-07:00",
+      "message": "mention folks who have shared ideas",
+      "tree": "1fa246c4075130db5c36de7c05ec34b9f4a53a07",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "fc11db86c9816ddfe8265e49d64768e8e6c0b5ce"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/e06d1ba384fe6cb205309aec81c5f08cd0d14333",
+      "id": "e06d1ba384fe6cb205309aec81c5f08cd0d14333",
+      "committed_date": "2009-10-05T14:33:18-07:00",
+      "authored_date": "2009-10-05T14:33:18-07:00",
+      "message": "fix enum representation, enumerable values are really just embedded JSON",
+      "tree": "c35563590c7538ee34f1a8f42effddf037ebfc92",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "6b57cff222e76ece15240e54c3e4f483d4e7f6b0"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/fc11db86c9816ddfe8265e49d64768e8e6c0b5ce",
+      "id": "fc11db86c9816ddfe8265e49d64768e8e6c0b5ce",
+      "committed_date": "2009-10-05T14:28:50-07:00",
+      "authored_date": "2009-10-05T14:28:50-07:00",
+      "message": "boolean, any, and null.",
+      "tree": "1bdb2be1186cc7730802bb064fa78e9edf6491af",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "88ca562579bcd1c6971f1ca5cdb211e7965335eb"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/6b57cff222e76ece15240e54c3e4f483d4e7f6b0",
+      "id": "6b57cff222e76ece15240e54c3e4f483d4e7f6b0",
+      "committed_date": "2009-10-05T14:02:28-07:00",
+      "authored_date": "2009-10-05T14:02:28-07:00",
+      "message": "add PCRE support (JSONSchema 'pattern'), document numbers, fiddle complex example",
+      "tree": "6eb1f3b85c4508d6cb1e4c91456980ba50140c95",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "d0b4bbc2dedf5b0b18f94278b87021ead17f961e"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/88ca562579bcd1c6971f1ca5cdb211e7965335eb",
+      "id": "88ca562579bcd1c6971f1ca5cdb211e7965335eb",
+      "committed_date": "2009-10-05T13:44:01-07:00",
+      "authored_date": "2009-10-05T13:44:01-07:00",
+      "message": "enumerated values are now proper JSON arrays (no more curly braces), ranges (min/max) are now represented using curly braces.  I've convinced myself this is good given that the C analogy isn't perfect, a.  and the min/max quantifier in PCRE",
+      "tree": "a612ff061c894a05044056c490af56ce9bfc3773",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "2a92af75261529cf40196283f8103d86d924c508"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/d0b4bbc2dedf5b0b18f94278b87021ead17f961e",
+      "id": "d0b4bbc2dedf5b0b18f94278b87021ead17f961e",
+      "committed_date": "2009-10-05T11:47:29-07:00",
+      "authored_date": "2009-10-05T11:47:29-07:00",
+      "message": "move length specifiers between type and name, change requires sytax to angle brackets, fiddle with placement of enum values (needswork)",
+      "tree": "3a16123c3f886d68c7e9b95cff17b1d80d8286cf",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+        {
+          "id": "528f0319679effe897d700efc20ee44ebec07ee9"
+        }
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/2a92af75261529cf40196283f8103d86d924c508",
+      "id": "2a92af75261529cf40196283f8103d86d924c508",
+      "committed_date": "2009-10-05T11:13:04-07:00",
+      "authored_date": "2009-10-05T11:13:04-07:00",
+      "message": "first pass",
+      "tree": "00c526852db7979324758e5fffd394dcb33fe4b4",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    },
+    {
+      "parents": [
+
+      ],
+      "author": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      },
+      "url": "http://github.com/lloyd/orderly/commit/528f0319679effe897d700efc20ee44ebec07ee9",
+      "id": "528f0319679effe897d700efc20ee44ebec07ee9",
+      "committed_date": "2009-10-05T11:12:39-07:00",
+      "authored_date": "2009-10-05T11:12:39-07:00",
+      "message": "initial commit",
+      "tree": "f652101ca189f92fc70767203879af9aeb9cec1e",
+      "committer": {
+        "name": "Lloyd Hilaiel",
+        "email": "lloyd@hilaiel.com"
+      }
+    }
+  ]
+}
