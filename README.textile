@@ -2,7 +2,7 @@
 <head><title> orderly </title></head>
 <body>
 
-h1. orderly -- v1 -- XX.YY.2009
+h1. orderly -- v1 -- 2009.10.07
 
 h2. abstract
 
@@ -10,7 +10,7 @@ Orderly is an ergonomic micro-language that can represent a subset of "JSONSchem
 
 h2. WARNING
 
-This proposal is HIGHLY subject to change and evolve in drastic ways.  This is not yet real, do not believe it in.
+This proposal is HIGHLY subject to change, it may evolve in drastic and jarring ways.  This is not real.  Do not believe it
 
 h2. a subset of JSONSchema
 
@@ -36,13 +36,13 @@ A collection of Non-normative examples of Orderly:
 
 h3. comments and whitespace
 
-Orderly supports comments, both '#' and '//'.
+Orderly supports comments, comments are initiated with either '#' or '//' and continue to the first encountered newline ('\n').
 
-Orderly doesn't rely overlymuch on whitespace, leaving the decision of how to format your schema up to you.   
+Orderly doesn't rely overmuch on whitespace, leaving the decision of how to format your schema up to you.   
 
-h3. type names
+h3. propery names
 
-Type names may be anything that is allowed inside "JSON strings":http://json.org/.  Unlike JSON itself, however, orderly provides a shorthand where a subset of strings may be represented without quotes.  For instance these are all valid orderly:
+Property names may be anything that is allowed inside "JSON strings":http://json.org/.  Unlike JSON itself, however, orderly provides a shorthand where a subset of strings may be represented without quotes.  For instance these are all valid orderly:
 
 bc.     string foo;
     string "foo";
@@ -50,7 +50,7 @@ bc.     string foo;
 
 h3. common properties
 
-From the JSONSchema specification, the following four options exist which apply to all data types:
+From the JSONSchema specification, four options exist which apply to all data types:
 
 The @optional@ property indicates a value which is not required in a conformant JSON instance.  Optional values are represented in orderly with a trailing question mark:
 
@@ -58,7 +58,7 @@ bc.     string name?;
     string "name"?;
 
 
-The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present. 
+The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present.  In orderly a requirement on another type is expressed by placing the property name (optionally quoted) enclosed in angle brackets at the end of a type definition:
 
 bc.     string town <state>;
  
@@ -67,13 +67,13 @@ The @enum@ propery specifies a set of allowable values for a key in the json doc
 bc.     string mood [ "happy", "sad", "meh" ];
     integer secretOfLife [ 7, 42 ];
 
-In a JSONSchema document the @default@ property specifies a default value for a property.  One could imagine that as an input object passes validation it will be automatically augmented with default values for required properties missing in the instance object.
+In a JSONSchema document the @default@ property specifies a default value for a property.  One could imagine that as an input object passes validation it will be automatically augmented with default values for required properties missing in the instance object.  The specification of default values in orderly looks something like assignment in most programming languages:
 
 bc.     string mood [ "happy", "sad", "meh" ] = "happy"; # optimistically default to "happy"
 
 h3. string types
 
-Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, this are represented using curly braces immediately after the type:  
+Strings are specified in orderly using the @string@ type specifier.  Strings in JSONSchema support "minLength" and "maxLength" properties, which are represented in orderly using curly braces immediately after the type:  
 
 bc.     string{4,12} login;
 
@@ -88,7 +88,7 @@ bc.     string mood /^((happy)|(sad)|(meh))$/;
 
 h3. number & integer types
 
-Numbers are specified in orderly using the @number@ type specifier.  In JSONSchema numbers and integers support ranges, ranges for numbers are specified in the same way we specify ranges for strings:
+Numbers are specified in orderly using the @number@ type specifier.  In JSONSchema numbers and integers support ranges, in orderly these ranges for numbers are specified in the same way we specify ranges for strings:
 
 bc.     number{0.02, 0.98} numNum;
     integer{0,10} rating;
@@ -103,7 +103,13 @@ bc.     boolean iShouldStay;
 
 h3. object types
 
-XXX
+Objects are represented in orderly using the @object@ type specifier:
+
+bc.     object {
+        string foo;
+        integer bar;
+        number baz;
+    } myobject;
 
 h3. array types
 
@@ -121,18 +127,23 @@ bc.     array {
         number;
     } artificial;
 
-*NOTE to self*: we must figure out @additionalProperties@ for both array and object...
-
 Finally, array types also support range semantics, for min/max number of elements:
 
 bc.     array { integer; } {0,10} myArrayOfSmallInts;
 
+h3. handling "additional properties" in arrays and objects
+
+JSONSchema provides the @additionalProperties@ attribute which allows a schema author to either:
+# specify that a valid instance object/array may not have any properties not in the schema 
+# specify an additional schema that applies to any additional properties in the instance object/array that are not explicitly mentioned in the schema
+
+It is *not known* yet how/if orderly will support this feature. 
 
 h3. null types
 
-The null type in JSONSchema specifies a value that must be null.  The @null@ type specifier in orderly supports this type:
+The null type in JSONSchema specifies a value that must be null.  The @null@ type specifier is orderly's equivalent:
 
-bc. null likeAir;
+bc.     null likeAir;
 
 As explained in the JSONSchema proposal, @null@ is useful "mainly for purpose of being able use union types to define nullability".  For example:
 
@@ -146,6 +157,17 @@ h3. any types
 "Any types" are represented in orderly using the @any@ type speicifier: 
 
 bc.     any notes;
+
+h3. unions
+
+It is possible in JSONSchema to specify a property that may be of one of many different types.  In orderly this functionality is represented using the @union@ type specifier:
+
+bc.     union {
+        string;
+        number;
+    } myUnion;
+
+A key syntactic feature to note is the supported (required?) ommission of property names where they would be meaningless.
 
 h3. references
 
@@ -164,7 +186,7 @@ h3. more complex examples
 
 A number with a range, and enumerated possible values, and a default:
 
-bc. integer powerOfTwo{0,256} [1,2,4,8,16,32,64,128,256] = 1;
+bc.     integer powerOfTwo{0,256} [1,2,4,8,16,32,64,128,256] = 1;
 
 An object with enumerated possible values and a default.
 
@@ -173,8 +195,16 @@ bc.     object {
       number normalTemperature;
     } temps [ { "beast": "canine", "normalTemperature": 101.2 },
         { "beast": "human", "normalTemperature": 98.6 } ]
-      = { "beast": "human", "normalTemperature": 101.2 };
+      = { "beast": "canine", "normalTemperature": 101.2 };
 
+
+h3. open design challenges
+
+A number of design challenges remain before orderly is "complete":
+* A decision is needed regarding support of the JSONSchema notion of making type values that are not explicitly mentioned analogous with 'any'.
+* @additionalProperties@ functionality must be figured out, as documented above
+* @maxDecimal@ support
+* Extending and Referencing
 
 h3. gotchas
 
@@ -211,8 +241,9 @@ Many people have offered feedback and ideas which shaped this project.  Those pe
 
 h2. History
 
-* (02.10.2009) "v-1" -- The idea for orderly was "first uttered":http://trickyco.de/2009/10/02/orderly-jsonschema
-* (05.10.2009) "v0" -- "orderly-json.org":http://orderly-json.org was erected and a more fully baked proposal put together thanks to feedback.
+* (2009.10.02) "v-1" -- The idea for orderly was "first uttered":http://trickyco.de/2009/10/02/orderly-jsonschema
+* (2009.10.05) "v0" -- "orderly-json.org":http://orderly-json.org was erected and a more fully baked proposal put together thanks to feedback.
+* (2009.10.07) "v1" -- editorial review, small additions 
 
 h2. License
 
