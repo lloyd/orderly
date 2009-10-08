@@ -2,7 +2,7 @@
 <head><title> orderly </title></head>
 <body>
 
-h1. orderly -- v1 -- 2009.10.07
+h1. orderly -- v2 -- 2009.10.XX
 
 h2. abstract
 
@@ -40,7 +40,7 @@ Orderly supports comments, comments are initiated with either '#' or '//' and co
 
 Orderly doesn't rely overmuch on whitespace, leaving the decision of how to format your schema up to you.   
 
-h3. propery names
+h3. property names
 
 Property names may be anything that is allowed inside "JSON strings":http://json.org/.  Unlike JSON itself, however, orderly provides a shorthand where a subset of strings may be represented without quotes.  For instance these are all valid orderly:
 
@@ -184,9 +184,9 @@ bc.      object {
 
 h3. more complex examples
 
-A number with a range, and enumerated possible values, and a default:
+A number with a range, enumerated possible values, and a default value:
 
-bc.     integer powerOfTwo{0,256} [1,2,4,8,16,32,64,128,256] = 1;
+bc.     integer{0,256} powerOfTwo[1,2,4,8,16,32,64,128,256] = 1;
 
 An object with enumerated possible values and a default.
 
