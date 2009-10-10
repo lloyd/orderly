@@ -128,6 +128,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 tok = orderly_tok_semicolon;
                 goto lexed;
             case '\t': case '\v': case '\f': case '\r': case ' ': 
+                lexer->charOff++;
                 startOffset++; 
                 break; 
             case '\n':
