@@ -44,7 +44,17 @@ typedef enum {
     orderly_tok_right_bracket,
     orderly_tok_right_curly,
     orderly_tok_lt,    
-    orderly_tok_gt
+    orderly_tok_gt,
+    orderly_tok_kw_string,
+    orderly_tok_kw_integer,
+    orderly_tok_kw_number,
+    orderly_tok_kw_boolean,
+    orderly_tok_kw_null,
+    orderly_tok_kw_any,
+    orderly_tok_kw_array,
+    orderly_tok_kw_object,
+    orderly_tok_kw_union,
+    orderly_tok_property_name
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;

@@ -19,6 +19,16 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_right_curly: return "r_curly";
         case orderly_tok_lt:     return "lt";
         case orderly_tok_gt: return "gt";
+        case orderly_tok_kw_string: return "kw_string";
+        case orderly_tok_kw_integer: return "kw_integer";
+        case orderly_tok_kw_number: return "kw_number";
+        case orderly_tok_kw_boolean: return "kw_boolean";
+        case orderly_tok_kw_null: return "kw_null";
+        case orderly_tok_kw_any: return "kw_any";
+        case orderly_tok_kw_array: return "kw_array";
+        case orderly_tok_kw_object: return "kw_object";
+        case orderly_tok_kw_union: return "kw_union";
+        case orderly_tok_property_name: return "property_name";
     }
     return "unknown";
 }
