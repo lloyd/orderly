@@ -136,6 +136,30 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 lexer->lineOff += 1;
                 startOffset++; 
                 break; 
+            case '/': 
+                if (*offset >= schemaTextLen) {
+                    tok = orderly_tok_eof;
+                    goto lexed;
+                }
+                if ('/' != schemaText[*offset])
+                {
+                    /* this must be a regexp */
+                    /* XXX: implement me! */
+                    tok = orderly_tok_error;
+                    goto lexed;
+                }
+                /* intentional fallthrough */
+            case '#':
+                /* comment!  ignore until end-of-line */
+                while (++(*offset) < schemaTextLen) {
+                    if ('\n' == schemaText[*offset]) break;
+                }
+                if ('\n' == schemaText[*offset]) break;
+ 
+                /* oops!  we hit eof *before* we hit newline */
+                tok = orderly_tok_eof;
+                goto lexed;
+                
 /*             case 't': { */
 /*                 const char * want = "rue"; */
 /*                 do { */
@@ -204,34 +228,6 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
 /*                                       jsonTextLen, offset); */
 /*                 goto lexed; */
 /*             } */
-/*             case '/': */
-/*                 /\* hey, look, a probable comment!  If comments are disabled */
-/*                  * it's an error. *\/ */
-/*                 if (!lexer->allowComments) { */
-/*                     unreadChar(lexer, offset); */
-/*                     lexer->error = orderly_lex_unallowed_comment; */
-/*                     tok = orderly_tok_error; */
-/*                     goto lexed; */
-/*                 } */
-/*                 /\* if comments are enabled, then we should try to lex */
-/*                  * the thing.  possible outcomes are */
-/*                  * - successful lex (tok_comment, which means continue), */
-/*                  * - malformed comment opening (slash not followed by */
-/*                  *   '*' or '/') (tok_error) */
-/*                  * - eof hit. (tok_eof) *\/ */
-/*                 tok = orderly_lex_comment(lexer, (const unsigned char *) jsonText, */
-/*                                        jsonTextLen, offset); */
-/*                 if (tok == orderly_tok_comment) { */
-/*                     /\* "error" is silly, but that's the initial */
-/*                      * state of tok.  guilty until proven innocent. *\/   */
-/*                     tok = orderly_tok_error; */
-/*                     orderly_buf_clear(lexer->buf); */
-/*                     lexer->bufInUse = 0; */
-/*                     startOffset = *offset;  */
-/*                     break; */
-/*                 } */
-/*                 /\* hit error or eof, bail *\/ */
-/*                 goto lexed; */
             default:
                 lexer->error = orderly_lex_invalid_char;
                 tok = orderly_tok_error;
