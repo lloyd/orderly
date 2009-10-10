@@ -42,7 +42,9 @@ typedef enum {
     orderly_tok_left_bracket,
     orderly_tok_left_curly,
     orderly_tok_right_bracket,
-    orderly_tok_right_curly
+    orderly_tok_right_curly,
+    orderly_tok_lt,    
+    orderly_tok_gt
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
@@ -52,8 +54,9 @@ orderly_lexer orderly_lex_alloc(orderly_alloc_funcs * alloc);
 void orderly_lex_free(orderly_lexer lexer);
 
 orderly_tok orderly_lex_lex(orderly_lexer lexer,
-                            const unsigned char * jsonText,
-                            unsigned int jsonTextLen, unsigned int * offset,
+                            const unsigned char * schemaText,
+                            unsigned int schemaTextLen,
+                            unsigned int * offset,
                             const unsigned char ** outBuf,
                             unsigned int * outLen);
 

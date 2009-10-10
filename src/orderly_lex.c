@@ -50,10 +50,25 @@ struct orderly_lexer_t {
 orderly_lexer
 orderly_lex_alloc(orderly_alloc_funcs * alloc)
 {
-    orderly_lexer lxr = (orderly_lexer)
-        OR_MALLOC(alloc, sizeof(struct orderly_lexer_t));
+    static orderly_alloc_funcs orderlyAllocFuncBuffer;
+    static orderly_alloc_funcs * orderlyAllocFuncBufferPtr = NULL;
+
+    orderly_lexer lxr = NULL;
+
+    if (orderlyAllocFuncBufferPtr == NULL) {
+        orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
+        orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
+    }
+
+    if (alloc == NULL) alloc = orderlyAllocFuncBufferPtr;
+
+    assert( alloc != NULL );
+
+    lxr = (orderly_lexer) OR_MALLOC(alloc, sizeof(struct orderly_lexer_t));
     memset((void *) lxr, 0, sizeof(struct orderly_lexer_t));
     lxr->alloc = alloc;
+    /* line offset is base 1 */
+    lxr->lineOff = 1;
     return lxr;
 }
 
@@ -63,6 +78,10 @@ orderly_lex_free(orderly_lexer lxr)
     OR_FREE(lxr->alloc, lxr);
     return;
 }
+
+/* read a character updating counts as appropriate */
+
+    
 
 orderly_tok
 orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
@@ -84,7 +103,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             goto lexed;
         }
 
-        c = schemaText[*offset];
+        c = schemaText[(*offset)++];
 
         switch (c) {
             case '{':
@@ -99,12 +118,23 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case ']':
                 tok = orderly_tok_right_bracket;
                 goto lexed;
+            case '<':
+                tok = orderly_tok_lt;
+                goto lexed;
+            case '>':
+                tok = orderly_tok_gt;
+                goto lexed;
             case ';':
                 tok = orderly_tok_semicolon;
                 goto lexed;
-/*             case '\t': case '\n': case '\v': case '\f': case '\r': case ' ': */
-/*                 startOffset++; */
-/*                 break; */
+            case '\t': case '\v': case '\f': case '\r': case ' ': 
+                startOffset++; 
+                break; 
+            case '\n':
+                lexer->charOff = 0;
+                lexer->lineOff += 1;
+                startOffset++; 
+                break; 
 /*             case 't': { */
 /*                 const char * want = "rue"; */
 /*                 do { */
@@ -215,6 +245,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
     if (tok != orderly_tok_error) {
         *outBuf = schemaText + startOffset;
         *outLen = *offset - startOffset;
+        lexer->charOff += *outLen;
     }
 
     return tok;

@@ -13,11 +13,28 @@ int main(int argc, char ** argv)
      * reasonable limit  (1 meg) */
     static char inbuf[MAX_INPUT_TEXT];
     size_t tot = 0, rd;
-    while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT))) {
+    while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
         tot += rd;
+
+    {
+        orderly_tok t;
+        unsigned int off = 0;
+        orderly_lexer lexer = orderly_lex_alloc(NULL);
+        const unsigned char * outBuf = NULL;
+        unsigned int outLen = 0;
+
+        do {
+            t = orderly_lex_lex(lexer, (const unsigned char *) inbuf,
+                                tot, &off, &outBuf, &outLen);
+            printf("(%3u,%3u): %d '",
+                   orderly_lex_current_line(lexer),
+                   orderly_lex_current_char(lexer),
+                   t);
+            fwrite(outBuf, sizeof(char), outLen, stdout);
+            printf("'\n");
+            
+        } while (t != orderly_tok_error && t != orderly_tok_eof);
     }
-
-    printf("%s\n", inbuf);
-
+    
     return 0;
 }
