@@ -29,6 +29,7 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_kw_object: return "kw_object";
         case orderly_tok_kw_union: return "kw_union";
         case orderly_tok_property_name: return "property_name";
+        case orderly_tok_json_string: return "json_string";
     }
     return "unknown";
 }

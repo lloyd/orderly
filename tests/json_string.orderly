@@ -1,0 +1,2 @@
+# json style strings are also allowed in orderly
+string "foo";

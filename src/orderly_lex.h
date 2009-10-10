@@ -54,7 +54,8 @@ typedef enum {
     orderly_tok_kw_array,
     orderly_tok_kw_object,
     orderly_tok_kw_union,
-    orderly_tok_property_name
+    orderly_tok_property_name,
+    orderly_tok_json_string
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
@@ -79,7 +80,9 @@ orderly_tok orderly_lex_peek(orderly_lexer lexer,
 
 typedef enum {
     orderly_lex_e_ok = 0,
-    orderly_lex_invalid_char = 1
+    orderly_lex_invalid_char = 1,
+    orderly_lex_not_implemented,
+    orderly_lex_unterminated_string
 } orderly_lex_error;
 
 const char * orderly_lex_error_to_string(orderly_lex_error error);

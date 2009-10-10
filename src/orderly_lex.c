@@ -145,6 +145,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 {
                     /* this must be a regexp */
                     /* XXX: implement me! */
+                    lexer->error = orderly_lex_not_implemented;
                     tok = orderly_tok_error;
                     goto lexed;
                 }
@@ -194,13 +195,13 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                         break;
                     }
                 }
+                /* XXX: we need onechar lookahead, otherwise "anyone"
+                   is considered to be a kw followed by a property name ! */ 
                 if (i < sizeof(keywords)/sizeof(keywords[0])) {
                     tok = keywords[i].tok;
                     *offset += (strlen(keywords[i].kw) - 1);
-                } else {
-                    tok = orderly_tok_error;
+                    goto lexed;
                 }
-                goto lexed;
             }
 
             case 'b': case 'c': case 'd': case 'e': case 'f':
@@ -224,47 +225,29 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 tok = orderly_tok_property_name;
                 goto lexed;
             }
-/*             case 'f': { */
-/*                 const char * want = "alse"; */
-/*                 do { */
-/*                     if (*offset >= jsonTextLen) { */
-/*                         tok = orderly_tok_eof; */
-/*                         goto lexed; */
-/*                     } */
-/*                     c = readChar(lexer, jsonText, offset); */
-/*                     if (c != *want) { */
-/*                         unreadChar(lexer, offset); */
-/*                         lexer->error = orderly_lex_invalid_string; */
-/*                         tok = orderly_tok_error; */
-/*                         goto lexed; */
-/*                     } */
-/*                 } while (*(++want)); */
-/*                 tok = orderly_tok_bool; */
-/*                 goto lexed; */
-/*             } */
-/*             case 'n': { */
-/*                 const char * want = "ull"; */
-/*                 do { */
-/*                     if (*offset >= jsonTextLen) { */
-/*                         tok = orderly_tok_eof; */
-/*                         goto lexed; */
-/*                     } */
-/*                     c = readChar(lexer, jsonText, offset); */
-/*                     if (c != *want) { */
-/*                         unreadChar(lexer, offset); */
-/*                         lexer->error = orderly_lex_invalid_string; */
-/*                         tok = orderly_tok_error; */
-/*                         goto lexed; */
-/*                     } */
-/*                 } while (*(++want)); */
-/*                 tok = orderly_tok_null; */
-/*                 goto lexed; */
-/*             } */
-/*             case '"': { */
-/*                 tok = orderly_lex_string(lexer, (const unsigned char *) jsonText, */
-/*                                       jsonTextLen, offset); */
-/*                 goto lexed; */
-/*             } */
+            case '"': {
+                /* looks like a JSON string, we'll perform a very
+                 * basic extraction and leave it up to the parser to
+                 * handle the more complicated bits, such as unescaping
+                 * and UTF8 validation */
+                do {
+                    char c = schemaText[*offset];
+                    if ('\\' == c) {
+                        if (++(*offset) < schemaTextLen) break;
+                    } else if ('"' == c) {
+                        break;
+                    }
+                } while (++(*offset) < schemaTextLen);
+
+                if ('"' == schemaText[*offset]) {
+                    tok = orderly_tok_json_string;                    
+                    (*offset)++;
+                } else {
+                    lexer->error = orderly_lex_unterminated_string;
+                    tok = orderly_tok_error;                    
+                }
+                goto lexed;
+            }
 /*             case '-': */
 /*             case '0': case '1': case '2': case '3': case '4':  */
 /*             case '5': case '6': case '7': case '8': case '9': { */
@@ -302,6 +285,10 @@ orderly_lex_error_to_string(orderly_lex_error error)
             return "ok, no error";
         case orderly_lex_invalid_char:
             return "invalid character in input schema";
+        case orderly_lex_not_implemented:
+            return "lexing implementation incomplete";
+        case orderly_lex_unterminated_string:
+            return "unterminated string encountered";
     }
     return "unknown error code";
 }
