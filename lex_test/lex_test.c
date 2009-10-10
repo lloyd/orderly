@@ -7,7 +7,25 @@
 
 #define MAX_INPUT_TEXT (1 << 20)
 
-int main(int argc, char ** argv) 
+static const char * tokToStr(orderly_tok t)
+{
+    switch (t) {
+        case orderly_tok_error: return "error";
+        case orderly_tok_eof: return "eof";
+        case orderly_tok_semicolon:     return "semicolon";
+        case orderly_tok_left_bracket: return "l_bracket";
+        case orderly_tok_left_curly: return "l_curly";
+        case orderly_tok_right_bracket: return "r_bracket";
+        case orderly_tok_right_curly: return "r_curly";
+        case orderly_tok_lt:     return "lt";
+        case orderly_tok_gt: return "gt";
+    }
+    return "unknown";
+}
+
+
+int
+main(int argc, char ** argv) 
 {
     /* this is not a stream lexer, let's read as much as we can up to a
      * reasonable limit  (1 meg) */
@@ -26,12 +44,11 @@ int main(int argc, char ** argv)
         do {
             t = orderly_lex_lex(lexer, (const unsigned char *) inbuf,
                                 tot, &off, &outBuf, &outLen);
-            printf("(%3u,%3u): %d '",
+            printf("(%3u,%3u): '",
                    orderly_lex_current_line(lexer),
-                   orderly_lex_current_char(lexer),
-                   t);
+                   orderly_lex_current_char(lexer));
             fwrite(outBuf, sizeof(char), outLen, stdout);
-            printf("'\n");
+            printf("' %s\n", tokToStr(t));
             
         } while (t != orderly_tok_error && t != orderly_tok_eof);
     }
