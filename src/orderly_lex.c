@@ -31,6 +31,7 @@
  */ 
 
 #include "orderly_lex.h"
+#include "orderly_alloc.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -59,7 +60,6 @@ orderly_lex_alloc(orderly_alloc_funcs * alloc)
 void
 orderly_lex_free(orderly_lexer lxr)
 {
-    orderly_buf_free(lxr->buf);
     OR_FREE(lxr->alloc, lxr);
     return;
 }
@@ -77,14 +77,14 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
     *outLen = 0;
 
     for (;;) {
-        assert(*offset <= jsonTextLen);
+        assert(*offset <= schemaTextLen);
 
-        if (*offset >= jsonTextLen) {
+        if (*offset >= schemaTextLen) {
             tok = orderly_tok_eof;
             goto lexed;
         }
 
-        c = readChar(lexer, jsonText, offset);
+        c = schemaText[*offset];
 
         switch (c) {
             case '{':
@@ -94,113 +94,113 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 tok = orderly_tok_right_curly;
                 goto lexed;
             case '[':
-                tok = orderly_tok_left_brace;
+                tok = orderly_tok_left_bracket;
                 goto lexed;
             case ']':
-                tok = orderly_tok_right_brace;
+                tok = orderly_tok_right_bracket;
                 goto lexed;
             case ';':
                 tok = orderly_tok_semicolon;
                 goto lexed;
-            case '\t': case '\n': case '\v': case '\f': case '\r': case ' ':
-                startOffset++;
-                break;
-            case 't': {
-                const char * want = "rue";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = orderly_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = orderly_lex_invalid_string;
-                        tok = orderly_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
-                tok = orderly_tok_bool;
-                goto lexed;
-            }
-            case 'f': {
-                const char * want = "alse";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = orderly_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = orderly_lex_invalid_string;
-                        tok = orderly_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
-                tok = orderly_tok_bool;
-                goto lexed;
-            }
-            case 'n': {
-                const char * want = "ull";
-                do {
-                    if (*offset >= jsonTextLen) {
-                        tok = orderly_tok_eof;
-                        goto lexed;
-                    }
-                    c = readChar(lexer, jsonText, offset);
-                    if (c != *want) {
-                        unreadChar(lexer, offset);
-                        lexer->error = orderly_lex_invalid_string;
-                        tok = orderly_tok_error;
-                        goto lexed;
-                    }
-                } while (*(++want));
-                tok = orderly_tok_null;
-                goto lexed;
-            }
-            case '"': {
-                tok = orderly_lex_string(lexer, (const unsigned char *) jsonText,
-                                      jsonTextLen, offset);
-                goto lexed;
-            }
-            case '-':
-            case '0': case '1': case '2': case '3': case '4': 
-            case '5': case '6': case '7': case '8': case '9': {
-                /* integer parsing wants to start from the beginning */
-                unreadChar(lexer, offset);
-                tok = orderly_lex_number(lexer, (const unsigned char *) jsonText,
-                                      jsonTextLen, offset);
-                goto lexed;
-            }
-            case '/':
-                /* hey, look, a probable comment!  If comments are disabled
-                 * it's an error. */
-                if (!lexer->allowComments) {
-                    unreadChar(lexer, offset);
-                    lexer->error = orderly_lex_unallowed_comment;
-                    tok = orderly_tok_error;
-                    goto lexed;
-                }
-                /* if comments are enabled, then we should try to lex
-                 * the thing.  possible outcomes are
-                 * - successful lex (tok_comment, which means continue),
-                 * - malformed comment opening (slash not followed by
-                 *   '*' or '/') (tok_error)
-                 * - eof hit. (tok_eof) */
-                tok = orderly_lex_comment(lexer, (const unsigned char *) jsonText,
-                                       jsonTextLen, offset);
-                if (tok == orderly_tok_comment) {
-                    /* "error" is silly, but that's the initial
-                     * state of tok.  guilty until proven innocent. */  
-                    tok = orderly_tok_error;
-                    orderly_buf_clear(lexer->buf);
-                    lexer->bufInUse = 0;
-                    startOffset = *offset; 
-                    break;
-                }
-                /* hit error or eof, bail */
-                goto lexed;
+/*             case '\t': case '\n': case '\v': case '\f': case '\r': case ' ': */
+/*                 startOffset++; */
+/*                 break; */
+/*             case 't': { */
+/*                 const char * want = "rue"; */
+/*                 do { */
+/*                     if (*offset >= jsonTextLen) { */
+/*                         tok = orderly_tok_eof; */
+/*                         goto lexed; */
+/*                     } */
+/*                     c = readChar(lexer, jsonText, offset); */
+/*                     if (c != *want) { */
+/*                         unreadChar(lexer, offset); */
+/*                         lexer->error = orderly_lex_invalid_string; */
+/*                         tok = orderly_tok_error; */
+/*                         goto lexed; */
+/*                     } */
+/*                 } while (*(++want)); */
+/*                 tok = orderly_tok_bool; */
+/*                 goto lexed; */
+/*             } */
+/*             case 'f': { */
+/*                 const char * want = "alse"; */
+/*                 do { */
+/*                     if (*offset >= jsonTextLen) { */
+/*                         tok = orderly_tok_eof; */
+/*                         goto lexed; */
+/*                     } */
+/*                     c = readChar(lexer, jsonText, offset); */
+/*                     if (c != *want) { */
+/*                         unreadChar(lexer, offset); */
+/*                         lexer->error = orderly_lex_invalid_string; */
+/*                         tok = orderly_tok_error; */
+/*                         goto lexed; */
+/*                     } */
+/*                 } while (*(++want)); */
+/*                 tok = orderly_tok_bool; */
+/*                 goto lexed; */
+/*             } */
+/*             case 'n': { */
+/*                 const char * want = "ull"; */
+/*                 do { */
+/*                     if (*offset >= jsonTextLen) { */
+/*                         tok = orderly_tok_eof; */
+/*                         goto lexed; */
+/*                     } */
+/*                     c = readChar(lexer, jsonText, offset); */
+/*                     if (c != *want) { */
+/*                         unreadChar(lexer, offset); */
+/*                         lexer->error = orderly_lex_invalid_string; */
+/*                         tok = orderly_tok_error; */
+/*                         goto lexed; */
+/*                     } */
+/*                 } while (*(++want)); */
+/*                 tok = orderly_tok_null; */
+/*                 goto lexed; */
+/*             } */
+/*             case '"': { */
+/*                 tok = orderly_lex_string(lexer, (const unsigned char *) jsonText, */
+/*                                       jsonTextLen, offset); */
+/*                 goto lexed; */
+/*             } */
+/*             case '-': */
+/*             case '0': case '1': case '2': case '3': case '4':  */
+/*             case '5': case '6': case '7': case '8': case '9': { */
+/*                 /\* integer parsing wants to start from the beginning *\/ */
+/*                 unreadChar(lexer, offset); */
+/*                 tok = orderly_lex_number(lexer, (const unsigned char *) jsonText, */
+/*                                       jsonTextLen, offset); */
+/*                 goto lexed; */
+/*             } */
+/*             case '/': */
+/*                 /\* hey, look, a probable comment!  If comments are disabled */
+/*                  * it's an error. *\/ */
+/*                 if (!lexer->allowComments) { */
+/*                     unreadChar(lexer, offset); */
+/*                     lexer->error = orderly_lex_unallowed_comment; */
+/*                     tok = orderly_tok_error; */
+/*                     goto lexed; */
+/*                 } */
+/*                 /\* if comments are enabled, then we should try to lex */
+/*                  * the thing.  possible outcomes are */
+/*                  * - successful lex (tok_comment, which means continue), */
+/*                  * - malformed comment opening (slash not followed by */
+/*                  *   '*' or '/') (tok_error) */
+/*                  * - eof hit. (tok_eof) *\/ */
+/*                 tok = orderly_lex_comment(lexer, (const unsigned char *) jsonText, */
+/*                                        jsonTextLen, offset); */
+/*                 if (tok == orderly_tok_comment) { */
+/*                     /\* "error" is silly, but that's the initial */
+/*                      * state of tok.  guilty until proven innocent. *\/   */
+/*                     tok = orderly_tok_error; */
+/*                     orderly_buf_clear(lexer->buf); */
+/*                     lexer->bufInUse = 0; */
+/*                     startOffset = *offset;  */
+/*                     break; */
+/*                 } */
+/*                 /\* hit error or eof, bail *\/ */
+/*                 goto lexed; */
             default:
                 lexer->error = orderly_lex_invalid_char;
                 tok = orderly_tok_error;
@@ -212,28 +212,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
   lexed:
     /* need to append to buffer if the buffer is in use or
      * if it's an EOF token */
-    if (tok == orderly_tok_eof || lexer->bufInUse) {
-        if (!lexer->bufInUse) orderly_buf_clear(lexer->buf);
-        lexer->bufInUse = 1;
-        orderly_buf_append(lexer->buf, jsonText + startOffset, *offset - startOffset);
-        lexer->bufOff = 0;
-        
-        if (tok != orderly_tok_eof) {
-            *outBuf = orderly_buf_data(lexer->buf);
-            *outLen = orderly_buf_len(lexer->buf);
-            lexer->bufInUse = 0;
-        }
-    } else if (tok != orderly_tok_error) {
-        *outBuf = jsonText + startOffset;
+    if (tok != orderly_tok_error) {
+        *outBuf = schemaText + startOffset;
         *outLen = *offset - startOffset;
-    }
-
-    /* special case for strings. skip the quotes. */
-    if (tok == orderly_tok_string || tok == orderly_tok_string_with_escapes)
-    {
-        assert(*outLen >= 2);
-        (*outBuf)++;
-        *outLen -= 2; 
     }
 
     return tok;
@@ -245,6 +226,8 @@ orderly_lex_error_to_string(orderly_lex_error error)
     switch (error) {
         case orderly_lex_e_ok:
             return "ok, no error";
+        case orderly_lex_invalid_char:
+            return "invalid character in input schema";
     }
     return "unknown error code";
 }
@@ -275,17 +258,10 @@ orderly_tok orderly_lex_peek(orderly_lexer lexer,
 {
     const unsigned char * outBuf;
     unsigned int outLen;
-    unsigned int bufLen = orderly_buf_len(lexer->buf);
-    unsigned int bufOff = lexer->bufOff;
-    unsigned int bufInUse = lexer->bufInUse;
     orderly_tok tok;
     
     tok = orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset,
                           &outBuf, &outLen);
-
-    lexer->bufOff = bufOff;
-    lexer->bufInUse = bufInUse;
-    orderly_buf_truncate(lexer->buf, bufLen);
     
     return tok;
 }

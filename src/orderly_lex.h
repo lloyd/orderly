@@ -36,11 +36,13 @@
 #include "api/orderly_common.h"
 
 typedef enum {
-    orderly_tok_semicolon,
+    orderly_tok_error,
+    orderly_tok_eof,
+    orderly_tok_semicolon,    
     orderly_tok_left_bracket,
     orderly_tok_left_curly,
     orderly_tok_right_bracket,
-    orderly_tok_right_curly,
+    orderly_tok_right_curly
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
@@ -64,6 +66,7 @@ orderly_tok orderly_lex_peek(orderly_lexer lexer,
 
 typedef enum {
     orderly_lex_e_ok = 0,
+    orderly_lex_invalid_char = 1
 } orderly_lex_error;
 
 const char * orderly_lex_error_to_string(orderly_lex_error error);
