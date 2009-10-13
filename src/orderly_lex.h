@@ -55,7 +55,8 @@ typedef enum {
     orderly_tok_kw_object,
     orderly_tok_kw_union,
     orderly_tok_property_name,
-    orderly_tok_json_string
+    orderly_tok_json_string,
+    orderly_tok_optional_marker /* '?' */
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
