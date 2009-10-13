@@ -228,7 +228,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 do {
                     char c = schemaText[*offset];
                     if ('\\' == c) {
-                        if (++(*offset) < schemaTextLen) break;
+                        if (++(*offset) >= schemaTextLen) break;
                     } else if ('"' == c) {
                         break;
                     }

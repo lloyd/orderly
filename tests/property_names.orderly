@@ -2,3 +2,7 @@ an     # almost a keyword
 any    # it *is* a keyword
 anyone# a keyword and thensome
 "any"  # a quoted keyword
+"this is a keyword with spaces" // self documenting
+"\""   # escaping alone
+"\"'!#$%&(@%*^!)#)!^\\" # lotsa stuff in addition to escaping
+
