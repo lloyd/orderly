@@ -116,6 +116,76 @@ keywordCheck(const unsigned char * str, unsigned int len)
     return orderly_tok_property_name;
 }
 
+/* a very basic extraction of JSON strings, we leave it up to the parser
+ * to handle the more complicated bits of JSON, such as unescaping
+ * and UTF8 validation
+ *
+ * precondition: offset should point to the first char *after* a quote ('"').
+ */
+static orderly_tok
+orderly_lex_json_string(orderly_lexer lexer, const unsigned char * schemaText,
+                        unsigned int schemaTextLen, unsigned int * offset)
+{
+    orderly_tok tok = orderly_tok_error;
+    do {
+        char c = schemaText[*offset];
+        if ('\\' == c) {
+            if (++(*offset) >= schemaTextLen) break;
+        } else if ('"' == c) {
+            break;
+        }
+    } while (++(*offset) < schemaTextLen);
+    
+    if ('"' == schemaText[*offset]) {
+        tok = orderly_tok_json_string;                    
+        (*offset)++;
+    } else {
+        lexer->error = orderly_lex_unterminated_string;
+        tok = orderly_tok_error;                    
+    }
+
+    return tok;
+}
+
+/* a very basic extraction of JSON arrays, as with strings we'll leave it up
+ * to the parser to handle the more complicated bits of JSON array parsing.
+ *
+ * precondition: offset should point to the first char *after* a left brace
+ *               ('[').
+ */
+static orderly_tok
+orderly_lex_json_array(orderly_lexer lexer, const unsigned char * schemaText,
+                       unsigned int schemaTextLen, unsigned int * offset)
+{
+    orderly_tok tok = orderly_tok_error;
+    unsigned int nesting = 1;
+    
+    do {
+        char c = schemaText[*offset];
+        if ('"' == c) {
+            tok = orderly_lex_json_string(lexer, schemaText, schemaTextLen,
+                                          offset);
+            if (tok != orderly_tok_json_string) break;
+        } else if ('[' == c) {
+            ++nesting;
+        } else if (']' == c) {
+            if (!(--nesting)) break;
+        } else {
+            /* ignore! */
+        }
+    } while (++(*offset) < schemaTextLen);
+    
+    if (!nesting) {
+        tok = orderly_tok_json_array;
+        (*offset)++;
+    } else {
+        lexer->error = orderly_lex_unterminated_array;
+        tok = orderly_tok_error;                    
+    }
+
+    return tok;
+}
+
 orderly_tok
 orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 unsigned int schemaTextLen, unsigned int * offset,
@@ -145,17 +215,14 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case '}':
                 tok = orderly_tok_right_curly;
                 goto lexed;
-            case '[':
-                tok = orderly_tok_left_bracket;
-                goto lexed;
-            case ']':
-                tok = orderly_tok_right_bracket;
-                goto lexed;
             case '<':
                 tok = orderly_tok_lt;
                 goto lexed;
             case '>':
                 tok = orderly_tok_gt;
+                goto lexed;
+            case '=':
+                tok = orderly_tok_assignment;
                 goto lexed;
             case ';':
                 tok = orderly_tok_semicolon;
@@ -210,7 +277,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case 'W': case 'X': case 'Y': case 'Z': {
                 do {
                     char c = schemaText[*offset];
-                    if (!(c >= 'a' && c <= 'z') && !(c >= 'Z' && c <= 'Z') &&
+                    if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') &&
                         c != '_' && c != '-')
                     {
                         break;
@@ -224,26 +291,14 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 goto lexed;
             }
             case '"': {
-                /* looks like a JSON string, we'll perform a very
-                 * basic extraction and leave it up to the parser to
-                 * handle the more complicated bits, such as unescaping
-                 * and UTF8 validation */
-                do {
-                    char c = schemaText[*offset];
-                    if ('\\' == c) {
-                        if (++(*offset) >= schemaTextLen) break;
-                    } else if ('"' == c) {
-                        break;
-                    }
-                } while (++(*offset) < schemaTextLen);
-
-                if ('"' == schemaText[*offset]) {
-                    tok = orderly_tok_json_string;                    
-                    (*offset)++;
-                } else {
-                    lexer->error = orderly_lex_unterminated_string;
-                    tok = orderly_tok_error;                    
-                }
+                tok = orderly_lex_json_string(lexer, schemaText,
+                                              schemaTextLen, offset);
+                goto lexed;
+            }
+            case '[': {
+                /* A json array! let's scan past the bugger */
+                tok = orderly_lex_json_array(lexer, schemaText,
+                                             schemaTextLen, offset);
                 goto lexed;
             }
 /*             case '-': */
@@ -287,6 +342,8 @@ orderly_lex_error_to_string(orderly_lex_error error)
             return "lexing implementation incomplete";
         case orderly_lex_unterminated_string:
             return "unterminated string encountered";
+        case orderly_lex_unterminated_array:
+            return "unterminated array encountered";
     }
     return "unknown error code";
 }

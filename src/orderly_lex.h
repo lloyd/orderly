@@ -39,9 +39,7 @@ typedef enum {
     orderly_tok_error,
     orderly_tok_eof,
     orderly_tok_semicolon,    
-    orderly_tok_left_bracket,
     orderly_tok_left_curly,
-    orderly_tok_right_bracket,
     orderly_tok_right_curly,
     orderly_tok_lt,    
     orderly_tok_gt,
@@ -56,7 +54,9 @@ typedef enum {
     orderly_tok_kw_union,
     orderly_tok_property_name,
     orderly_tok_json_string,
-    orderly_tok_optional_marker /* '?' */
+    orderly_tok_json_array,
+    orderly_tok_optional_marker /* '?' */,
+    orderly_tok_assignment /* '=' */
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
@@ -83,7 +83,8 @@ typedef enum {
     orderly_lex_e_ok = 0,
     orderly_lex_invalid_char = 1,
     orderly_lex_not_implemented,
-    orderly_lex_unterminated_string
+    orderly_lex_unterminated_string,
+    orderly_lex_unterminated_array
 } orderly_lex_error;
 
 const char * orderly_lex_error_to_string(orderly_lex_error error);
