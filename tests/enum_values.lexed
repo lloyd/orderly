@@ -1,0 +1,9 @@
+(  1,  6): 'string' kw_string
+(  1, 11): 'mood' property_name
+(  1, 37): '[ "happy", "sad", "meh" ]' json_array
+(  1, 38): ';' semicolon
+(  2,  7): 'integer' kw_integer
+(  2, 20): 'secretOfLife' property_name
+(  2, 30): '[ 7, 42 ]' json_array
+(  2, 31): ';' semicolon
+(  3,  0): '' eof

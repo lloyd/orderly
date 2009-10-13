@@ -1,0 +1,4 @@
+(  2,  6): 'string' kw_string
+(  2, 10): 'foo' property_name
+(  2, 11): ';' semicolon
+(  3,  0): '' eof

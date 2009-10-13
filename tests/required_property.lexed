@@ -1,0 +1,7 @@
+(  1,  6): 'string' kw_string
+(  1, 11): 'town' property_name
+(  1, 13): '<' lt
+(  1, 18): 'state' property_name
+(  1, 19): '>' gt
+(  1, 20): ';' semicolon
+(  2,  0): '' eof

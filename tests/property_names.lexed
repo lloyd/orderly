@@ -1,0 +1,8 @@
+(  1,  2): 'an' property_name
+(  2,  3): 'any' kw_any
+(  3,  6): 'anyone' property_name
+(  4,  5): '"any"' json_string
+(  5, 31): '"this is a keyword with spaces"' json_string
+(  6,  4): '"\""' json_string
+(  7, 23): '"\"'!#$%&(@%*^!)#)!^\\"' json_string
+(  9,  0): '' eof
