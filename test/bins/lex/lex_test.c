@@ -1,4 +1,4 @@
-#include "../src/orderly_lex.h"
+#include "../../../src/orderly_lex.h"
 
 #include <stdio.h>
 #include <sys/types.h>

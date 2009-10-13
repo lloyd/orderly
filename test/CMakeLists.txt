@@ -1,0 +1,2 @@
+ADD_SUBDIRECTORY(bins/lex)
+ADD_CUSTOM_TARGET(test ${CMAKE_CURRENT_SOURCE_DIR}/run_tests.rb)
