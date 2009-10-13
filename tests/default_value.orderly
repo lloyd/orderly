@@ -1,0 +1,1 @@
+string mood [ "happy", "sad", "meh" ] = "happy"; # optimistically default to "happy"
