@@ -310,6 +310,13 @@ orderly_lex_json_object(orderly_lexer lexer, const unsigned char * schemaText,
     return tok;
 }
 
+#define CHECK_KEYWORD(_kw)                             \
+    if (((*offset) + (strlen(_kw)) < schemaTextLen) && \
+        !strncmp((_kw), (const char *) (schemaText + *offset), strlen(_kw))) { \
+        *offset += strlen(_kw);                        \
+        tok = orderly_tok_default_value;               \
+    } 
+
 /* scan a single json value
  * precondition: offset should point to first char of json value */
 static orderly_tok
@@ -341,9 +348,14 @@ orderly_lex_json_value(orderly_lexer lexer, const unsigned char * schemaText,
             break;
         }
         case 't':
+            CHECK_KEYWORD("true");
+            break;
         case 'f':            
+            CHECK_KEYWORD("false");
+            break;
         case 'n':
-            tok = orderly_tok_error;
+            CHECK_KEYWORD("null");
+            break;
     }
     
     return ((tok == orderly_tok_error || tok == orderly_tok_eof)
