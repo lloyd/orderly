@@ -1,0 +1,5 @@
+object {
+    string foo;
+    integer bar;
+    number baz;
+} myobject;

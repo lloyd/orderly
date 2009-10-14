@@ -1,0 +1,15 @@
+(  1,  6): 'object' kw_object
+(  1,  8): '{' l_curly
+(  2, 10): 'string' kw_string
+(  2, 14): 'foo' property_name
+(  2, 15): ';' semicolon
+(  3, 11): 'integer' kw_integer
+(  3, 15): 'bar' property_name
+(  3, 16): ';' semicolon
+(  4, 10): 'number' kw_number
+(  4, 14): 'baz' property_name
+(  4, 15): ';' semicolon
+(  5,  1): '}' r_curly
+(  5, 10): 'myobject' property_name
+(  5, 11): ';' semicolon
+(  6,  0): '' eof
