@@ -1,7 +1,6 @@
 (  1,  6): 'string' kw_string
 (  1, 11): 'mood' property_name
 (  1, 37): '[ "happy", "sad", "meh" ]' json_array
-(  1, 39): '=' assignment
-(  1, 47): '"happy"' json_string
-(  1, 48): ';' semicolon
+(  1, 46): '"happy"' default_value
+(  1, 47): ';' semicolon
 (  2,  0): '' eof
