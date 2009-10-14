@@ -271,6 +271,86 @@ orderly_lex_json_array(orderly_lexer lexer, const unsigned char * schemaText,
     return tok;
 }
 
+/* a very basic extraction of JSON objects, as with strings we'll leave it up
+ * to the parser to handle the more complicated bits of JSON array parsing.
+ *
+ * precondition: offset should point to the first char *after* a left curly
+ *               ('{').
+ */
+static orderly_tok
+orderly_lex_json_object(orderly_lexer lexer, const unsigned char * schemaText,
+                        unsigned int schemaTextLen, unsigned int * offset)
+{
+    orderly_tok tok = orderly_tok_error;
+    unsigned int nesting = 1;
+    
+    do {
+        char c = schemaText[*offset];
+        if ('"' == c) {
+            tok = orderly_lex_json_string(lexer, schemaText, schemaTextLen,
+                                          offset);
+            if (tok != orderly_tok_json_string) break;
+        } else if ('{' == c) {
+            ++nesting;
+        } else if ('}' == c) {
+            if (!(--nesting)) break;
+        } else {
+            /* ignore! */
+        }
+    } while (++(*offset) < schemaTextLen);
+    
+    if (!nesting) {
+        tok = orderly_tok_json_array;
+        (*offset)++;
+    } else {
+        lexer->error = orderly_lex_unterminated_array;
+        tok = orderly_tok_error;                    
+    }
+
+    return tok;
+}
+
+/* scan a single json value
+ * precondition: offset should point to first char of json value */
+static orderly_tok
+orderly_lex_json_value(orderly_lexer lexer, const unsigned char * schemaText,
+                       unsigned int schemaTextLen, unsigned int * offset)
+{
+    orderly_tok tok = orderly_tok_error;
+    switch (schemaText[*offset]) {
+        case '"': /* string */
+            (*offset)++;
+            tok = orderly_lex_json_string(lexer, schemaText,
+                                          schemaTextLen, offset);
+            break;
+        case '[': /* array */
+            (*offset)++;
+            tok = orderly_lex_json_array(lexer, schemaText,
+                                         schemaTextLen, offset);
+            break;
+        case '{': /* object */
+            (*offset)++;
+            tok = orderly_lex_json_object(lexer, schemaText,
+                                          schemaTextLen, offset);
+            break;            
+        case '-': /* number */
+        case '0': case '1': case '2': case '3': case '4':  
+        case '5': case '6': case '7': case '8': case '9': { 
+            tok = orderly_lex_number(lexer, (const unsigned char *) schemaText,
+                                     schemaTextLen, offset);
+            break;
+        }
+        case 't':
+        case 'f':            
+        case 'n':
+            tok = orderly_tok_error;
+    }
+    
+    return ((tok == orderly_tok_error || tok == orderly_tok_eof)
+            ? orderly_tok_error : orderly_tok_default_value);
+}
+
+
 orderly_tok
 orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 unsigned int schemaTextLen, unsigned int * offset,
@@ -308,9 +388,6 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 goto lexed;
             case '>':
                 tok = orderly_tok_gt;
-                goto lexed;
-            case '=':
-                tok = orderly_tok_assignment;
                 goto lexed;
             case ';':
                 tok = orderly_tok_semicolon;
@@ -389,12 +466,36 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                                              schemaTextLen, offset);
                 goto lexed;
             }
+            case '=':
+                /* '=' is not returned by the lexer to parser */
+                startOffset++; 
+
+                /* The assignment operator is followed by a json object.
+                 * first, we'll skip whitespace, then we'll pass it to a
+                 * function capable of scanning the value */
+                while (*offset < schemaTextLen) {
+                    c = schemaText[*offset];
+                    if (strchr("\t\v\f\r ", c)) {
+                        lexer->charOff++;
+                    } else if (c == '\n') {
+                        lexer->charOff = 0;
+                        lexer->lineOff += 1;
+                    } else {
+                        break;
+                    }
+                    startOffset++; 
+                    (*offset)++;
+                }
+                tok = orderly_lex_json_value(lexer, schemaText,
+                                             schemaTextLen, offset);
+                goto lexed;
             case '-': 
             case '0': case '1': case '2': case '3': case '4':  
             case '5': case '6': case '7': case '8': case '9': { 
                 /* integer parsing wants to start from the beginning */
                 (*offset)--;
-                tok = orderly_lex_number(lexer, (const unsigned char *) schemaText,
+                tok = orderly_lex_number(lexer,
+                                         (const unsigned char *) schemaText,
                                          schemaTextLen, offset);
                 goto lexed;
             }
@@ -405,10 +506,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
         }
     }
 
-
   lexed:
-    /* need to append to buffer if the buffer is in use or
-     * if it's an EOF token */
     if (tok != orderly_tok_error) {
         *outBuf = schemaText + startOffset;
         *outLen = *offset - startOffset;

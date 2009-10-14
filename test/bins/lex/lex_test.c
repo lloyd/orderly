@@ -33,7 +33,7 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_json_number: return "json_number";
         case orderly_tok_json_integer: return "json_integer";
         case orderly_tok_optional_marker: return "optional_marker";
-        case orderly_tok_assignment: return "assignment";
+        case orderly_tok_default_value: return "default_value";
     }
     return "unknown";
 }

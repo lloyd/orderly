@@ -58,7 +58,7 @@ typedef enum {
     orderly_tok_json_integer,
     orderly_tok_json_number,
     orderly_tok_optional_marker /* '?' */,
-    orderly_tok_assignment /* '=' */,
+    orderly_tok_default_value /* '=' <json text> */,
     orderly_tok_comma /* ',' */
 } orderly_tok;
 

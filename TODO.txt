@@ -1,0 +1,2 @@
+1. introduce macros in lexer for char reading and counter advancing to maintain correct line/char counts
+2. plenty of lexical errors to be added to tests
