@@ -10,6 +10,8 @@ end
 passed = 0
 total = 0
 
+puts "Running parse/lex tests:"
+
 Dir.glob(File.join(casesDir, "*.orderly")).each { |f| 
   got = ""
   IO.popen(lexBinary, "w+") { |lb|
@@ -17,14 +19,22 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     lb.close_write
     got = lb.read
   }
-  want = IO.read(f.sub(/orderly$/, "lexed"))
-  print "Lexing test <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>: "
-  if (got == want)
-    puts "ok"
-    passed += 1
+  wantFile = f.sub(/orderly$/, "lexed")
+
+  print "<#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>:\t "
+  if !File.exist? wantFile
+    puts "FAIL"    
+    puts "'goldfile' doesn't exist: #{wantFile}"
+    puts got
   else
-    puts "fail"
-    # XXX: give more information
+    want = IO.read(wantFile)
+    if (got == want)
+      puts "ok"
+      passed += 1
+    else
+      puts "FAIL"
+      # XXX: give more information
+    end
   end
   total += 1
 }
