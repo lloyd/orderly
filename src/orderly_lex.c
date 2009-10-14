@@ -116,6 +116,91 @@ keywordCheck(const unsigned char * str, unsigned int len)
     return orderly_tok_property_name;
 }
 
+
+#define OLC_READ_NEXT_CHAR if (*offset >= schemaTextLen) return orderly_tok_eof; c = schemaText[(*offset)++];
+
+/* lexing of JSON numbers */
+static orderly_tok
+orderly_lex_number(orderly_lexer lexer, const unsigned char * schemaText,
+                   unsigned int schemaTextLen, unsigned int * offset)
+{
+    unsigned char c;
+    orderly_tok tok = orderly_tok_json_integer;
+
+    OLC_READ_NEXT_CHAR;
+ 
+    /* optional leading minus */
+    if (c == '-') {
+        OLC_READ_NEXT_CHAR;
+    }
+    
+    /* a single zero, or a series of integers */
+    if (c == '0') {
+        OLC_READ_NEXT_CHAR;
+    }
+    else if (c >= '1' && c <= '9') {
+        do {
+            OLC_READ_NEXT_CHAR;
+        } while (c >= '0' && c <= '9');
+    }
+    else {
+        (*offset)--;
+        lexer->error = orderly_lex_missing_integer_after_minus;
+        return orderly_tok_error;
+    }
+    
+    /* optional fraction (indicates this is floating point) */
+    if (c == '.') {
+        int numRd = 0;
+        
+        OLC_READ_NEXT_CHAR;
+
+        while (c >= '0' && c <= '9') {
+            numRd++;
+            OLC_READ_NEXT_CHAR;
+        }
+ 
+        if (!numRd) {
+            (*offset)--;
+            lexer->error = orderly_lex_missing_integer_after_decimal;
+            return orderly_tok_error;
+        }
+        
+        tok = orderly_tok_json_number;
+    }
+    
+ 
+    /* optional exponent (indicates this is floating point) */
+    if (c == 'e' || c == 'E')
+    {
+        OLC_READ_NEXT_CHAR;
+ 
+        /* optional sign */
+        if (c == '+' || c == '-') {
+            OLC_READ_NEXT_CHAR;
+        }
+ 
+        if (c >= '0' && c <= '9') {
+            do {
+                OLC_READ_NEXT_CHAR;
+            } while (c >= '0' && c <= '9');
+        }
+        else {
+            (*offset)--;
+            lexer->error = orderly_lex_missing_integer_after_exponent;
+            return orderly_tok_error;
+        }
+        tok = orderly_tok_json_number;
+    }
+    
+    /* we always go "one too far" */
+    (*offset)--;
+    
+    return tok;
+    
+}
+
+
 /* a very basic extraction of JSON strings, we leave it up to the parser
  * to handle the more complicated bits of JSON, such as unescaping
  * and UTF8 validation
@@ -209,6 +294,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
         c = schemaText[(*offset)++];
 
         switch (c) {
+            case ',':
+                tok = orderly_tok_comma;
+                goto lexed;
             case '{':
                 tok = orderly_tok_left_curly;
                 goto lexed;
@@ -301,15 +389,15 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                                              schemaTextLen, offset);
                 goto lexed;
             }
-/*             case '-': */
-/*             case '0': case '1': case '2': case '3': case '4':  */
-/*             case '5': case '6': case '7': case '8': case '9': { */
-/*                 /\* integer parsing wants to start from the beginning *\/ */
-/*                 unreadChar(lexer, offset); */
-/*                 tok = orderly_lex_number(lexer, (const unsigned char *) jsonText, */
-/*                                       jsonTextLen, offset); */
-/*                 goto lexed; */
-/*             } */
+            case '-': 
+            case '0': case '1': case '2': case '3': case '4':  
+            case '5': case '6': case '7': case '8': case '9': { 
+                /* integer parsing wants to start from the beginning */
+                (*offset)--;
+                tok = orderly_lex_number(lexer, (const unsigned char *) schemaText,
+                                         schemaTextLen, offset);
+                goto lexed;
+            }
             default:
                 lexer->error = orderly_lex_invalid_char;
                 tok = orderly_tok_error;
@@ -344,6 +432,14 @@ orderly_lex_error_to_string(orderly_lex_error error)
             return "unterminated string encountered";
         case orderly_lex_unterminated_array:
             return "unterminated array encountered";
+        case orderly_lex_missing_integer_after_minus:
+            return "malformed number, a digit is required after the "
+                "minus sign.";
+        case orderly_lex_missing_integer_after_decimal:
+            return "malformed number, a digit is required after the "
+                "decimal point.";
+        case orderly_lex_missing_integer_after_exponent:
+            return "malformed number, a digit is required after the exponent.";
     }
     return "unknown error code";
 }

@@ -17,6 +17,7 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_right_curly: return "r_curly";
         case orderly_tok_lt:     return "lt";
         case orderly_tok_gt: return "gt";
+        case orderly_tok_comma: return "comma";
         case orderly_tok_kw_string: return "kw_string";
         case orderly_tok_kw_integer: return "kw_integer";
         case orderly_tok_kw_number: return "kw_number";
@@ -29,6 +30,8 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_property_name: return "property_name";
         case orderly_tok_json_string: return "json_string";
         case orderly_tok_json_array: return "json_array";
+        case orderly_tok_json_number: return "json_number";
+        case orderly_tok_json_integer: return "json_integer";
         case orderly_tok_optional_marker: return "optional_marker";
         case orderly_tok_assignment: return "assignment";
     }
