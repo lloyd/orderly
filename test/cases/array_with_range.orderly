@@ -1,0 +1,1 @@
+array { integer; } {0,10} myArrayOfSmallInts;
