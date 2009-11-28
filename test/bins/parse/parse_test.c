@@ -1,4 +1,5 @@
 #include "../../../src/orderly_parse.h"
+#include "../../../src/orderly_alloc.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -7,16 +8,22 @@
 
 #define MAX_INPUT_TEXT (1 << 20)
 
-static const char * nodeToStr(orderly_node * n)
+static void dumpNode(orderly_node * n, unsigned int indent)
 {
-    if (n) {
-        switch (n->t) {
-            case orderly_node_empty: return "empty";
-            case orderly_node_error: return "error";
-        }
+    printf("%p\n", (void *) n);
+}
+
+
+static const char * statusToStr(orderly_parse_status s)
+{
+    switch (s) {
+        case orderly_parse_s_ok: return "ok";
+        case orderly_parse_s_not_implemented: return "not_implemented";
+        case orderly_parse_s_prop_name_expected: return "prop_name_expected";
     }
     return "unknown";
 }
+
 
 int
 main(int argc, char ** argv) 
@@ -29,9 +36,20 @@ main(int argc, char ** argv)
         tot += rd;
 
     {
-        orderly_node * n = orderly_parse(NULL, inbuf, tot);
-        printf("%s\n", nodeToStr(n));
-        orderly_free_node(&n);
+        orderly_alloc_funcs oaf;
+        orderly_node * n;
+        orderly_parse_status s;
+
+        orderly_set_default_alloc_funcs(&oaf);
+
+        s = orderly_parse(&oaf, inbuf, tot, &n);
+        printf("VVVVVVVV (%s)\n", statusToStr(s));
+        dumpNode(n, 0); /* here's where we'll map over and output the returned tree */ 
+        printf("^^^^^^^^\n");
+        /* TODO: ugly alloc routine crap here, perhaps we should give the
+         *       ultimate client a parse handle and make the ownership of
+         *       the parse tree held by the parse handle? */
+        orderly_free_node(&oaf, &n);
     }
     
     return 0;

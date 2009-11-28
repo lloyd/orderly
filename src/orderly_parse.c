@@ -31,12 +31,109 @@
  */ 
 
 #include "orderly_parse.h"
+#include "orderly_lex.h"
+#include "orderly_alloc.h"
 
 #include <stdlib.h>
+#include <string.h>
 
-orderly_node * orderly_parse(orderly_alloc_funcs * alloc,
-                             const unsigned char * schemaText,
-                             const unsigned int schemaTextLen)
+static orderly_parse_status
+orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
+                                const unsigned char * schemaText,
+                                const unsigned int schemaTextLen,
+                                orderly_lexer lxr,
+                                unsigned int * offset,
+                                orderly_node * n)
 {
-    return NULL;
+    return orderly_parse_s_not_implemented;
+}
+
+
+static orderly_parse_status
+orderly_parse_property_name(orderly_alloc_funcs * alloc,
+                            const unsigned char * schemaText,
+                            const unsigned int schemaTextLen,
+                            orderly_lexer lxr,
+                            unsigned int * offset,
+                            orderly_node * n)
+{
+    const unsigned char * outBuf = NULL;
+    unsigned int outLen = 0;
+    orderly_tok t;
+
+    if (n == NULL) return 0;
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    
+    if (t != orderly_tok_property_name) {
+        return orderly_parse_s_prop_name_expected;
+    }
+
+    n->name = OR_MALLOC(alloc, outLen + 1);
+    memcpy((void *)(n->name), (void *) outBuf, outLen);
+    ((char *) n->name)[outLen] = 0;
+
+    return orderly_parse_s_ok;
+}
+
+
+static orderly_parse_status
+orderly_parse_named_entry(orderly_alloc_funcs * alloc,
+                          const unsigned char * schemaText,
+                          const unsigned int schemaTextLen,
+                          orderly_lexer lxr,
+                          unsigned int * offset,
+                          orderly_node ** n)
+{
+    orderly_tok t;
+    orderly_parse_status s;
+
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+    
+    if (t == orderly_tok_kw_string) {
+        return orderly_parse_s_not_implemented;
+    } else if (t == orderly_tok_kw_null) {
+        *n = orderly_alloc_node(alloc, orderly_node_null);
+        if ((s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+                                             lxr, offset, *n)) || 
+            (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
+                                                 lxr, offset, *n)))
+        {
+            orderly_free_node(alloc, n);
+        }
+    } else {
+        s = orderly_parse_s_not_implemented;        
+    }
+
+    return s;
+}
+
+orderly_parse_status
+orderly_parse(orderly_alloc_funcs * alloc,
+              const unsigned char * schemaText,
+              const unsigned int schemaTextLen,
+              orderly_node ** n)
+{
+    unsigned int offset = 0;
+    orderly_parse_status s = orderly_parse_s_ok;
+    orderly_lexer lxr;
+
+    {
+        static orderly_alloc_funcs orderlyAllocFuncBuffer;
+        static orderly_alloc_funcs * orderlyAllocFuncBufferPtr = NULL;
+
+        if (orderlyAllocFuncBufferPtr == NULL) {
+            orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
+            orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
+        }
+        if (alloc == NULL) alloc = orderlyAllocFuncBufferPtr;
+    }
+
+    *n = NULL;
+    
+    lxr = orderly_lex_alloc(alloc);
+    s = orderly_parse_named_entry(alloc, schemaText, schemaTextLen, lxr,
+                                  &offset, n);
+    orderly_lex_free(lxr);
+    
+    return s;
 }

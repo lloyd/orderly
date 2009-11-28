@@ -393,8 +393,8 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
     unsigned char c;
     unsigned int startOffset = *offset;
 
-    *outBuf = NULL;
-    *outLen = 0;
+    if (outBuf) *outBuf = NULL;
+    if (outLen) *outLen = 0;
 
     for (;;) {
         assert(*offset <= schemaTextLen);
@@ -540,9 +540,10 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
 
   lexed:
     if (tok != orderly_tok_error) {
-        *outBuf = schemaText + startOffset;
-        *outLen = *offset - startOffset;
-        lexer->charOff += *outLen;
+        unsigned int ol = *offset - startOffset;
+        if (outBuf) *outBuf = schemaText + startOffset;
+        if (outLen) *outLen = ol;
+        lexer->charOff += ol;
     }
 
     return tok;
@@ -598,12 +599,5 @@ orderly_tok orderly_lex_peek(orderly_lexer lexer,
                              const unsigned char * jsonText,
                              unsigned int jsonTextLen, unsigned int offset)
 {
-    const unsigned char * outBuf;
-    unsigned int outLen;
-    orderly_tok tok;
-    
-    tok = orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset,
-                          &outBuf, &outLen);
-    
-    return tok;
+    return orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset, NULL, NULL);
 }

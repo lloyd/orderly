@@ -36,8 +36,16 @@
 #include "api/orderly_common.h"
 #include "api/orderly_node.h"
 
-orderly_node * orderly_parse(orderly_alloc_funcs * alloc,
-                             const unsigned char * schemaText,
-                             const unsigned int schemaTextLen);
+typedef enum {
+    orderly_parse_s_ok,
+    orderly_parse_s_not_implemented,
+    orderly_parse_s_prop_name_expected
+} orderly_parse_status;
+
+orderly_parse_status
+orderly_parse(orderly_alloc_funcs * alloc,
+              const unsigned char * schemaText,
+              const unsigned int schemaTextLen,
+              orderly_node ** n);
 
 #endif

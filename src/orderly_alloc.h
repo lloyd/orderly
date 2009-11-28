@@ -45,6 +45,6 @@
 #define OR_FREE(afs, ptr) (afs)->free((afs)->ctx, (ptr))
 #define OR_REALLOC(afs, ptr, sz) (afs)->realloc((afs)->ctx, (ptr), (sz))
 
-void orderly_set_default_alloc_funcs(orderly_alloc_funcs * yaf);
+void orderly_set_default_alloc_funcs(orderly_alloc_funcs * oaf);
 
 #endif

@@ -31,14 +31,25 @@
  */ 
 
 #include "api/orderly_node.h"
+#include "orderly_alloc.h"
 
 #include <stdlib.h>
+#include <string.h>
 
-void orderly_free_node(orderly_node ** node)
+void orderly_free_node(orderly_alloc_funcs * alloc,
+                       orderly_node ** node)
 {
+    if (node && *node && (*node)->name) OR_FREE(alloc, (void *)((*node)->name));
+    OR_FREE(alloc, *node);
+    *node = NULL;
 }
 
-orderly_node * orderly_alloc_node(void)
+orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,
+                                  orderly_node_type t)
 {
-    return NULL;
+    orderly_node * n = (orderly_node *)
+        OR_MALLOC(alloc, sizeof(orderly_node));
+    memset((void *) n, 0, sizeof(orderly_node));
+    n->t = t;
+    return n;
 }

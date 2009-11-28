@@ -30,21 +30,30 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __ORDERLY_LEX_H__
-#define __ORDERLY_LEX_H__
+#ifndef __ORDERLY_NODE_H__
+#define __ORDERLY_NODE_H__
 
 #include "orderly_common.h"
 
 typedef enum {
     orderly_node_empty,
-    orderly_node_error
+    orderly_node_null
 } orderly_node_type;
 
 typedef struct {
     orderly_node_type t;
+    const char * name;
+/*
+    union 
+    {
+    } u;
+*/
 } orderly_node;
 
-void orderly_free_node(orderly_node ** node);
-orderly_node * orderly_alloc_node(void);
+void orderly_free_node(orderly_alloc_funcs * alloc,
+                       orderly_node ** node);
+
+orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,
+                                  orderly_node_type t);
 
 #endif
