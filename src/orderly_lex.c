@@ -201,6 +201,27 @@ orderly_lex_number(orderly_lexer lexer, const unsigned char * schemaText,
 }
 
 
+/* lexing of perl compatible regular expresions */
+static orderly_tok
+orderly_lex_regex(orderly_lexer lexer, const unsigned char * schemaText,
+                  unsigned int schemaTextLen, unsigned int * offset)
+{
+    unsigned char c;
+
+    /* TODO: PCRE's must be more complex than this.  How much 
+     * regex syntax do we need to understand to successfully
+     * scan one? */
+    do {
+        OLC_READ_NEXT_CHAR;            
+        if (c == '\\') {
+            OLC_READ_NEXT_CHAR;            
+            continue;
+        }
+    } while(c != '/');
+    
+    return orderly_tok_regex;
+}
+
 /* a very basic extraction of JSON strings, we leave it up to the parser
  * to handle the more complicated bits of JSON, such as unescaping
  * and UTF8 validation
@@ -424,12 +445,11 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 if ('/' != schemaText[*offset])
                 {
                     /* this must be a regexp */
-                    /* XXX: implement me! */
-                    lexer->error = orderly_lex_not_implemented;
-                    tok = orderly_tok_error;
+                    tok = orderly_lex_regex(lexer, schemaText,
+                                            schemaTextLen, offset);
                     goto lexed;
                 }
-                /* intentional fallthrough */
+                /* intentional fallthrough (this was a '//' comment) */
             case '#': {
                 /* comment!  ignore until end-of-line */
                 do {

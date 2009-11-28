@@ -1,0 +1,5 @@
+(  1,  6): 'string' kw_string
+(  1, 11): 'name' property_name
+(  1, 72): '/^((john)|(bob)|(susan)|(георги)|(цветанка))$/' regex
+(  1, 73): ';' semicolon
+(  2,  0): '' eof

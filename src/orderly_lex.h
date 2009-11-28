@@ -59,7 +59,8 @@ typedef enum {
     orderly_tok_json_number,
     orderly_tok_optional_marker /* '?' */,
     orderly_tok_default_value /* '=' <json text> */,
-    orderly_tok_comma /* ',' */
+    orderly_tok_comma /* ',' */,
+    orderly_tok_regex
 } orderly_tok;
 
 typedef struct orderly_lexer_t * orderly_lexer;
