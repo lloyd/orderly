@@ -1,5 +1,8 @@
 #!/usr/bin/env ruby
 
+# arguments are a string that must match the test name
+substrpat = ARGV.length ? ARGV[0] : ""
+
 thisDir = File.dirname(__FILE__)
 casesDir = File.join(thisDir, "cases")
 lexBinary = File.join(thisDir, "..", "build", "test", "bins", "lex", "lex_test")
@@ -14,9 +17,11 @@ end
 passed = 0
 total = 0
 
-puts "Running parse/lex tests:"
+puts "Running parse/lex tests: "
+puts "(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
 
 Dir.glob(File.join(casesDir, "*.orderly")).each { |f| 
+  next if substrpat && substrpat.length > 0 && !f.include?(substrpat)
   [
     [ "Lexing", f.sub(/orderly$/, "lexed"), lexBinary ],
     [ "Parsing", f.sub(/orderly$/, "parsed"), parseBinary ]
