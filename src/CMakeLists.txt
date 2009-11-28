@@ -28,9 +28,10 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-SET (SRCS orderly_lex.c orderly_alloc.c orderly_buf.c)
-SET (HDRS orderly_common.h orderly_lex.h)
-SET (PUB_HDRS)
+SET (SRCS orderly_node.c orderly_lex.c orderly_alloc.c orderly_buf.c
+          orderly_parse.c)
+SET (HDRS orderly_common.h orderly_lex.h orderly_parse.h)
+SET (PUB_HDRS api/orderly_common.h api/orderly_node.h)
 
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
