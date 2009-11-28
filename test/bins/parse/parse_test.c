@@ -27,6 +27,7 @@ static void dumpNode(orderly_node * n, unsigned int indent)
         if (n->default_value) printf("%s--> default: %s\n",
                                         indentStr, n->default_value);        
         if (n->values) printf("%s--> enum: %s\n", indentStr, n->values);        
+        if (n->requires) printf("%s--> requires: %s\n", indentStr, n->requires);        
     } else {
         printf("%s(null)\n", indentStr);
     }

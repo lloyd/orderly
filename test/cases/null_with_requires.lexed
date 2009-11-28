@@ -1,0 +1,7 @@
+(  1,  4): 'null' kw_null
+(  1, 12): 'likeAir' property_name
+(  1, 14): '<' lt
+(  1, 26): 'anotherValue' property_name
+(  1, 27): '>' gt
+(  1, 28): ';' semicolon
+(  3,  0): '' eof

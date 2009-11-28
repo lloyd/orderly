@@ -39,9 +39,15 @@
 void orderly_free_node(orderly_alloc_funcs * alloc,
                        orderly_node ** node)
 {
-    if (node && *node && (*node)->name) OR_FREE(alloc, (void *)((*node)->name));
-    OR_FREE(alloc, *node);
-    *node = NULL;
+    if (node && *node) {
+        if ((*node)->name) OR_FREE(alloc, (void *)((*node)->name));
+        if ((*node)->values) OR_FREE(alloc, (void *)((*node)->values));
+        if ((*node)->default_value) OR_FREE(alloc, (void *)((*node)->default_value));
+        if ((*node)->requires) OR_FREE(alloc, (void *)((*node)->requires));
+        OR_FREE(alloc, *node);
+        *node = NULL;
+    }
+    
 }
 
 orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,

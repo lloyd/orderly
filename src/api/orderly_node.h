@@ -51,6 +51,8 @@ typedef struct {
     const char * values;
     /* a json representation of this members default value */
     const char * default_value;
+    /* Does thes existence of this element require any others? */
+    const char * requires;
     /* is this node optional? */
     unsigned int optional;
 /*

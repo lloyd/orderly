@@ -69,13 +69,13 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
     }
 
-    /* optional_default_value? */
+    /* optional_requires? */
     if (t == orderly_tok_lt) {
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
         if (t != orderly_tok_property_name) {
             return orderly_parse_s_prop_name_expected;
         }
-        BUF_STRDUP(n->default_value, alloc, outBuf, outLen);
+        BUF_STRDUP(n->requires, alloc, outBuf, outLen);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
         if (t != orderly_tok_gt) {
             return orderly_parse_s_gt_expected;
