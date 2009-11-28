@@ -51,8 +51,8 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
         # XXX: give more information
       end
     end
+    total += 1
   }
-  total += 1
 }
 
 puts "#{passed}/#{total} tests successful"
