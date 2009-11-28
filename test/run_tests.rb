@@ -22,6 +22,7 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     [ "Parsing", f.sub(/orderly$/, "parsed"), parseBinary ]
   ].each { |testType|
     what, wantFile, program = *testType
+    gotFile = wantFile + ".got"
     got = ""
     IO.popen(program, "w+") { |lb|
       File.open(f, "r").each {|l| lb.write(l)}
@@ -32,7 +33,8 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     print "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>:\t "
     if !File.exist? wantFile
       puts "FAIL"    
-      puts "'goldfile' doesn't exist: #{wantFile}"
+      puts "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
+      File.open(gotFile, "w+") { |gf| gf.write got }
       puts got
     else
       want = IO.read(wantFile)
