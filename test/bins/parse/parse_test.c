@@ -10,7 +10,17 @@
 
 static void dumpNode(orderly_node * n, unsigned int indent)
 {
-    printf("%p\n", (void *) n);
+    if (n) {
+        const char * type = "unknown";
+        switch (n->t) {
+            case orderly_node_empty: type = "empty"; break;
+            case orderly_node_null: type = "null"; break;
+        }
+        printf("(%p) %s [%s]\n", (void *) n, n->name, type);        
+    } else {
+        printf("(null)\n");
+    }
+    
 }
 
 
@@ -20,6 +30,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_ok: return "ok";
         case orderly_parse_s_not_implemented: return "not_implemented";
         case orderly_parse_s_prop_name_expected: return "prop_name_expected";
+        case orderly_parse_s_gt_expected: return "gt_expected";
     }
     return "unknown";
 }

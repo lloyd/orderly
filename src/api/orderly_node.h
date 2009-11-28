@@ -43,6 +43,16 @@ typedef enum {
 typedef struct {
     orderly_node_type t;
     const char * name;
+    /* a json array of possible values
+     * XXX: sure not doing our validators any favors by leaving
+     *      this as a blob of text.  otoh, we'd orderly to be
+     *      *dependent* on a means of parsing and representing json
+     *      to make this more convenient */
+    const char * values;
+    /* a json representation of this members default value */
+    const char * default_value;
+    /* is this node optional? */
+    unsigned int optional;
 /*
     union 
     {

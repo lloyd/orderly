@@ -37,6 +37,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUF_STRDUP(dst, a, ob, ol)               \
+    (dst) = OR_MALLOC((a), (ol) + 1);            \
+    memcpy((void *)(dst), (void *) (ob), (ol));  \
+    ((char *) (dst))[(ol)] = 0;
+
+
 static orderly_parse_status
 orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
                                 const unsigned char * schemaText,
@@ -45,7 +51,48 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
                                 unsigned int * offset,
                                 orderly_node * n)
 {
-    return orderly_parse_s_not_implemented;
+    orderly_tok t;
+    const unsigned char * outBuf = NULL;
+    unsigned int outLen = 0;
+
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+
+    /* optional_enum_values? */
+    if (t == orderly_tok_json_array) {
+        BUF_STRDUP(n->values, alloc, outBuf, outLen);
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+    }
+
+    /* optional_default_value? */
+    if (t == orderly_tok_default_value) {
+        BUF_STRDUP(n->default_value, alloc, outBuf, outLen);
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+    }
+
+    /* optional_default_value? */
+    if (t == orderly_tok_lt) {
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        if (t != orderly_tok_property_name) {
+            return orderly_parse_s_prop_name_expected;
+        }
+        BUF_STRDUP(n->default_value, alloc, outBuf, outLen);
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        if (t != orderly_tok_gt) {
+            return orderly_parse_s_gt_expected;
+        }
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+    }
+
+    /* optional_default_value? */    
+    if (t == orderly_tok_optional_marker) {    
+        n->optional = 1;
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+    }
+
+    /* "unlex" the last token.  let higher level code deal with it */
+    offset -= outLen;
+    
+    return orderly_parse_s_ok;
 }
 
 
@@ -68,9 +115,7 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
         return orderly_parse_s_prop_name_expected;
     }
 
-    n->name = OR_MALLOC(alloc, outLen + 1);
-    memcpy((void *)(n->name), (void *) outBuf, outLen);
-    ((char *) n->name)[outLen] = 0;
+    BUF_STRDUP(n->name, alloc, outBuf, outLen);
 
     return orderly_parse_s_ok;
 }

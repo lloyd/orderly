@@ -39,7 +39,8 @@
 typedef enum {
     orderly_parse_s_ok,
     orderly_parse_s_not_implemented,
-    orderly_parse_s_prop_name_expected
+    orderly_parse_s_prop_name_expected,
+    orderly_parse_s_gt_expected
 } orderly_parse_status;
 
 orderly_parse_status
