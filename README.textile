@@ -223,6 +223,7 @@ h2. grammar
 bc.. ----------------------------------------
 
 orderly_schema
+    named_entry ';'
     named_entry
 
 named_entries
