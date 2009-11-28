@@ -5,24 +5,33 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define MAX_INPUT_TEXT (1 << 20)
 
 static void dumpNode(orderly_node * n, unsigned int indent)
 {
+    char * indentStr = (char *) malloc(indent * 4 + 1);
+    memset((void *) indentStr, ' ', indent);
+    indentStr[indent] = 0;
+
     if (n) {
         const char * type = "unknown";
         switch (n->t) {
             case orderly_node_empty: type = "empty"; break;
             case orderly_node_null: type = "null"; break;
         }
-        printf("(%p) %s [%s]\n", (void *) n, n->name, type);        
+        printf("%s%s [%s] %s\n", indentStr, n->name, type,
+               n->optional ? "OPTIONAL" : "");        
+        if (n->default_value) printf("%s--> default: %s\n",
+                                        indentStr, n->default_value);        
+        if (n->values) printf("%s--> enum: %s\n", indentStr, n->values);        
     } else {
-        printf("(null)\n");
+        printf("%s(null)\n", indentStr);
     }
-    
+    free(indentStr);
 }
-
 
 static const char * statusToStr(orderly_parse_status s)
 {
@@ -54,9 +63,8 @@ main(int argc, char ** argv)
         orderly_set_default_alloc_funcs(&oaf);
 
         s = orderly_parse(&oaf, inbuf, tot, &n);
-        printf("VVVVVVVV (%s)\n", statusToStr(s));
+        printf("parse complete (%s):\n", statusToStr(s));
         dumpNode(n, 0); /* here's where we'll map over and output the returned tree */ 
-        printf("^^^^^^^^\n");
         /* TODO: ugly alloc routine crap here, perhaps we should give the
          *       ultimate client a parse handle and make the ownership of
          *       the parse tree held by the parse handle? */
