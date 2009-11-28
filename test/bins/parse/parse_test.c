@@ -21,6 +21,7 @@ static void dumpNode(orderly_node * n, unsigned int indent)
         switch (n->t) {
             case orderly_node_empty: type = "empty"; break;
             case orderly_node_null: type = "null"; break;
+            case orderly_node_string: type = "string"; break;
         }
         printf("%s%s [%s] %s\n", indentStr, n->name, type,
                n->optional ? "OPTIONAL" : "");        
@@ -41,6 +42,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_not_implemented: return "not_implemented";
         case orderly_parse_s_prop_name_expected: return "prop_name_expected";
         case orderly_parse_s_gt_expected: return "gt_expected";
+        case orderly_parse_s_prop_name_syntax_error: return "prop_name_syntax_error";
     }
     return "unknown";
 }

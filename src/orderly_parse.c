@@ -95,6 +95,65 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
     return orderly_parse_s_ok;
 }
 
+static orderly_parse_status
+orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
+                            const unsigned char * schemaText,
+                            const unsigned int schemaTextLen,
+                            orderly_lexer lxr,
+                            unsigned int * offset,
+                            orderly_node * n)
+{
+    /* XXX: handle optional regex! */
+    return orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, lxr, offset, n);
+}
+
+
+/* in-place unescaping of a json string */
+static char *
+unescapeJsonString(orderly_alloc_funcs * alloc,
+                   const char * json,
+                   unsigned int len)
+{
+#define FREE_AND_BAIL { free(str); str = NULL; return str; }
+#define CHECK_LEN if ((json - orig) >= len) FREE_AND_BAIL;
+
+    char * str = NULL;
+    char * p = NULL;
+    const char * orig = json;
+
+    if (json && len > 0) {
+        p = str = OR_MALLOC(alloc, len);
+        if (*json++ != '"') FREE_AND_BAIL;
+        /* now for string content that we'll copy over as we go */
+        do
+        {
+            CHECK_LEN;
+            switch(*json++) {
+                /* the end, my friend */  
+                case '"': goto i_want_to_break_free;
+                case '\\':
+                    CHECK_LEN;
+                    switch(*json++) {
+                        case 'f': *p++ = '\f'; break;
+                        case 'r': *p++ = '\r'; break;
+                        case 'n': *p++ = '\n'; break;
+                        case 't': *p++ = '\t'; break;
+                        case 'b': *p++ = '\b'; break;
+                        /* TODO: support decoding of \u escaping in *property* names? */
+                        default: *p++ = *(json-1);
+                    }
+                    break;
+                default: *p++ = *(json-1);
+            }
+        } while (1);
+      i_want_to_break_free:
+        *p = 0;
+    }
+    
+    return str;
+}
+
+                                 
 
 static orderly_parse_status
 orderly_parse_property_name(orderly_alloc_funcs * alloc,
@@ -111,14 +170,32 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
     if (n == NULL) return 0;
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     
-    if (t != orderly_tok_property_name) {
+    if (t == orderly_tok_property_name) {
+        BUF_STRDUP(n->name, alloc, outBuf, outLen);
+    } else if (t == orderly_tok_json_string) {
+        n->name = unescapeJsonString(alloc, (const char *) outBuf, outLen);        
+        if (n->name == NULL) {
+            return orderly_parse_s_prop_name_syntax_error;
+        }
+    } else {
         return orderly_parse_s_prop_name_expected;
     }
 
-    BUF_STRDUP(n->name, alloc, outBuf, outLen);
-
     return orderly_parse_s_ok;
 }
+
+static orderly_parse_status
+orderly_parse_string_prefix(orderly_alloc_funcs * alloc,
+                            const unsigned char * schemaText,
+                            const unsigned int schemaTextLen,
+                            orderly_lexer lxr,
+                            unsigned int * offset,
+                            orderly_node * n)
+{
+    return orderly_parse_property_name(alloc, schemaText, schemaTextLen, lxr, offset, n);
+    /* XXX: handle optional range! */
+}
+
 
 
 static orderly_parse_status
@@ -135,7 +212,14 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
     
     if (t == orderly_tok_kw_string) {
-        return orderly_parse_s_not_implemented;
+        *n = orderly_alloc_node(alloc, orderly_node_string);
+        if ((s = orderly_parse_string_prefix(alloc, schemaText, schemaTextLen,
+                                             lxr, offset, *n)) || 
+            (s = orderly_parse_string_suffix(alloc, schemaText, schemaTextLen,
+                                             lxr, offset, *n)))
+        {
+            orderly_free_node(alloc, n);
+        }
     } else if (t == orderly_tok_kw_null) {
         *n = orderly_alloc_node(alloc, orderly_node_null);
         if ((s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,

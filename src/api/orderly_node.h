@@ -37,7 +37,8 @@
 
 typedef enum {
     orderly_node_empty,
-    orderly_node_null
+    orderly_node_null,
+    orderly_node_string
 } orderly_node_type;
 
 typedef struct {
