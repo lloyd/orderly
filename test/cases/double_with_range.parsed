@@ -1,0 +1,3 @@
+parse complete (ok):
+weight [number] 
+--> range: {0,1}

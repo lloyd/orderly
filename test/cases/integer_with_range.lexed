@@ -1,0 +1,9 @@
+(  1,  7): 'integer' kw_integer
+(  1,  9): '{' l_curly
+(  1, 14): '-100' json_integer
+(  1, 15): ',' comma
+(  1, 19): '100' json_integer
+(  1, 21): '}' r_curly
+(  1, 29): 'myrange' property_name
+(  1, 30): ';' semicolon
+(  3,  0): '' eof

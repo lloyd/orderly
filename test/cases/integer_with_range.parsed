@@ -1,0 +1,3 @@
+parse complete (ok):
+myrange [integer] 
+--> range: {-100,100}

@@ -1,0 +1,9 @@
+(  1,  6): 'number' kw_number
+(  1,  8): '{' l_curly
+(  1, 11): '0.0' json_number
+(  1, 12): ',' comma
+(  1, 15): '1.0' json_number
+(  1, 16): '}' r_curly
+(  1, 23): 'weight' property_name
+(  1, 24): ';' semicolon
+(  3,  0): '' eof
