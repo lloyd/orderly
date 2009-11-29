@@ -1,11 +1,14 @@
-(  1,  1): '{' l_curly
-(  1,  8): 'string' kw_string
-(  1, 13): 'mood' property_name
-(  1, 39): '[ "happy", "sad", "meh" ]' json_array
-(  1, 40): ';' semicolon
-(  1, 48): 'integer' kw_integer
-(  1, 61): 'secretOfLife' property_name
-(  1, 71): '[ 7, 42 ]' json_array
-(  1, 72): ';' semicolon
-(  1, 74): '}' r_curly
-(  3,  0): '' eof
+(  1,  6): 'object' kw_object
+(  1,  8): '{' l_curly
+(  1, 15): 'string' kw_string
+(  1, 20): 'mood' property_name
+(  1, 46): '[ "happy", "sad", "meh" ]' json_array
+(  1, 47): ';' semicolon
+(  1, 55): 'integer' kw_integer
+(  1, 68): 'secretOfLife' property_name
+(  1, 78): '[ 7, 42 ]' json_array
+(  1, 79): ';' semicolon
+(  1, 81): '}' r_curly
+(  1, 85): 'obj' property_name
+(  1, 86): ';' semicolon
+(  4,  0): '' eof

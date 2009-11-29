@@ -1,2 +1,3 @@
-{ string mood [ "happy", "sad", "meh" ]; integer secretOfLife [ 7, 42 ]; }
+object { string mood [ "happy", "sad", "meh" ]; integer secretOfLife [ 7, 42 ]; } obj;
+
 
