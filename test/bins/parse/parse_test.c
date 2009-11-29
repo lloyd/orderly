@@ -45,8 +45,8 @@
 static void dumpNode(orderly_node * n, unsigned int indent)
 {
     char * indentStr = (char *) malloc(indent * 4 + 1);
-    memset((void *) indentStr, ' ', indent);
-    indentStr[indent] = 0;
+    memset((void *) indentStr, ' ', indent * 4);
+    indentStr[indent*4] = 0;
 
     if (n) {
         const char * type = "unknown";
@@ -58,6 +58,7 @@ static void dumpNode(orderly_node * n, unsigned int indent)
             case orderly_node_any: type = "any"; break;
             case orderly_node_integer: type = "integer"; break;
             case orderly_node_number: type = "number"; break;
+            case orderly_node_object: type = "object"; break;
         }
         printf("%s%s [%s] %s\n", indentStr, n->name, type,
                n->optional ? "OPTIONAL" : "");        
@@ -79,7 +80,13 @@ static void dumpNode(orderly_node * n, unsigned int indent)
                 printf("%ld", n->range.rhs.i);
             printf("}\n");
         }
-        
+        if (n->child) {
+            printf("%schildren:\n", indentStr);
+            dumpNode(n->child, indent + 1);
+        }
+        if (n->sibling) {
+            dumpNode(n->sibling, indent);
+        }
     } else {
         printf("%s(null)\n", indentStr);
     }
@@ -99,6 +106,8 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_malformed_range: return "malformed_range";
         case orderly_parse_s_integer_overflow: return "integer_overflow";
         case orderly_parse_s_numeric_parse_error: return "numeric_parse_error";
+        case orderly_parse_s_left_curly_expected: return "left_curly_expected";
+        case orderly_parse_s_right_curly_expected: return "right_curly_expected";
     }
     return "unknown";
 }

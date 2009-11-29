@@ -42,7 +42,8 @@ typedef enum {
     orderly_node_boolean,
     orderly_node_any,
     orderly_node_integer,
-    orderly_node_number
+    orderly_node_number,
+    orderly_node_object
 } orderly_node_type;
 
 #define ORDERLY_RANGE_LHS_INT 0x1

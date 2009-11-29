@@ -94,7 +94,7 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
     }
 
     /* "unlex" the last token.  let higher level code deal with it */
-    offset -= outLen;
+    *offset -= outLen;
     
     return orderly_parse_s_ok;
 }
@@ -310,6 +310,64 @@ orderly_parse_optional_range(orderly_alloc_funcs * alloc,
     return s;
 }
 
+/* forward decl neccesitated by mutual recursion */
+static orderly_parse_status
+orderly_parse_named_entry(orderly_alloc_funcs * alloc,
+                          const unsigned char * schemaText,
+                          const unsigned int schemaTextLen,
+                          orderly_lexer lxr,
+                          unsigned int * offset,
+                          orderly_node ** n);
+
+
+static orderly_parse_status
+orderly_parse_named_entries(orderly_alloc_funcs * alloc,
+                            const unsigned char * schemaText,
+                            const unsigned int schemaTextLen,
+                            orderly_lexer lxr,
+                            unsigned int * offset,
+                            orderly_node ** n)
+{
+    /*
+     * named_entries
+     *     named_entry ';' named_entries
+     *     named_entry 
+     *     # nothing
+     *
+     */
+    orderly_parse_status s = orderly_parse_s_ok;
+    orderly_tok t = orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset);
+
+    if (t == orderly_tok_kw_string ||
+        t == orderly_tok_kw_integer ||
+        t == orderly_tok_kw_number ||
+        t == orderly_tok_kw_boolean ||
+        t == orderly_tok_kw_null ||
+        t == orderly_tok_kw_any ||
+        t == orderly_tok_kw_array ||
+        t == orderly_tok_kw_object ||
+        t == orderly_tok_kw_union)
+    {
+        /* looks like we got a named entry! */
+        s = orderly_parse_named_entry(alloc, schemaText, schemaTextLen, lxr, offset, n);
+        if (s == orderly_parse_s_ok) {
+            /* optionally consume a semicolon */
+            if (orderly_tok_semicolon == orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset))
+            {
+                (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+                /* if a semicolon is present, we'll try to lex another named entry, recursively */ 
+                s = orderly_parse_named_entries(alloc, schemaText, schemaTextLen,
+                                                lxr, offset, &((*n)->sibling));
+                if (orderly_parse_s_ok != s)
+                {
+                    orderly_free_node(alloc, n);            
+                }
+            }
+        }
+    }
+
+    return s;
+}
 
 static orderly_parse_status
 orderly_parse_named_entry(orderly_alloc_funcs * alloc,
@@ -324,7 +382,8 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
 
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
     
-    if (t == orderly_tok_kw_string) {
+    if (t == orderly_tok_kw_string)
+    {
         *n = orderly_alloc_node(alloc, orderly_node_string);
         if ((s = orderly_parse_optional_range(alloc, schemaText, schemaTextLen,
                                              lxr, offset, *n)) || 
@@ -335,9 +394,9 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
         {
             orderly_free_node(alloc, n);
         }
-    } else if (t == orderly_tok_kw_null ||
-               t == orderly_tok_kw_boolean ||
-               t == orderly_tok_kw_any)
+    }
+    else if (t == orderly_tok_kw_null || t == orderly_tok_kw_boolean ||
+             t == orderly_tok_kw_any)
     {
         if (t == orderly_tok_kw_null) *n = orderly_alloc_node(alloc, orderly_node_null);
         else if (t == orderly_tok_kw_boolean) *n = orderly_alloc_node(alloc, orderly_node_boolean);
@@ -350,8 +409,8 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
         {
             orderly_free_node(alloc, n);
         }
-    } else if (t == orderly_tok_kw_integer ||
-               t == orderly_tok_kw_number)
+    }
+    else if (t == orderly_tok_kw_integer || t == orderly_tok_kw_number)
     {
         if (t == orderly_tok_kw_integer) *n = orderly_alloc_node(alloc, orderly_node_integer);
         else if (t == orderly_tok_kw_number) *n = orderly_alloc_node(alloc, orderly_node_number);
@@ -365,8 +424,40 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
         {
             orderly_free_node(alloc, n);
         }
+    }
+    else if (t == orderly_tok_kw_object)
+    {
+        *n = orderly_alloc_node(alloc, orderly_node_object);
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+        if (t != orderly_tok_left_curly) {
+            orderly_free_node(alloc, n);            
+            return orderly_parse_s_left_curly_expected;
+        }
 
-    } else {
+        /* now parse named entries (a.k.a. kiddies) */
+        s = orderly_parse_named_entries(alloc, schemaText, schemaTextLen,
+                                        lxr, offset, &((*n)->child));
+        if (orderly_parse_s_ok != s)
+        {
+            orderly_free_node(alloc, n);            
+        }
+        else
+        {
+            t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+            if (t != orderly_tok_right_curly) {
+                orderly_free_node(alloc, n);            
+                s = orderly_parse_s_right_curly_expected;
+            } else if ((s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+                                                        lxr, offset, *n)) || 
+                       (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
+                                                            lxr, offset, *n)))
+            {
+                orderly_free_node(alloc, n);                            
+            }
+        }
+    }
+    else
+    {
         s = orderly_parse_s_expected_schema_entry; /* a.k.a. named_entry */
     }
 
@@ -404,6 +495,10 @@ orderly_parse(orderly_alloc_funcs * alloc,
     if (s == orderly_parse_s_ok) {
         orderly_tok t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset,
                                         NULL, NULL);
+        if (t == orderly_tok_semicolon) {
+            t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset, NULL, NULL);            
+        }
+        
         if (t != orderly_tok_eof) {
             s = orderly_parse_s_junk_at_end_of_input;
             if (*n) orderly_free_node(alloc, n);

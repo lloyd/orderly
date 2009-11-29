@@ -1,0 +1,6 @@
+parse complete (ok):
+myobject [object] 
+children:
+    foo [string] 
+    bar [integer] 
+    baz [number] 
