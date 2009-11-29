@@ -22,6 +22,8 @@ static void dumpNode(orderly_node * n, unsigned int indent)
             case orderly_node_empty: type = "empty"; break;
             case orderly_node_null: type = "null"; break;
             case orderly_node_string: type = "string"; break;
+            case orderly_node_boolean: type = "boolean"; break;
+            case orderly_node_any: type = "any"; break;
         }
         printf("%s%s [%s] %s\n", indentStr, n->name, type,
                n->optional ? "OPTIONAL" : "");        

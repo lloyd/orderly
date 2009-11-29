@@ -220,8 +220,14 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
         {
             orderly_free_node(alloc, n);
         }
-    } else if (t == orderly_tok_kw_null) {
-        *n = orderly_alloc_node(alloc, orderly_node_null);
+    } else if (t == orderly_tok_kw_null ||
+               t == orderly_tok_kw_boolean ||
+               t == orderly_tok_kw_any)
+    {
+        if (t == orderly_tok_kw_null) *n = orderly_alloc_node(alloc, orderly_node_null);
+        else if (t == orderly_tok_kw_boolean) *n = orderly_alloc_node(alloc, orderly_node_boolean);
+        else if (t == orderly_tok_kw_any) *n = orderly_alloc_node(alloc, orderly_node_any);
+
         if ((s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
                                              lxr, offset, *n)) || 
             (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
