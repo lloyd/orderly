@@ -64,6 +64,20 @@ static void dumpNode(orderly_node * n, unsigned int indent)
         if (n->values) printf("%s--> enum: %s\n", indentStr, n->values);        
         if (n->requires) printf("%s--> requires: %s\n", indentStr, n->requires);        
         if (n->regex) printf("%s--> regex: %s\n", indentStr, n->regex);        
+        if (ORDERLY_RANGE_SPECIFIED(n->range)) {
+            printf("%s--> range: {", indentStr);
+            if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info)
+                printf("%g", n->range.lhs.d);
+            else if (ORDERLY_RANGE_LHS_INT & n->range.info)            
+                printf("%ld", n->range.lhs.i);
+            printf(",");
+            if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
+                printf("%g", n->range.rhs.d);
+            else if (ORDERLY_RANGE_RHS_INT & n->range.info)            
+                printf("%ld", n->range.rhs.i);
+            printf("}\n");
+        }
+        
     } else {
         printf("%s(null)\n", indentStr);
     }
@@ -81,6 +95,8 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_expected_schema_entry: return "expected_schema_entry";
         case orderly_parse_s_junk_at_end_of_input: return "junk_at_end_of_input";
         case orderly_parse_s_malformed_range: return "malformed_range";
+        case orderly_parse_s_integer_overflow: return "integer_overflow";
+        case orderly_parse_s_numeric_parse_error: return "numeric_parse_error";
     }
     return "unknown";
 }

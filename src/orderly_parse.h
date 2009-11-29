@@ -52,7 +52,11 @@ typedef enum {
     /** After a successful parse we found something other than end of input */
     orderly_parse_s_junk_at_end_of_input,
     /** Range specification (i.e {0,10}) had a syntax error */    
-    orderly_parse_s_malformed_range
+    orderly_parse_s_malformed_range,
+    /** encountered an integer too large to be parsed */    
+    orderly_parse_s_integer_overflow,
+    /** encountered a floating point number that couldn't be parsed */    
+    orderly_parse_s_numeric_parse_error
 } orderly_parse_status;
 
 orderly_parse_status

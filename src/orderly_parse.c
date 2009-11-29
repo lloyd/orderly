@@ -37,6 +37,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <limits.h>
+#include <errno.h>
+#include <math.h>
 
 #define BUF_STRDUP(dst, a, ob, ol)               \
     (dst) = OR_MALLOC((a), (ol) + 1);            \
@@ -165,6 +168,38 @@ unescapeJsonString(orderly_alloc_funcs * alloc,
     return str;
 }
 
+
+static int
+decodeJsonInteger(const unsigned char * json, unsigned int len,
+                  long int * i)
+{
+    char numBuf[64];
+    if (!json || !len || sizeof(numBuf) <= len) return 0;
+    memcpy(numBuf, json, len);
+    numBuf[len] = 0;
+    *i = strtol(numBuf, NULL, 10);    
+    if ((*i == LONG_MIN || *i == LONG_MAX) && errno == ERANGE) {
+        return 0;
+    }
+    return 1;
+}
+
+
+static int
+decodeJsonDouble(unsigned const char * json, unsigned int len,
+                 double * d)
+{
+    char numBuf[64];
+    if (!json || !len || sizeof(numBuf) <= len) return 0;
+    memcpy(numBuf, json, len);
+    numBuf[len] = 0;
+    *d = strtod(numBuf, NULL);    
+    if ((*d == HUGE_VAL || *d == -HUGE_VAL) && errno == ERANGE) {
+        return 0;
+    }
+    return 1;
+}
+
                                  
 static orderly_parse_status
 orderly_parse_range(orderly_alloc_funcs * alloc,
@@ -187,11 +222,17 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
 
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     /* optional starting range */
-    if (t == orderly_tok_json_number) {
-        /* XXX: parse out the first integer in the range and populate node struct */
+    if (t == orderly_tok_json_integer) {
+        n->range.info |= ORDERLY_RANGE_LHS_INT;
+        if (!decodeJsonInteger(outBuf, outLen, &(n->range.lhs.i))) {
+            return orderly_parse_s_integer_overflow;
+        }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
-    } else if (t == orderly_tok_json_integer) {
-        /* XXX: parse out the first integer in the range and populate node struct */
+    } else if (t == orderly_tok_json_number) {
+        n->range.info |= ORDERLY_RANGE_LHS_DOUBLE;
+        if (!decodeJsonDouble(outBuf, outLen, &(n->range.lhs.d))) {
+            return orderly_parse_s_numeric_parse_error;
+        }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     }
 
@@ -201,11 +242,17 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
     
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     /* optional ending range */
-    if (t == orderly_tok_json_number) {
-        /* XXX: parse out the first integer in the range and populate node struct */
+    if (t == orderly_tok_json_integer) {
+        n->range.info |= ORDERLY_RANGE_RHS_INT;
+        if (!decodeJsonInteger(outBuf, outLen, &(n->range.rhs.i))) {
+            return orderly_parse_s_integer_overflow;
+        }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
-    } else if (t == orderly_tok_json_integer) {
-        /* XXX: parse out the first integer in the range and populate node struct */
+    } else if (t == orderly_tok_json_number) {
+        n->range.info |= ORDERLY_RANGE_RHS_DOUBLE;
+        if (!decodeJsonDouble(outBuf, outLen, &(n->range.rhs.d))) {
+            return orderly_parse_s_numeric_parse_error;
+        }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     }
 

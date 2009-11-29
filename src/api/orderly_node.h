@@ -43,6 +43,33 @@ typedef enum {
     orderly_node_any
 } orderly_node_type;
 
+#define ORDERLY_RANGE_LHS_INT 0x1
+#define ORDERLY_RANGE_LHS_DOUBLE 0x2
+#define ORDERLY_RANGE_HAS_LHS(r) ((r).info & (ORDERLY_RANGE_LHS_INT | ORDERLY_RANGE_LHS_DOUBLE))
+
+#define ORDERLY_RANGE_RHS_INT 0x4
+#define ORDERLY_RANGE_RHS_DOUBLE 0x8
+#define ORDERLY_RANGE_HAS_RHS(r) ((r).info & (ORDERLY_RANGE_RHS_INT | ORDERLY_RANGE_RHS_DOUBLE))
+
+#define ORDERLY_RANGE_SPECIFIED(r) ((r).info != 0)
+
+
+typedef struct 
+{
+    /** a bitfield specifying wether the RHS
+     *  and LHS were provided, and what form they're in */
+    unsigned int info;
+    union {
+        long int i;
+        double d;
+    } lhs;
+    union {
+        long int i;
+        double d;
+    } rhs;
+} orderly_range;
+    
+
 typedef struct {
     orderly_node_type t;
     const char * name;
@@ -61,6 +88,10 @@ typedef struct {
     const char * regex;
     /* is this node optional? */
     unsigned int optional;
+    /* range specifications for nodes that support it
+     * (i.e. string {0,10} foo;) */
+    orderly_range range;
+    
 } orderly_node;
 
 void orderly_free_node(orderly_alloc_funcs * alloc,
