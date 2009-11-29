@@ -56,13 +56,11 @@ typedef struct {
     const char * default_value;
     /* Does thes existence of this element require any others? */
     const char * requires;
+    /* regular expression constraining allowable values
+     * (optional for string nodes) */
+    const char * regex;
     /* is this node optional? */
     unsigned int optional;
-/*
-    union 
-    {
-    } u;
-*/
 } orderly_node;
 
 void orderly_free_node(orderly_alloc_funcs * alloc,

@@ -31,6 +31,7 @@ static void dumpNode(orderly_node * n, unsigned int indent)
                                         indentStr, n->default_value);        
         if (n->values) printf("%s--> enum: %s\n", indentStr, n->values);        
         if (n->requires) printf("%s--> requires: %s\n", indentStr, n->requires);        
+        if (n->regex) printf("%s--> regex: %s\n", indentStr, n->regex);        
     } else {
         printf("%s(null)\n", indentStr);
     }

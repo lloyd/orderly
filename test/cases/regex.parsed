@@ -1,0 +1,3 @@
+parse complete (ok):
+name [string] 
+--> regex: ^((john)|(bob)|(susan)|(георги)|(цветанка))$

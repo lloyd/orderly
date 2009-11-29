@@ -44,6 +44,7 @@ void orderly_free_node(orderly_alloc_funcs * alloc,
         if ((*node)->values) OR_FREE(alloc, (void *)((*node)->values));
         if ((*node)->default_value) OR_FREE(alloc, (void *)((*node)->default_value));
         if ((*node)->requires) OR_FREE(alloc, (void *)((*node)->requires));
+        if ((*node)->regex) OR_FREE(alloc, (void *)((*node)->regex));
         OR_FREE(alloc, *node);
         *node = NULL;
     }

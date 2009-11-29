@@ -36,6 +36,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define BUF_STRDUP(dst, a, ob, ol)               \
     (dst) = OR_MALLOC((a), (ol) + 1);            \
@@ -103,7 +104,18 @@ orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
                             unsigned int * offset,
                             orderly_node * n)
 {
-    /* XXX: handle optional regex! */
+    if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset) == orderly_tok_regex) 
+    {
+        const unsigned char * outBuf = NULL;
+        unsigned int outLen = 0;
+        (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
+                               &outBuf, &outLen);
+        /* chomp off leading and trailing slashes. the lexer MUST return
+         * a string of at least length two */
+        assert(outLen >= 2);
+        BUF_STRDUP(n->regex, alloc, outBuf + 1, outLen - 2);        
+    }
+
     return orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, lxr, offset, n);
 }
 
