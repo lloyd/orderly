@@ -263,8 +263,17 @@ orderly_parse(orderly_alloc_funcs * alloc,
     s = orderly_parse_named_entry(alloc, schemaText, schemaTextLen, lxr,
                                   &offset, n);
 
-    /* now let's ensure we consumed the entire schema.  sure glad this ain't
-     * a stream parser! */
+    /* if we've parsed ok so far, let's ensure we consumed the entire schema. */
+    if (s == orderly_parse_s_ok) {
+        orderly_tok t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset,
+                                        NULL, NULL);
+        if (t != orderly_tok_eof) {
+            s = orderly_parse_s_junk_at_end_of_input;
+            if (*n) orderly_free_node(alloc, n);
+        }
+    }
+
+    /* XXX: in the case our parse broke, we should now return offset information */
 
     orderly_lex_free(lxr);
     
