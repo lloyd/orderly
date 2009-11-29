@@ -166,6 +166,56 @@ unescapeJsonString(orderly_alloc_funcs * alloc,
 }
 
                                  
+static orderly_parse_status
+orderly_parse_range(orderly_alloc_funcs * alloc,
+                    const unsigned char * schemaText,
+                    const unsigned int schemaTextLen,
+                    orderly_lexer lxr,
+                    unsigned int * offset,
+                    orderly_node * n)
+{
+    const unsigned char * outBuf = NULL;
+    unsigned int outLen = 0;
+    orderly_tok t;
+
+    assert(n != NULL);
+    
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    if (t != orderly_tok_left_curly) {
+        return orderly_parse_s_malformed_range;
+    }
+
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    /* optional starting range */
+    if (t == orderly_tok_json_number) {
+        /* XXX: parse out the first integer in the range and populate node struct */
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    } else if (t == orderly_tok_json_integer) {
+        /* XXX: parse out the first integer in the range and populate node struct */
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    }
+
+    if (t != orderly_tok_comma) {
+        return orderly_parse_s_malformed_range;
+    }
+    
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    /* optional ending range */
+    if (t == orderly_tok_json_number) {
+        /* XXX: parse out the first integer in the range and populate node struct */
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    } else if (t == orderly_tok_json_integer) {
+        /* XXX: parse out the first integer in the range and populate node struct */
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    }
+
+    if (t != orderly_tok_right_curly) {
+        return orderly_parse_s_malformed_range;
+    }
+    
+    return orderly_parse_s_ok;
+}
+
 
 static orderly_parse_status
 orderly_parse_property_name(orderly_alloc_funcs * alloc,
@@ -179,7 +229,7 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
     unsigned int outLen = 0;
     orderly_tok t;
 
-    if (n == NULL) return 0;
+    assert(n != NULL);
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
     
     if (t == orderly_tok_property_name) {
@@ -196,6 +246,7 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
     return orderly_parse_s_ok;
 }
 
+
 static orderly_parse_status
 orderly_parse_string_prefix(orderly_alloc_funcs * alloc,
                             const unsigned char * schemaText,
@@ -204,10 +255,13 @@ orderly_parse_string_prefix(orderly_alloc_funcs * alloc,
                             unsigned int * offset,
                             orderly_node * n)
 {
-    return orderly_parse_property_name(alloc, schemaText, schemaTextLen, lxr, offset, n);
-    /* XXX: handle optional range! */
+    orderly_parse_status s = orderly_parse_s_ok;
+    if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset) == orderly_tok_left_curly)
+    {
+        s = orderly_parse_range(alloc, schemaText, schemaTextLen, lxr, offset, n);
+    }
+    return s;
 }
-
 
 
 static orderly_parse_status
@@ -226,6 +280,8 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
     if (t == orderly_tok_kw_string) {
         *n = orderly_alloc_node(alloc, orderly_node_string);
         if ((s = orderly_parse_string_prefix(alloc, schemaText, schemaTextLen,
+                                             lxr, offset, *n)) || 
+            (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
                                              lxr, offset, *n)) || 
             (s = orderly_parse_string_suffix(alloc, schemaText, schemaTextLen,
                                              lxr, offset, *n)))

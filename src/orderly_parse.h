@@ -50,7 +50,9 @@ typedef enum {
      *  but there was none */
     orderly_parse_s_expected_schema_entry,
     /** After a successful parse we found something other than end of input */
-    orderly_parse_s_junk_at_end_of_input
+    orderly_parse_s_junk_at_end_of_input,
+    /** Range specification (i.e {0,10}) had a syntax error */    
+    orderly_parse_s_malformed_range
 } orderly_parse_status;
 
 orderly_parse_status
