@@ -107,7 +107,7 @@ static const char * statusToStr(orderly_parse_status s)
 int
 main(int argc, char ** argv) 
 {
-    /* this is not a stream lexer, let's read as much as we can up to a
+    /* this is not a stream parser, let's read as much as we can up to a
      * reasonable limit  (1 meg) */
     static unsigned char inbuf[MAX_INPUT_TEXT];
     size_t tot = 0, rd;
