@@ -43,6 +43,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_prop_name_expected: return "prop_name_expected";
         case orderly_parse_s_gt_expected: return "gt_expected";
         case orderly_parse_s_prop_name_syntax_error: return "prop_name_syntax_error";
+        case orderly_parse_s_expected_schema_entry: return "expected_schema_entry";
     }
     return "unknown";
 }

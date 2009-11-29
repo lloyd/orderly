@@ -230,7 +230,7 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
             orderly_free_node(alloc, n);
         }
     } else {
-        s = orderly_parse_s_not_implemented;        
+        s = orderly_parse_s_expected_schema_entry; /* a.k.a. named_entry */
     }
 
     return s;
@@ -262,6 +262,10 @@ orderly_parse(orderly_alloc_funcs * alloc,
     lxr = orderly_lex_alloc(alloc);
     s = orderly_parse_named_entry(alloc, schemaText, schemaTextLen, lxr,
                                   &offset, n);
+
+    /* now let's ensure we consumed the entire schema.  sure glad this ain't
+     * a stream parser! */
+
     orderly_lex_free(lxr);
     
     return s;

@@ -38,10 +38,17 @@
 
 typedef enum {
     orderly_parse_s_ok,
+    /** An error arose due to the fact that the orderly parser is not completely implemented */
     orderly_parse_s_not_implemented,
+    /** A property name was expected, but none was found */
     orderly_parse_s_prop_name_expected,
+    /** A '>' was expected (as after specification of a 'required' parameter: 'string foo <bar>;') */
     orderly_parse_s_gt_expected,
-    orderly_parse_s_prop_name_syntax_error
+    /** A syntax error was discovered in the name of a property */
+    orderly_parse_s_prop_name_syntax_error,
+    /** A schema entry was expected (an element description such as 'string foo;',
+     *  but there was none */
+    orderly_parse_s_expected_schema_entry
 } orderly_parse_status;
 
 orderly_parse_status
