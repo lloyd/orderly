@@ -72,7 +72,7 @@ typedef struct
 } orderly_range;
     
 
-typedef struct {
+typedef struct orderly_node_t {
     orderly_node_type t;
     const char * name;
     /* a json array of possible values
@@ -93,7 +93,13 @@ typedef struct {
     /* range specifications for nodes that support it
      * (i.e. string {0,10} foo;) */
     orderly_range range;
-    
+    /* If this node has children (in the case of arrays, unions, or
+     * objects), the first child is reference here and subsequent
+     * children are referenced via the first child's sibling ptr */
+    struct orderly_node_t * child;
+    /* children of a common parent are linked via this pointer, flowing
+     * from the first child to the last */
+    struct orderly_node_t * sibling;
 } orderly_node;
 
 void orderly_free_node(orderly_alloc_funcs * alloc,
