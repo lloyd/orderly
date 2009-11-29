@@ -59,8 +59,9 @@ static void dumpNode(orderly_node * n, unsigned int indent)
             case orderly_node_integer: type = "integer"; break;
             case orderly_node_number: type = "number"; break;
             case orderly_node_object: type = "object"; break;
+            case orderly_node_array: type = "array"; break;
         }
-        printf("%s%s [%s] %s\n", indentStr, n->name, type,
+        printf("%s%s [%s] %s\n", indentStr, n->name ? n->name : "", type,
                n->optional ? "OPTIONAL" : "");        
         if (n->default_value) printf("%s--> default: %s\n",
                                         indentStr, n->default_value);        
