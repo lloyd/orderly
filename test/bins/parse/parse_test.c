@@ -60,6 +60,7 @@ static void dumpNode(orderly_node * n, unsigned int indent)
             case orderly_node_number: type = "number"; break;
             case orderly_node_object: type = "object"; break;
             case orderly_node_array: type = "array"; break;
+            case orderly_node_union: type = "union"; break;
         }
         printf("%s%s [%s] %s\n", indentStr, n->name ? n->name : "", type,
                n->optional ? "OPTIONAL" : "");        

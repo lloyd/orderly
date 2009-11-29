@@ -1,0 +1,11 @@
+(  1,  5): 'union' kw_union
+(  1,  7): '{' l_curly
+(  2, 10): 'string' kw_string
+(  2, 34): '[ "Sr.", "Jr.", "III" ]' json_array
+(  2, 35): ';' semicolon
+(  3,  8): 'null' kw_null
+(  3,  9): ';' semicolon
+(  4,  1): '}' r_curly
+(  4,  8): 'suffix' property_name
+(  4,  9): ';' semicolon
+(  5,  0): '' eof

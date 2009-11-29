@@ -1,0 +1,6 @@
+parse complete (ok):
+suffix [union] 
+children:
+     [string] 
+    --> enum: [ "Sr.", "Jr.", "III" ]
+     [null] 
