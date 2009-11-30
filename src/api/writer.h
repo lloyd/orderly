@@ -30,44 +30,28 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __ORDERLY_BUF_H__
-#define __ORDERLY_BUF_H__
+#ifndef __ORDERLY_WRITER_H__
+#define __ORDERLY_WRITER_H__
 
-#include "api/common.h"
-#include "orderly_alloc.h"
+#include "node.h"
 
-/*
- * Implementation/performance notes.  If this were moved to a header
- * only implementation using #define's where possible we might be 
- * able to sqeeze a little performance out of the guy by killing function
- * call overhead.  YMMV.
- */
+typedef struct orderly_writer_t * orderly_writer;
 
-/**
- * orderly_buf is a buffer with exponential growth.  the buffer ensures that
- * you are always null padded.
- */
-typedef struct orderly_buf_t * orderly_buf;
+struct orderly_writer_config 
+{
+    orderly_alloc_funcs * alloc;
+    int pretty;
+};
 
-/* allocate a new buffer */
-orderly_buf orderly_buf_alloc(orderly_alloc_funcs * alloc);
+/** allocate a new writer */
+orderly_writer orderly_writer_new(const struct orderly_writer_config * cfg);
 
-/* free the buffer */
-void orderly_buf_free(orderly_buf buf);
+/** release a writer */
+void orderly_writer_free(orderly_writer *w);
 
-/* append a number of bytes to the buffer */
-void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len);
-
-/* empty the buffer */
-void orderly_buf_clear(orderly_buf buf);
-
-/* get a pointer to the beginning of the buffer */
-const unsigned char * orderly_buf_data(orderly_buf buf);
-
-/* get the length of the buffer */
-unsigned int orderly_buf_len(orderly_buf buf);
-
-/* truncate the buffer */
-void orderly_buf_truncate(orderly_buf buf, unsigned int len);
+/** write a schema */
+const char *
+orderly_write(orderly_writer w, orderly_format fmt,
+              const orderly_node * node);
 
 #endif

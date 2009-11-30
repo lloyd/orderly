@@ -30,44 +30,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __ORDERLY_BUF_H__
-#define __ORDERLY_BUF_H__
+#ifndef __ORDERLY_READER_H__
+#define __ORDERLY_READER_H__
 
-#include "api/common.h"
-#include "orderly_alloc.h"
+#include "common.h"
 
-/*
- * Implementation/performance notes.  If this were moved to a header
- * only implementation using #define's where possible we might be 
- * able to sqeeze a little performance out of the guy by killing function
- * call overhead.  YMMV.
- */
 
-/**
- * orderly_buf is a buffer with exponential growth.  the buffer ensures that
- * you are always null padded.
- */
-typedef struct orderly_buf_t * orderly_buf;
-
-/* allocate a new buffer */
-orderly_buf orderly_buf_alloc(orderly_alloc_funcs * alloc);
-
-/* free the buffer */
-void orderly_buf_free(orderly_buf buf);
-
-/* append a number of bytes to the buffer */
-void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len);
-
-/* empty the buffer */
-void orderly_buf_clear(orderly_buf buf);
-
-/* get a pointer to the beginning of the buffer */
-const unsigned char * orderly_buf_data(orderly_buf buf);
-
-/* get the length of the buffer */
-unsigned int orderly_buf_len(orderly_buf buf);
-
-/* truncate the buffer */
-void orderly_buf_truncate(orderly_buf buf, unsigned int len);
 
 #endif

@@ -78,6 +78,13 @@ typedef struct
     void * ctx;
 } orderly_alloc_funcs;
 
+typedef enum {
+    ORDERLY_UNKNOWN = 0,
+    ORDERLY_JSONSCHEMA = 1,
+    ORDERLY_TEXTUAL = 2
+} orderly_format;
+    
+
 #ifdef __cplusplus
 }
 #endif    

@@ -30,7 +30,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#include "api/orderly_node.h"
+#include "api/node.h"
 #include "orderly_alloc.h"
 
 #include <stdlib.h>

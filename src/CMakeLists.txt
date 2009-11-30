@@ -29,9 +29,9 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 SET (SRCS orderly_node.c orderly_lex.c orderly_alloc.c orderly_buf.c
-          orderly_parse.c)
+          orderly_parse.c orderly_writer.c)
 SET (HDRS orderly_common.h orderly_lex.h orderly_parse.h)
-SET (PUB_HDRS api/orderly_common.h api/orderly_node.h)
+SET (PUB_HDRS api/common.h api/node.h api/reader.h api/writer.h)
 
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)

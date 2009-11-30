@@ -33,8 +33,8 @@
 #ifndef __ORDERLY_PARSE_H__
 #define __ORDERLY_PARSE_H__
 
-#include "api/orderly_common.h"
-#include "api/orderly_node.h"
+#include "api/common.h"
+#include "api/node.h"
 
 typedef enum {
     orderly_parse_s_ok,

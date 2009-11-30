@@ -30,44 +30,34 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#ifndef __ORDERLY_BUF_H__
-#define __ORDERLY_BUF_H__
+#include "orderly/writer.h"
 
-#include "api/common.h"
-#include "orderly_alloc.h"
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
-/*
- * Implementation/performance notes.  If this were moved to a header
- * only implementation using #define's where possible we might be 
- * able to sqeeze a little performance out of the guy by killing function
- * call overhead.  YMMV.
- */
+#define MAX_INPUT_TEXT (1 << 20)
+int
+main(int argc, char ** argv) 
+{
+    /* XXX: 1 meg max schema size... */
+    static char inbuf[MAX_INPUT_TEXT];
+    size_t tot = 0, rd;
+    while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
+    {
+        tot += rd;
+    }
 
-/**
- * orderly_buf is a buffer with exponential growth.  the buffer ensures that
- * you are always null padded.
- */
-typedef struct orderly_buf_t * orderly_buf;
+    {
+        orderly_writer w;
+        w = orderly_writer_new(NULL);
 
-/* allocate a new buffer */
-orderly_buf orderly_buf_alloc(orderly_alloc_funcs * alloc);
+        /* XXX: now read and parse the schema */
+    
+        /* XXX: now write the schema */
 
-/* free the buffer */
-void orderly_buf_free(orderly_buf buf);
-
-/* append a number of bytes to the buffer */
-void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len);
-
-/* empty the buffer */
-void orderly_buf_clear(orderly_buf buf);
-
-/* get a pointer to the beginning of the buffer */
-const unsigned char * orderly_buf_data(orderly_buf buf);
-
-/* get the length of the buffer */
-unsigned int orderly_buf_len(orderly_buf buf);
-
-/* truncate the buffer */
-void orderly_buf_truncate(orderly_buf buf, unsigned int len);
-
-#endif
+    }
+    
+    return 0;
+}

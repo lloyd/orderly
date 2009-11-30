@@ -33,7 +33,7 @@
 #ifndef __ORDERLY_LEX_H__
 #define __ORDERLY_LEX_H__
 
-#include "api/orderly_common.h"
+#include "api/common.h"
 
 typedef enum {
     orderly_tok_error,

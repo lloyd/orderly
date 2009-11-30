@@ -33,7 +33,7 @@
 #ifndef __ORDERLY_NODE_H__
 #define __ORDERLY_NODE_H__
 
-#include "orderly_common.h"
+#include "common.h"
 
 typedef enum {
     orderly_node_empty,

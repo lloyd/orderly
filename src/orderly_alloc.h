@@ -39,7 +39,7 @@
 #ifndef __ORDERLY_ALLOC_H__
 #define __ORDERLY_ALLOC_H__
 
-#include "api/orderly_common.h"
+#include "api/common.h"
 
 #define OR_MALLOC(afs, sz) (afs)->malloc((afs)->ctx, (sz))
 #define OR_FREE(afs, ptr) (afs)->free((afs)->ctx, (ptr))
