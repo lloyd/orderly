@@ -34,7 +34,24 @@
 #define __ORDERLY_READER_H__
 
 #include "common.h"
+#include "node.h"
 
+typedef struct orderly_reader_t * orderly_reader;
 
+struct orderly_reader_config 
+{
+    orderly_alloc_funcs * alloc;
+};
+
+/** allocate a new reader */
+orderly_reader orderly_reader_new(const struct orderly_reader_config * cfg);
+
+/** release a reader */
+void orderly_reader_free(orderly_reader *w);
+
+/** read a schema */
+const orderly_node * 
+orderly_read(orderly_reader r, orderly_format fmt,
+             const char * schema, unsigned int len);
 
 #endif

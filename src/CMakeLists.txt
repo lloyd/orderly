@@ -29,7 +29,7 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 SET (SRCS orderly_node.c orderly_lex.c orderly_alloc.c orderly_buf.c
-          orderly_parse.c orderly_writer.c)
+          orderly_parse.c orderly_writer.c orderly_reader.c)
 SET (HDRS orderly_common.h orderly_lex.h orderly_parse.h)
 SET (PUB_HDRS api/common.h api/node.h api/reader.h api/writer.h)
 
@@ -55,14 +55,13 @@ SET_TARGET_PROPERTIES(orderly PROPERTIES
 FILE(MAKE_DIRECTORY ${libDir})
 FILE(MAKE_DIRECTORY ${incDir})
 
-# copy public headers to output directory
+# copy public headers to output directory as a pre-build step
 FOREACH (header ${PUB_HDRS})
   SET (header ${CMAKE_CURRENT_SOURCE_DIR}/${header})
-
   EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
-
-  ADD_CUSTOM_COMMAND(TARGET orderly_s POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir})
+  ADD_CUSTOM_COMMAND(TARGET orderly_s PRE_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir}
+      COMMAND ${CMAKE_COMMAND} -E echo copy_if_different ${header} ${incDir}      )
 ENDFOREACH (header ${PUB_HDRS})
 
 INCLUDE_DIRECTORIES(${incDir}/..)

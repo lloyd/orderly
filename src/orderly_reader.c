@@ -30,46 +30,31 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#include "orderly/writer.h"
-#include "orderly/reader.h"
+#include "api/reader.h"
+#include "orderly_buf.h"
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <string.h>
+#include <stdlib.h>
 
-#define MAX_INPUT_TEXT (1 << 20)
-int
-main(int argc, char ** argv) 
+struct orderly_reader_t 
 {
-    /* XXX: 1 meg max schema size... */
-    static char inbuf[MAX_INPUT_TEXT];
-    size_t tot = 0, rd;
-    while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
-    {
-        tot += rd;
-    }
+    struct orderly_reader_config cfg;
+    orderly_buf b;
+};
 
-    {
-        orderly_writer w = orderly_writer_new(NULL);
-        orderly_reader r = orderly_reader_new(NULL);
-        const orderly_node * n;
-        const char * schema;
+orderly_reader
+orderly_reader_new(const struct orderly_reader_config * cfg)
+{
+    return NULL;
+}
 
-        /* now read and parse the schema */
-        n = orderly_read(r, ORDERLY_TEXTUAL, inbuf, tot);
-        
-        /* now write the schema */
-        schema = orderly_write(w, ORDERLY_TEXTUAL, n);
-        
-        if (schema) {
-            write(0, schema, strlen(schema));
-        }
-        
-        orderly_writer_free(&w);
-        orderly_reader_free(&r);
-    }
-    
-    return 0;
+void
+orderly_reader_free(orderly_reader *w)
+{
+}
+
+const orderly_node * 
+orderly_read(orderly_reader w, orderly_format fmt,
+             const char * schema, unsigned int len)
+{
+    return NULL;
 }
