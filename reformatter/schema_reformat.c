@@ -59,6 +59,8 @@ main(int argc, char ** argv)
 
         /* now read and parse the schema */
         n = orderly_read(r, ORDERLY_TEXTUAL, inbuf, tot);
+
+printf("read hot foo: %p\n", n);
         
         /* now write the schema */
         schema = orderly_write(w, ORDERLY_TEXTUAL, n);

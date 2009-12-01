@@ -38,13 +38,8 @@
 
 typedef struct orderly_reader_t * orderly_reader;
 
-struct orderly_reader_config 
-{
-    orderly_alloc_funcs * alloc;
-};
-
 /** allocate a new reader */
-orderly_reader orderly_reader_new(const struct orderly_reader_config * cfg);
+orderly_reader orderly_reader_new(const orderly_alloc_funcs * alloc);
 
 /** release a reader */
 void orderly_reader_free(orderly_reader *w);

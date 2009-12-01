@@ -31,30 +31,72 @@
  */ 
 
 #include "api/reader.h"
+#include "api/node.h"
 #include "orderly_buf.h"
 
+#include "orderly_parse.h"
+
 #include <stdlib.h>
+#include <string.h>
 
 struct orderly_reader_t 
 {
-    struct orderly_reader_config cfg;
-    orderly_buf b;
+    orderly_alloc_funcs alloc;
+    orderly_node * node;
+    orderly_parse_status status;
 };
 
 orderly_reader
-orderly_reader_new(const struct orderly_reader_config * cfg)
+orderly_reader_new(const orderly_alloc_funcs * alloc)
 {
-    return NULL;
+    orderly_reader rdr = NULL;
+
+    {
+        static orderly_alloc_funcs orderlyAllocFuncBuffer;
+        static orderly_alloc_funcs * orderlyAllocFuncBufferPtr = NULL;
+
+        if (orderlyAllocFuncBufferPtr == NULL) {
+            orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
+            orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
+        }
+        if (alloc == NULL) alloc = orderlyAllocFuncBufferPtr;
+    }
+
+    rdr = OR_MALLOC(alloc, sizeof(struct orderly_reader_t));
+    memcpy((void *) (&(rdr->alloc)), (void *) alloc,
+           sizeof(orderly_alloc_funcs));
+    rdr->node = NULL;
+    rdr->status = orderly_parse_s_ok;
+
+    return rdr;
 }
 
+
 void
-orderly_reader_free(orderly_reader *w)
+orderly_reader_free(orderly_reader *r)
 {
+    if (r && *r) {
+        if ((*r)->node) {
+            orderly_free_node(&((*r)->alloc), &((*r)->node));
+        }
+        OR_FREE(&((*r)->alloc), (*r));
+        *r = NULL;
+    }
 }
 
 const orderly_node * 
-orderly_read(orderly_reader w, orderly_format fmt,
+orderly_read(orderly_reader r, orderly_format fmt,
              const char * schema, unsigned int len)
 {
-    return NULL;
+    /* XXX: set an error code? */
+    if (r == NULL) return NULL;
+    
+    /* if this handle has been used before, now is the time
+     * to free the parse tree */
+    if (r->node) orderly_free_node(&(r->alloc), &(r->node));
+    
+    r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
+                              len, &(r->node));
+    
+    return r->node;
 }
