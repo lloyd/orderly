@@ -390,6 +390,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
     orderly_tok tok = orderly_tok_error;
     unsigned char c;
     unsigned int startOffset = *offset;
+    unsigned int previousOffset = *offset;
 
     if (outBuf) *outBuf = NULL;
     if (outLen) *outLen = 0;
@@ -533,7 +534,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
         unsigned int ol = *offset - startOffset;
         if (outBuf) *outBuf = schemaText + startOffset;
         if (outLen) *outLen = ol;
-        lexer->previousOffset = startOffset;
+        lexer->previousOffset = previousOffset;
     }
 
     return tok;
