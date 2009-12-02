@@ -588,11 +588,14 @@ orderly_parse(orderly_alloc_funcs * alloc,
             s = orderly_parse_s_junk_at_end_of_input;
             if (*n) orderly_free_node(alloc, n);
         }
+
+        if (final_offset) *final_offset = offset;
+    } else {
+        /* in the case our parse broke, we should now return offset
+         * information just BEFORE the last lexted token */
+        if (final_offset) *final_offset = orderly_lex_previous_offset(lxr);
     }
-
-    /* in the case our parse broke, we should now return offset information */
-    if (final_offset) *final_offset = offset;
-
+    
     orderly_lex_free(lxr);
     
     return s;

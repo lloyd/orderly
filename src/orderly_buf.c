@@ -117,3 +117,9 @@ orderly_buf_truncate(orderly_buf buf, unsigned int len)
     assert(len <= buf->used);
     buf->used = len;
 }
+
+void orderly_buf_append_string(orderly_buf buf, const char * s)
+{
+    orderly_buf_append(buf, (void *) s, strlen(s));
+}
+

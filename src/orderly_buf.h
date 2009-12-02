@@ -58,6 +58,9 @@ void orderly_buf_free(orderly_buf buf);
 /* append a number of bytes to the buffer */
 void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len);
 
+/* append a number of bytes to the buffer */
+void orderly_buf_append_string(orderly_buf buf, const char * s);
+
 /* empty the buffer */
 void orderly_buf_clear(orderly_buf buf);
 

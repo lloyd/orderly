@@ -579,7 +579,11 @@ orderly_tok orderly_lex_peek(orderly_lexer lexer,
                              const unsigned char * jsonText,
                              unsigned int jsonTextLen, unsigned int offset)
 {
-    return orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset, NULL, NULL);
+    orderly_tok t;
+    unsigned int fo = lexer->previousOffset;
+    t = orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset, NULL, NULL);
+    lexer->previousOffset = fo;
+    return t;
 }
 
 

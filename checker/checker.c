@@ -61,7 +61,8 @@ main(int argc, char ** argv)
         
     if (!n) {
         rv = 1;            
-        printf("Schema is invalid: \n");
+        printf("Schema is invalid: %s\n%s\n", orderly_get_error(r),
+               orderly_get_error_context(r, inbuf, tot));
     } else {
         printf("Schema is valid\n");
     }

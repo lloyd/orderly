@@ -49,4 +49,21 @@ const orderly_node *
 orderly_read(orderly_reader r, orderly_format fmt,
              const char * schema, unsigned int len);
 
+/** when NULL is returned from orderly_read, this function can return
+ *  an english, developer readable error code.  */
+const char * orderly_get_error(orderly_reader r);
+
+/** when NULL is returned from orderly_read, this function can return
+ *  the location of the error in a human redable form, formatted in
+ *  such a way that it can be displayed with a fixed width font.  The
+ *  returned string is dynamically allocated and is valid until
+ *  orderly_reader_free is called. */
+const char * orderly_get_error_context(orderly_reader r,
+                                       const char * schema, unsigned int len);
+
+/** when NULL is returned from orderly_read, this function can return
+ *  the location of the error as a numeric offset from the beginning of the
+ *  schema buffer */
+unsigned int orderly_get_error_offset(orderly_reader r);
+
 #endif
