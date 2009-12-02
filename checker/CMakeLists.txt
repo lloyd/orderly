@@ -30,12 +30,12 @@
 
 # set up a paths
 SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/bin)
-SET (exeName orderly_reformat)
+SET (exeName orderly_check)
 
 # create a directories
 FILE(MAKE_DIRECTORY ${binDir})
 
-SET (SRCS reformat.c)
+SET (SRCS checker.c)
 
 # use the library we build, duh.
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/include)

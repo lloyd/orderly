@@ -39,39 +39,34 @@
 #include <unistd.h>
 #include <string.h>
 
+/* XXX: 1 meg max schema size... */
 #define MAX_INPUT_TEXT (1 << 20)
+
 int
 main(int argc, char ** argv) 
 {
-    /* XXX: 1 meg max schema size... */
     static char inbuf[MAX_INPUT_TEXT];
     size_t tot = 0, rd;
+    int rv = 0;
+    orderly_reader r = orderly_reader_new(NULL);
+    const orderly_node * n;
+
     while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
     {
         tot += rd;
     }
 
-    {
-        orderly_writer w = orderly_writer_new(NULL);
-        orderly_reader r = orderly_reader_new(NULL);
-        const orderly_node * n;
-        const char * schema;
-
-        /* now read and parse the schema */
-        n = orderly_read(r, ORDERLY_TEXTUAL, inbuf, tot);
-
-printf("read hot foo: %p\n", n);
+    /* now read and parse the schema */
+    n = orderly_read(r, ORDERLY_TEXTUAL, inbuf, tot);
         
-        /* now write the schema */
-        schema = orderly_write(w, ORDERLY_TEXTUAL, n);
-        
-        if (schema) {
-            write(0, schema, strlen(schema));
-        }
-        
-        orderly_writer_free(&w);
-        orderly_reader_free(&r);
+    if (!n) {
+        rv = 1;            
+        printf("Schema is invalid: \n");
+    } else {
+        printf("Schema is valid\n");
     }
     
-    return 0;
+    orderly_reader_free(&r);
+    
+    return rv;
 }
