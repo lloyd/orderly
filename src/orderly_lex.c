@@ -502,7 +502,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                  * function capable of scanning the value */
                 while (*offset < schemaTextLen) {
                     c = schemaText[*offset];
-                    if (strchr("\t\v\f\r\n ", c)) {
+                    if (NULL == strchr("\t\v\f\r\n ", c)) {
                         break;
                     }
                     startOffset++; 
