@@ -1,0 +1,9 @@
+cases/ contains low level lexing and parsing tests.
+
+positive_cases/ contains higher level parsing tests that
+test roundtripping between jsonschema and orderly.
+
+negative_cases/ contains error schemas and the expected 
+output when parsing them.
+
+

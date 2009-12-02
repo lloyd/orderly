@@ -1,0 +1,8 @@
+# { "name": { "first": "Lloyd", "last":"Hilaiel" }, "age": 32  }
+object {
+  object {
+    string first;
+    string last;
+  } name;
+  integer age [0,200];
+} person;
