@@ -594,10 +594,12 @@ orderly_parse(orderly_alloc_funcs * alloc,
         }
 
         if (final_offset) *final_offset = offset;
-    } else {
+    }
+
+    if (s != orderly_parse_s_ok && final_offset) {
         /* in the case our parse broke, we should now return offset
          * information just BEFORE the last lexted token */
-        if (final_offset) *final_offset = orderly_lex_previous_offset(lxr);
+        *final_offset = orderly_lex_previous_offset(lxr);
     }
     
     orderly_lex_free(lxr);
