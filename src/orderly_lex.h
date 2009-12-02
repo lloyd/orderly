@@ -100,14 +100,9 @@ const char * orderly_lex_error_to_string(orderly_lex_error error);
  *  error when orderly_lex_lex returns orderly_tok_error. */
 orderly_lex_error orderly_lex_get_error(orderly_lexer lexer);
 
-/** get the current offset into the most recently lexed json string. */
-unsigned int orderly_lex_current_offset(orderly_lexer lexer);
-
-/** get the number of lines lexed by this lexer instance */
-unsigned int orderly_lex_current_line(orderly_lexer lexer);
-
-/** get the number of chars lexed by this lexer instance since the last
- *  \n or \r */
-unsigned int orderly_lex_current_char(orderly_lexer lexer);
+/** get the offset passed to the lexter at the time the last token was
+ *  parsed.  This is a convenience for error reporting so higher level
+ *  code can drink more beer, and do less bookkeeping.  */
+unsigned int orderly_lex_previous_offset(orderly_lexer lexer);
 
 #endif

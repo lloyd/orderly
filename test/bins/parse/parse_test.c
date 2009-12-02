@@ -132,7 +132,7 @@ main(int argc, char ** argv)
 
         orderly_set_default_alloc_funcs(&oaf);
 
-        s = orderly_parse(&oaf, inbuf, tot, &n);
+        s = orderly_parse(&oaf, inbuf, tot, &n, NULL);
         printf("parse complete (%s):\n", statusToStr(s));
         dumpNode(n, 0); /* here's where we'll map over and output the returned tree */ 
         /* TODO: ugly alloc routine crap here, perhaps we should give the

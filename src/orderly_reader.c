@@ -44,6 +44,11 @@ struct orderly_reader_t
     orderly_alloc_funcs alloc;
     orderly_node * node;
     orderly_parse_status status;
+    /* how far we got in the parse, useful in error reporting */
+    unsigned int finalOffset;
+    /* when the client wants a nice error string, we'll stuff it in the
+     * buf */
+    orderly_buf errorBuffer;
 };
 
 orderly_reader
@@ -67,6 +72,8 @@ orderly_reader_new(const orderly_alloc_funcs * alloc)
            sizeof(orderly_alloc_funcs));
     rdr->node = NULL;
     rdr->status = orderly_parse_s_ok;
+    rdr->errorBuffer = NULL;
+    rdr->finalOffset = 0;
 
     return rdr;
 }
@@ -96,7 +103,7 @@ orderly_read(orderly_reader r, orderly_format fmt,
     if (r->node) orderly_free_node(&(r->alloc), &(r->node));
     
     r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
-                              len, &(r->node));
+                              len, &(r->node), &(r->finalOffset));
     
     return r->node;
 }

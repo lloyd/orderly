@@ -67,6 +67,7 @@ orderly_parse_status
 orderly_parse(orderly_alloc_funcs * alloc,
               const unsigned char * schemaText,
               const unsigned int schemaTextLen,
-              orderly_node ** n);
+              orderly_node ** n,
+              unsigned int * final_offset);
 
 #endif

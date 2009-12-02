@@ -39,9 +39,7 @@
 #include <string.h>
 
 struct orderly_lexer_t {
-    /* the overal line and char offset into the data */
-    unsigned int lineOff;
-    unsigned int charOff;
+    unsigned int previousOffset;
     /* error */
     orderly_lex_error error;
     orderly_alloc_funcs * alloc;
@@ -67,8 +65,8 @@ orderly_lex_alloc(orderly_alloc_funcs * alloc)
     lxr = (orderly_lexer) OR_MALLOC(alloc, sizeof(struct orderly_lexer_t));
     memset((void *) lxr, 0, sizeof(struct orderly_lexer_t));
     lxr->alloc = alloc;
-    /* line offset is base 1 */
-    lxr->lineOff = 1;
+    lxr->previousOffset = 0;
+
     return lxr;
 }
 
@@ -429,12 +427,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 tok = orderly_tok_optional_marker;
                 goto lexed;
             case '\t': case '\v': case '\f': case '\r': case ' ': 
-                lexer->charOff++;
                 startOffset++; 
                 break; 
             case '\n':
-                lexer->charOff = 0;
-                lexer->lineOff += 1;
                 startOffset++; 
                 break; 
             case '/': 
@@ -507,12 +502,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                  * function capable of scanning the value */
                 while (*offset < schemaTextLen) {
                     c = schemaText[*offset];
-                    if (strchr("\t\v\f\r ", c)) {
-                        lexer->charOff++;
-                    } else if (c == '\n') {
-                        lexer->charOff = 0;
-                        lexer->lineOff += 1;
-                    } else {
+                    if (strchr("\t\v\f\r\n ", c)) {
                         break;
                     }
                     startOffset++; 
@@ -543,7 +533,7 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
         unsigned int ol = *offset - startOffset;
         if (outBuf) *outBuf = schemaText + startOffset;
         if (outLen) *outLen = ol;
-        lexer->charOff += ol;
+        lexer->previousOffset = startOffset;
     }
 
     return tok;
@@ -585,19 +575,16 @@ orderly_lex_get_error(orderly_lexer lexer)
     return lexer->error;
 }
 
-unsigned int orderly_lex_current_line(orderly_lexer lexer)
-{
-    return lexer->lineOff;
-}
-
-unsigned int orderly_lex_current_char(orderly_lexer lexer)
-{
-    return lexer->charOff;
-}
-
 orderly_tok orderly_lex_peek(orderly_lexer lexer,
                              const unsigned char * jsonText,
                              unsigned int jsonTextLen, unsigned int offset)
 {
     return orderly_lex_lex(lexer, jsonText, jsonTextLen, &offset, NULL, NULL);
+}
+
+
+unsigned int
+orderly_lex_previous_offset(orderly_lexer lexer)
+{
+    return lexer->previousOffset;
 }

@@ -71,6 +71,25 @@ static const char * tokToStr(orderly_tok t)
     return "unknown";
 }
 
+/* horribly inefficient, but this is a test program, WE DONT CARE */
+static void
+currentLineAndChar(const char * buf, unsigned int off,
+                   unsigned int * l, unsigned int * c)
+{
+    unsigned int i;
+
+    *l = 1; *c = 0;
+    
+    for (i=0; i < off; i++) {
+        if (buf[i] == '\n') {
+            *l += 1;
+            *c = 0;
+        } else {
+            *c +=1;
+        }
+    }
+}
+
 int
 main(int argc, char ** argv) 
 {
@@ -89,11 +108,12 @@ main(int argc, char ** argv)
         unsigned int outLen = 0;
 
         do {
+            unsigned int l, c;
+
             t = orderly_lex_lex(lexer, (const unsigned char *) inbuf,
                                 tot, &off, &outBuf, &outLen);
-            printf("(%3u,%3u): '",
-                   orderly_lex_current_line(lexer),
-                   orderly_lex_current_char(lexer));
+            currentLineAndChar(inbuf, off, &l, &c);
+            printf("(%3u,%3u): '", l, c);
             fwrite(outBuf, sizeof(char), outLen, stdout);
             printf("' %s\n", tokToStr(t));
             

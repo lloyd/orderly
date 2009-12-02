@@ -548,11 +548,16 @@ orderly_parse_status
 orderly_parse(orderly_alloc_funcs * alloc,
               const unsigned char * schemaText,
               const unsigned int schemaTextLen,
-              orderly_node ** n)
+              orderly_node ** n,
+              unsigned int * final_offset)
 {
     unsigned int offset = 0;
     orderly_parse_status s = orderly_parse_s_ok;
     orderly_lexer lxr;
+
+    /* initialize the output offset (how much was successfully parsed?)
+     * to zero */
+    if (final_offset) *final_offset = 0;
 
     {
         static orderly_alloc_funcs orderlyAllocFuncBuffer;
@@ -585,7 +590,8 @@ orderly_parse(orderly_alloc_funcs * alloc,
         }
     }
 
-    /* XXX: in the case our parse broke, we should now return offset information */
+    /* in the case our parse broke, we should now return offset information */
+    if (final_offset) *final_offset = offset;
 
     orderly_lex_free(lxr);
     
