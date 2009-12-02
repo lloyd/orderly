@@ -94,6 +94,9 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
     }
 
     /* "unlex" the last token.  let higher level code deal with it */
+    /* XXX: this will mess up our "previous offset" routine.  we should
+     * introduce a real unlex function and the required additional bit
+     * of state */
     *offset -= outLen;
     
     return orderly_parse_s_ok;
@@ -277,12 +280,13 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
     orderly_tok t;
 
     assert(n != NULL);
-    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
+                        &outBuf, &outLen);
     
     if (t == orderly_tok_property_name) {
         BUF_STRDUP(n->name, alloc, outBuf, outLen);
     } else if (t == orderly_tok_json_string) {
-        n->name = unescapeJsonString(alloc, (const char *) outBuf, outLen);        
+        n->name = unescapeJsonString(alloc, (const char *) outBuf, outLen);
         if (n->name == NULL) {
             return orderly_parse_s_prop_name_syntax_error;
         }

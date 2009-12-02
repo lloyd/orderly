@@ -59,8 +59,8 @@ typedef enum {
     orderly_parse_s_numeric_parse_error,
     /** A '{' was expected (as in an object specification: 'object { string foo; } bar;') */
     orderly_parse_s_left_curly_expected,
-    orderly_parse_s_right_curly_expected
-
+    orderly_parse_s_right_curly_expected,
+    orderly_parse_s_lex_error
 } orderly_parse_status;
 
 orderly_parse_status
