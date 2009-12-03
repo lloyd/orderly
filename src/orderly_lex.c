@@ -534,8 +534,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
         unsigned int ol = *offset - startOffset;
         if (outBuf) *outBuf = schemaText + startOffset;
         if (outLen) *outLen = ol;
-        lexer->previousOffset = previousOffset;
     }
+
+    lexer->previousOffset = previousOffset;
 
     return tok;
 }

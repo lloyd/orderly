@@ -60,7 +60,8 @@ typedef enum {
     /** A '{' was expected (as in an object specification: 'object { string foo; } bar;') */
     orderly_parse_s_left_curly_expected,
     orderly_parse_s_right_curly_expected,
-    orderly_parse_s_lex_error
+    /** error codes of 1000 or greater represent lexographic errors */
+    orderly_parse_s_lex_error = 1000
 } orderly_parse_status;
 
 orderly_parse_status

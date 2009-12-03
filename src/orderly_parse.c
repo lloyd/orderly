@@ -46,6 +46,12 @@
     memcpy((void *)(dst), (void *) (ob), (ol));  \
     ((char *) (dst))[(ol)] = 0;
 
+#define CHECK_LEX_ERROR(tok, lxr)                \
+    if ((tok) == orderly_tok_error) {            \
+      return orderly_parse_s_lex_error +         \
+             orderly_lex_get_error((lxr));       \
+    }
+
 
 static orderly_parse_status
 orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
@@ -60,37 +66,44 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
     unsigned int outLen = 0;
 
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+    CHECK_LEX_ERROR(t, lxr);
 
     /* optional_enum_values? */
     if (t == orderly_tok_json_array) {
         BUF_STRDUP(n->values, alloc, outBuf, outLen);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     /* optional_default_value? */
     if (t == orderly_tok_default_value) {
         BUF_STRDUP(n->default_value, alloc, outBuf, outLen);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     /* optional_requires? */
     if (t == orderly_tok_lt) {
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        CHECK_LEX_ERROR(t, lxr);
         if (t != orderly_tok_property_name) {
             return orderly_parse_s_prop_name_expected;
         }
         BUF_STRDUP(n->requires, alloc, outBuf, outLen);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        CHECK_LEX_ERROR(t, lxr);
         if (t != orderly_tok_gt) {
             return orderly_parse_s_gt_expected;
         }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     /* optional_default_value? */    
     if (t == orderly_tok_optional_marker) {    
         n->optional = 1;
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     /* "unlex" the last token.  let higher level code deal with it */
@@ -219,11 +232,13 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
     assert(n != NULL);
     
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    CHECK_LEX_ERROR(t, lxr);
     if (t != orderly_tok_left_curly) {
         return orderly_parse_s_malformed_range;
     }
 
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    CHECK_LEX_ERROR(t, lxr);
     /* optional starting range */
     if (t == orderly_tok_json_integer) {
         n->range.info |= ORDERLY_RANGE_LHS_INT;
@@ -231,12 +246,14 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
             return orderly_parse_s_integer_overflow;
         }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+        CHECK_LEX_ERROR(t, lxr);
     } else if (t == orderly_tok_json_number) {
         n->range.info |= ORDERLY_RANGE_LHS_DOUBLE;
         if (!decodeJsonDouble(outBuf, outLen, &(n->range.lhs.d))) {
             return orderly_parse_s_numeric_parse_error;
         }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     if (t != orderly_tok_comma) {
@@ -244,6 +261,8 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
     }
     
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+    CHECK_LEX_ERROR(t, lxr);
+
     /* optional ending range */
     if (t == orderly_tok_json_integer) {
         n->range.info |= ORDERLY_RANGE_RHS_INT;
@@ -251,12 +270,14 @@ orderly_parse_range(orderly_alloc_funcs * alloc,
             return orderly_parse_s_integer_overflow;
         }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+        CHECK_LEX_ERROR(t, lxr);
     } else if (t == orderly_tok_json_number) {
         n->range.info |= ORDERLY_RANGE_RHS_DOUBLE;
         if (!decodeJsonDouble(outBuf, outLen, &(n->range.rhs.d))) {
             return orderly_parse_s_numeric_parse_error;
         }
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);
+        CHECK_LEX_ERROR(t, lxr);
     }
 
     if (t != orderly_tok_right_curly) {
@@ -282,6 +303,7 @@ orderly_parse_property_name(orderly_alloc_funcs * alloc,
     assert(n != NULL);
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
                         &outBuf, &outLen);
+    CHECK_LEX_ERROR(t, lxr);
     
     if (t == orderly_tok_property_name) {
         BUF_STRDUP(n->name, alloc, outBuf, outLen);
@@ -387,7 +409,14 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     orderly_tok t;
     orderly_parse_status s;
 
+#define CHECK_LEX_AND_FREENODE                                          \
+    if (t == orderly_tok_error) {                                       \
+        orderly_free_node(alloc, n);                                    \
+        return orderly_parse_s_lex_error + orderly_lex_get_error((lxr)); \
+    }
+
     t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+    CHECK_LEX_ERROR(t, lxr);
     
     if (t == orderly_tok_kw_string)
     {
@@ -436,6 +465,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     {
         *n = orderly_alloc_node(alloc, orderly_node_object);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+        CHECK_LEX_AND_FREENODE;
+        
         if (t != orderly_tok_left_curly) {
             orderly_free_node(alloc, n);            
             return orderly_parse_s_left_curly_expected;
@@ -451,6 +482,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         else
         {
             t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+            CHECK_LEX_AND_FREENODE;
+
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
@@ -467,6 +500,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     {
         *n = orderly_alloc_node(alloc, orderly_node_array);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+        CHECK_LEX_AND_FREENODE;
+
         if (t != orderly_tok_left_curly) {
             orderly_free_node(alloc, n);            
             return orderly_parse_s_left_curly_expected;
@@ -482,6 +517,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         else
         {
             t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+            CHECK_LEX_AND_FREENODE;
+
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
@@ -500,6 +537,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     {
         *n = orderly_alloc_node(alloc, orderly_node_union);
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+        CHECK_LEX_AND_FREENODE;
+
         if (t != orderly_tok_left_curly) {
             orderly_free_node(alloc, n);            
             return orderly_parse_s_left_curly_expected;
@@ -515,6 +554,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         else
         {
             t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
+            CHECK_LEX_AND_FREENODE;
+
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
@@ -585,7 +626,7 @@ orderly_parse(orderly_alloc_funcs * alloc,
         orderly_tok t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset,
                                         NULL, NULL);
         if (t == orderly_tok_semicolon) {
-            t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset, NULL, NULL);            
+             t = orderly_lex_lex(lxr, schemaText, schemaTextLen, &offset, NULL, NULL);            
         }
         
         if (t != orderly_tok_eof) {

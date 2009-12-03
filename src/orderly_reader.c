@@ -34,8 +34,8 @@
 #include "api/node.h"
 #include "orderly_buf.h"
 
-
 #include "orderly_parse.h"
+#include "orderly_lex.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -117,45 +117,75 @@ orderly_get_error(orderly_reader r)
     const char * err = "unknown error.";
 
     if (r) {
-        switch(r->status) {
-            case orderly_parse_s_ok:
-                err = "ok (no error)";
-                break;
-            case orderly_parse_s_not_implemented:
-                err = "internal error (language feature not yet implemented by orderly parser)";
-                break;
-            case orderly_parse_s_prop_name_expected:
-                err = "property name expected";
-                break;
-            case orderly_parse_s_gt_expected:
-                err = "greater than '>' expected";
-                break;
-            case orderly_parse_s_prop_name_syntax_error:
-                err = "syntax error inside property name";
-                break;
-            case orderly_parse_s_expected_schema_entry:
-                err = "expected a schema element (i.e. \"string foo;\")";
-                break;
-            case orderly_parse_s_junk_at_end_of_input:
-                err = "unexpected rubbish at end of input";
-                break;
-            case orderly_parse_s_malformed_range:
-                err = "range malformed";
-                break;
-            case orderly_parse_s_integer_overflow:
-                err = "integer overflow!  woah.  big number!";
-                break;
-            case orderly_parse_s_numeric_parse_error:
-                err = "numeric parse error.  thems some funny lookin' digits.";
-                break;
-            case orderly_parse_s_left_curly_expected:
-                err = "expected a left curly brace '{'";
-                break;
-            case orderly_parse_s_right_curly_expected:
-                err = "expected a right curly brace '}'";
-                break;
+        if (r->status < orderly_parse_s_lex_error) {
+            switch(r->status) {
+                case orderly_parse_s_ok:
+                    err = "ok (no error)";
+                    break;
+                case orderly_parse_s_not_implemented:
+                    err = "internal error (language feature not yet implemented by orderly parser)";
+                    break;
+                case orderly_parse_s_prop_name_expected:
+                    err = "property name expected";
+                    break;
+                case orderly_parse_s_gt_expected:
+                    err = "greater than '>' expected";
+                    break;
+                case orderly_parse_s_prop_name_syntax_error:
+                    err = "syntax error inside property name";
+                    break;
+                case orderly_parse_s_expected_schema_entry:
+                    err = "expected a schema element (i.e. \"string foo;\")";
+                    break;
+                case orderly_parse_s_junk_at_end_of_input:
+                    err = "unexpected rubbish at end of input";
+                    break;
+                case orderly_parse_s_malformed_range:
+                    err = "range malformed";
+                    break;
+                case orderly_parse_s_integer_overflow:
+                    err = "integer overflow!  woah.  big number!";
+                    break;
+                case orderly_parse_s_numeric_parse_error:
+                    err = "numeric parse error.  thems some funny lookin' digits.";
+                    break;
+                case orderly_parse_s_left_curly_expected:
+                    err = "expected a left curly brace '{'";
+                    break;
+                case orderly_parse_s_right_curly_expected:
+                    err = "expected a right curly brace '}'";
+                    break;
+                case orderly_parse_s_lex_error:
+                    err = "internal error";
+                    break;
+            }
+        } else {
+            switch ((orderly_lex_error) r->status - orderly_parse_s_lex_error) {
+                case orderly_lex_invalid_char:
+                    err = "invalid character found in input text";
+                    break;
+                case orderly_lex_not_implemented:
+                    err = "internal error (language feature not yet implemented by orderly lexer)";
+                    break;
+                case orderly_lex_unterminated_string:
+                    err = "unterminated string";
+                    break;
+                case orderly_lex_unterminated_array:
+                    err = "unterminated array";
+                    break;
+                case orderly_lex_missing_integer_after_minus:
+                    err = "missing integer after minus sign ('-')";
+                    break;
+                case orderly_lex_missing_integer_after_decimal:
+                    err = "missing integer after decimal point";
+                    break;
+                case orderly_lex_missing_integer_after_exponent:
+                    err = "missing integer after exponent marker ('e' or 'E')";
+                    break;
+            }
         }
     }
+
     
     return err;
 }
