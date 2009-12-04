@@ -64,7 +64,8 @@ main(int argc, char ** argv)
         schema = orderly_write(w, ORDERLY_TEXTUAL, n);
         
         if (schema) {
-            write(0, schema, strlen(schema));
+            fwrite(schema, strlen(schema), 1, stdout);
+            fflush(stdout);
         }
         
         orderly_writer_free(&w);
