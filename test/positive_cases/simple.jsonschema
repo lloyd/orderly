@@ -1,0 +1,15 @@
+# { "name": { "first": "Lloyd", "last":"Hilaiel" }, "age": 32  }
+{
+  "type": "object",
+  "properties": {
+    "age": {
+      "type":"integer",
+      "mininum": 0,
+      "maximum": 200
+    },
+    "name": {
+      "first": { "type": "string" },
+      "last": { "type": "string" }
+    }
+  }
+}
