@@ -30,47 +30,20 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-#include "orderly/writer.h"
-#include "orderly/reader.h"
+#ifndef __ORDERLY_JSON_PARSE_H__
+#define __ORDERLY_JSON_PARSE_H__
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/uio.h>
-#include <unistd.h>
-#include <string.h>
+#include "api/common.h"
+#include "api/node.h"
 
-#define MAX_INPUT_TEXT (1 << 20)
-int
-main(int argc, char ** argv) 
-{
-    /* XXX: 1 meg max schema size... */
-    static char inbuf[MAX_INPUT_TEXT];
-    size_t tot = 0, rd;
-    while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
-    {
-        tot += rd;
-    }
+typedef enum {
+    orderly_json_parse_s_ok = 0
+} orderly_json_parse_status;
 
-    {
-        orderly_writer w = orderly_writer_new(NULL);
-        orderly_reader r = orderly_reader_new(NULL);
-        const orderly_node * n;
-        const char * schema;
+orderly_json_parse_status
+orderly_json_parse(orderly_alloc_funcs * alloc,
+                   const unsigned char * schemaText,
+                   const unsigned int schemaTextLen,
+                   orderly_node ** n);
 
-        /* now read and parse the schema */
-        n = orderly_read(r, ORDERLY_UNKNOWN, inbuf, tot);
-
-        /* now write the schema */
-        schema = orderly_write(w, ORDERLY_TEXTUAL, n);
-        
-        if (schema) {
-            fwrite(schema, strlen(schema), 1, stdout);
-            fflush(stdout);
-        }
-        
-        orderly_writer_free(&w);
-        orderly_reader_free(&r);
-    }
-    
-    return 0;
-}
+#endif

@@ -1,4 +1,4 @@
-# { "name": { "first": "Lloyd", "last":"Hilaiel" }, "age": 32  }
+// { "name": { "first": "Lloyd", "last":"Hilaiel" }, "age": 32  }
 {
   "type": "object",
   "properties": {

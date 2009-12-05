@@ -43,7 +43,7 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(${exeName} ${SRCS})
 
-TARGET_LINK_LIBRARIES(${exeName} orderly_s)
+TARGET_LINK_LIBRARIES(${exeName} orderly)
 
 # copy the binary into the output directory
 GET_TARGET_PROPERTY(binPath ${exeName} LOCATION)

@@ -110,6 +110,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_numeric_parse_error: return "numeric_parse_error";
         case orderly_parse_s_left_curly_expected: return "left_curly_expected";
         case orderly_parse_s_right_curly_expected: return "right_curly_expected";
+        case orderly_parse_s_lex_error: return "lex_error";
     }
     return "unknown";
 }

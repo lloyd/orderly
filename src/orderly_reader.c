@@ -35,6 +35,7 @@
 #include "orderly_buf.h"
 
 #include "orderly_parse.h"
+#include "orderly_json_parse.h"
 #include "orderly_lex.h"
 
 #include <stdlib.h>
@@ -97,15 +98,29 @@ const orderly_node *
 orderly_read(orderly_reader r, orderly_format fmt,
              const char * schema, unsigned int len)
 {
-    /* XXX: set an error code? */
+    /* We cannot set set an error code, return NULL */
     if (r == NULL) return NULL;
     
     /* if this handle has been used before, now is the time
      * to free the parse tree */
     if (r->node) orderly_free_node(&(r->alloc), &(r->node));
-    
-    r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
-                              len, &(r->node), &(r->finalOffset));
+
+    if (fmt == ORDERLY_JSONSCHEMA) {
+        r->finalOffset = 0;
+        r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
+                                       len, &(r->node));
+    } else if (fmt == ORDERLY_TEXTUAL) {
+        r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
+                                  len, &(r->node), &(r->finalOffset));
+    } else {
+        /** XXX: we'll try orderly first, then jsonschema */ 
+        r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
+                                  len, &(r->node), &(r->finalOffset));
+        if (r->status != orderly_parse_s_ok) {
+            r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
+                                           len, &(r->node));
+        }
+    }
     
     return r->node;
 }
