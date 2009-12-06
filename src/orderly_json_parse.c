@@ -250,7 +250,7 @@ static int js_parse_end_map(void * ctx)
             }
         }
         pc->state = OPS_HandleProperties;
-    } else if (pc->state ==  == OPS_HandleProperties) {
+    } else if (pc->state == OPS_HandleProperties) {
 
     }
     

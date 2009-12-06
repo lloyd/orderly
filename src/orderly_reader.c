@@ -173,6 +173,8 @@ orderly_get_error(orderly_reader r)
                     err = "expected a right curly brace '}'";
                     break;
                 case orderly_parse_s_lex_error:
+                case orderly_parse_s_jsonschema_error:
+                    /* outer if should keep this code from ever executing */
                     err = "internal error";
                     break;
             }
