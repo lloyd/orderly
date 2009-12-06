@@ -60,3 +60,52 @@ orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,
     n->t = t;
     return n;
 }
+
+const char * orderly_node_type_to_string(orderly_node_type t)
+{
+    const char * type = NULL;
+    switch (t) {
+        case orderly_node_empty: type = "empty"; break;
+        case orderly_node_null: type = "null"; break;
+        case orderly_node_string: type = "string"; break;
+        case orderly_node_boolean: type = "boolean"; break;
+        case orderly_node_any: type = "any"; break;
+        case orderly_node_integer: type = "integer"; break;
+        case orderly_node_number: type = "number"; break;
+        case orderly_node_object: type = "object"; break;
+        case orderly_node_array: type = "array"; break;
+        case orderly_node_union: type = "union"; break;
+    }
+    return type;
+}
+
+orderly_node_type orderly_string_to_node_type(const char * type,
+                                              unsigned int typeLen)
+{
+    orderly_node_type t = orderly_node_empty;
+    if (type == NULL || typeLen == 0) return t;
+
+    if (!strncmp(type, "empty", typeLen)) {
+        t = orderly_node_null;
+    } else if (!strncmp(type, "null", typeLen)) {
+        t = orderly_node_null;
+    } else if (!strncmp(type, "string", typeLen)) {
+        t = orderly_node_string;
+    } else if (!strncmp(type, "boolean", typeLen)) {
+        t = orderly_node_boolean;
+    } else if (!strncmp(type, "any", typeLen)) {
+        t = orderly_node_any;
+    } else if (!strncmp(type, "integer", typeLen)) {
+        t = orderly_node_integer;
+    } else if (!strncmp(type, "number", typeLen)) {
+        t = orderly_node_number;
+    } else if (!strncmp(type, "object", typeLen)) {
+        t = orderly_node_object;
+    } else if (!strncmp(type, "array", typeLen)) {
+        t = orderly_node_array;
+    } else if (!strncmp(type, "union", typeLen)) {
+        t = orderly_node_union;
+    }
+    return t;
+}
+

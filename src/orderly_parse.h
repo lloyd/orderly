@@ -61,7 +61,9 @@ typedef enum {
     orderly_parse_s_left_curly_expected,
     orderly_parse_s_right_curly_expected,
     /** error codes of 1000 or greater represent lexographic errors */
-    orderly_parse_s_lex_error = 1000
+    orderly_parse_s_lex_error = 1000,
+    /** error codes of 10000 or greater represent jsonschema parsing errors */
+    orderly_parse_s_jsonschema_error = 10000
 } orderly_parse_status;
 
 orderly_parse_status

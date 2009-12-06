@@ -108,7 +108,8 @@ orderly_read(orderly_reader r, orderly_format fmt,
     if (fmt == ORDERLY_JSONSCHEMA) {
         r->finalOffset = 0;
         r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
-                                       len, &(r->node));
+                                       len, &(r->node), &(r->finalOffset));
+        if (r->status) r->status += orderly_parse_s_jsonschema_error;
     } else if (fmt == ORDERLY_TEXTUAL) {
         r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
                                   len, &(r->node), &(r->finalOffset));
@@ -118,7 +119,8 @@ orderly_read(orderly_reader r, orderly_format fmt,
                                   len, &(r->node), &(r->finalOffset));
         if (r->status != orderly_parse_s_ok) {
             r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
-                                           len, &(r->node));
+                                           len, &(r->node), &(r->finalOffset));
+            if (r->status) r->status += orderly_parse_s_jsonschema_error;
         }
     }
     
@@ -174,7 +176,7 @@ orderly_get_error(orderly_reader r)
                     err = "internal error";
                     break;
             }
-        } else {
+        } else if (r->status < orderly_parse_s_jsonschema_error) {
             switch ((orderly_lex_error) r->status - orderly_parse_s_lex_error) {
                 case orderly_lex_invalid_char:
                     err = "invalid character found in input text";
@@ -196,6 +198,30 @@ orderly_get_error(orderly_reader r)
                     break;
                 case orderly_lex_missing_integer_after_exponent:
                     err = "missing integer after exponent marker ('e' or 'E')";
+                    break;
+            }
+        } else {
+            switch ((orderly_json_parse_status) r->status - orderly_parse_s_jsonschema_error) {
+                case orderly_json_parse_s_ok:
+                    err = "no error, it's all good.";
+                    break;
+                case orderly_json_parse_s_unexpected_property_name:
+                    err = "unexpected property name encountered";
+                    break;
+                case orderly_json_parse_s_unexpected_json_map:
+                    err = "unexpected json map encountered";
+                    break;
+                case orderly_json_parse_s_unrecognized_node_type:
+                    err = "schema node type is unrecognized";
+                    break;
+                case orderly_json_parse_s_unexpected_json_property:
+                    err = "unexpected property encountered in json text";
+                    break;
+                case orderly_json_parse_s_unexpected_json_string:
+                    err = "unexpected json string encountered";
+                    break;
+                case orderly_json_parse_s_unexpected_number:
+                    err = "unexpected number in json text";
                     break;
             }
         }

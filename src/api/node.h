@@ -48,6 +48,9 @@ typedef enum {
     orderly_node_union
 } orderly_node_type;
 
+const char * orderly_node_type_to_string(orderly_node_type t);
+orderly_node_type orderly_string_to_node_type(const char *, unsigned int);
+
 #define ORDERLY_RANGE_LHS_INT 0x1
 #define ORDERLY_RANGE_LHS_DOUBLE 0x2
 #define ORDERLY_RANGE_HAS_LHS(r) ((r).info & (ORDERLY_RANGE_LHS_INT | ORDERLY_RANGE_LHS_DOUBLE))

@@ -4,12 +4,15 @@
   "properties": {
     "age": {
       "type":"integer",
-      "mininum": 0,
+      "minimum": 0,
       "maximum": 200
     },
     "name": {
-      "first": { "type": "string" },
-      "last": { "type": "string" }
+      "type": "object",
+      "properties": {
+        "first": { "type": "string" },
+        "last": { "type": "string" }
+      } 
     }
   }
 }

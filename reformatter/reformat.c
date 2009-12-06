@@ -43,6 +43,8 @@
 int
 main(int argc, char ** argv) 
 {
+    int rv = 0;
+
     /* XXX: 1 meg max schema size... */
     static char inbuf[MAX_INPUT_TEXT];
     size_t tot = 0, rd;
@@ -60,17 +62,23 @@ main(int argc, char ** argv)
         /* now read and parse the schema */
         n = orderly_read(r, ORDERLY_UNKNOWN, inbuf, tot);
 
-        /* now write the schema */
-        schema = orderly_write(w, ORDERLY_TEXTUAL, n);
+        if (!n) {
+            rv = 1;            
+            fprintf(stderr, "Schema is invalid: %s\n%s\n", orderly_get_error(r),
+                    orderly_get_error_context(r, inbuf, tot));
+        } else {
+            /* now write the schema */
+            schema = orderly_write(w, ORDERLY_TEXTUAL, n);
         
-        if (schema) {
-            fwrite(schema, strlen(schema), 1, stdout);
-            fflush(stdout);
+            if (schema) {
+                fwrite(schema, strlen(schema), 1, stdout);
+                fflush(stdout);
+            }
         }
         
         orderly_writer_free(&w);
         orderly_reader_free(&r);
     }
     
-    return 0;
+    return rv;
 }

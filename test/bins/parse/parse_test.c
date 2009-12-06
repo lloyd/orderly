@@ -49,19 +49,9 @@ static void dumpNode(orderly_node * n, unsigned int indent)
     indentStr[indent*4] = 0;
 
     if (n) {
-        const char * type = "unknown";
-        switch (n->t) {
-            case orderly_node_empty: type = "empty"; break;
-            case orderly_node_null: type = "null"; break;
-            case orderly_node_string: type = "string"; break;
-            case orderly_node_boolean: type = "boolean"; break;
-            case orderly_node_any: type = "any"; break;
-            case orderly_node_integer: type = "integer"; break;
-            case orderly_node_number: type = "number"; break;
-            case orderly_node_object: type = "object"; break;
-            case orderly_node_array: type = "array"; break;
-            case orderly_node_union: type = "union"; break;
-        }
+        const char * type = orderly_node_type_to_string(n->t);
+        if (NULL == type) type = "unknown";
+
         printf("%s%s [%s] %s\n", indentStr, n->name ? n->name : "", type,
                n->optional ? "OPTIONAL" : "");        
         if (n->default_value) printf("%s--> default: %s\n",
@@ -111,6 +101,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_left_curly_expected: return "left_curly_expected";
         case orderly_parse_s_right_curly_expected: return "right_curly_expected";
         case orderly_parse_s_lex_error: return "lex_error";
+        case orderly_parse_s_jsonschema_error: return "jsonschema_parse_error";
     }
     return "unknown";
 }

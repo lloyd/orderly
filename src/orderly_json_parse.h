@@ -37,13 +37,20 @@
 #include "api/node.h"
 
 typedef enum {
-    orderly_json_parse_s_ok = 0
+    orderly_json_parse_s_ok = 0,
+    orderly_json_parse_s_unexpected_property_name,
+    orderly_json_parse_s_unexpected_json_map,
+    orderly_json_parse_s_unrecognized_node_type,
+    orderly_json_parse_s_unexpected_json_property,
+    orderly_json_parse_s_unexpected_json_string,
+    orderly_json_parse_s_unexpected_number
 } orderly_json_parse_status;
 
 orderly_json_parse_status
 orderly_json_parse(orderly_alloc_funcs * alloc,
                    const unsigned char * schemaText,
                    const unsigned int schemaTextLen,
-                   orderly_node ** n);
+                   orderly_node ** n,
+                   unsigned int * final_offset);
 
 #endif
