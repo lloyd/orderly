@@ -47,7 +47,8 @@ typedef enum {
     OPS_Init = 0,
     OPS_ParseNode,
     OPS_HandleType,
-    OPS_HandleProperties,
+    OPS_HandleProperties0,
+    OPS_HandleProperties1,
     OPS_HandleMinimum,
     OPS_HandleMaximum,
     OPS_EndOfStates
@@ -61,7 +62,7 @@ static const char *
 psToString(orderly_parse_state ps)
 {
     static const char * states[] = {
-        "init", "pnode", "htype",  "props", "min", "max"
+        "init", "pnode", "htype",  "hp0", "hp1", "min", "max"
     };
     if (ps >= OPS_EndOfStates) return "?????";
     return states[ps];
@@ -190,7 +191,8 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
         if (v && !strncmp((const char *) v, "type", l)) {
             pc->state = OPS_HandleType;
         } else if (v && !strncmp((const char *) v, "properties", l)) {
-            pc->state = OPS_HandleProperties;
+            
+            pc->state = OPS_HandleProperties0;
         } else if (v && !strncmp((const char *) v, "minimum", l)) {
             pc->state = OPS_HandleMinimum;
         } else if (v && !strncmp((const char *) v, "maximum", l)) {
@@ -198,7 +200,7 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
         } else {
             pc->error = orderly_json_parse_s_unexpected_property_name;
         }
-    } else if (pc->state == OPS_HandleProperties) {
+    } else if (pc->state == OPS_HandleProperties1) {
         /* push this key onto the keystack */
         char * key;
         BUF_STRDUP(key, pc->alloc, v, l);
@@ -221,7 +223,8 @@ static int js_parse_start_map(void * ctx)
         pc->state = OPS_ParseNode;
         pc->current = orderly_alloc_node(pc->alloc, orderly_node_empty);
         pc->current->sibling = old;
-    } else if (pc->state == OPS_HandleProperties) {
+    } else if (pc->state == OPS_HandleProperties0) {
+        pc->state = OPS_HandleProperties1;
         orderly_ps_push(pc->alloc, pc->nodes, pc->current);
         pc->current = NULL;
     } else {
@@ -235,26 +238,27 @@ static int js_parse_start_map(void * ctx)
 static int js_parse_end_map(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
+
+    DUMP_PARSER_STATE("js_parse_end_map", "}");
+
     if (pc->state == OPS_ParseNode) {    
-        /* current will become a child of the top node on the
-         * stack, and will inherit the name of the top key on the
-         * keystack.  True *except for the outermost node */
+        /* last name on the stack belongs to us */
+        if (orderly_ps_length(pc->keys)) {
+            pc->current->name = orderly_ps_current(pc->keys);
+            orderly_ps_pop(pc->keys);                            
+        }
+        pc->state = OPS_HandleProperties1;
+    } else if (pc->state == OPS_HandleProperties1) {
+        /* current becomes child of first node on the stack */
         if (orderly_ps_length(pc->nodes)) {
             orderly_node * kid = pc->current;
             pc->current = orderly_ps_current(pc->nodes);
             orderly_ps_pop(pc->nodes);            
             pc->current->child = kid;
-            if (orderly_ps_length(pc->keys)) {
-                pc->current->name = orderly_ps_current(pc->keys);
-                orderly_ps_pop(pc->keys);                            
-            }
         }
-        pc->state = OPS_HandleProperties;
-    } else if (pc->state == OPS_HandleProperties) {
 
+        pc->state = OPS_ParseNode;        
     }
-    
-    DUMP_PARSER_STATE("js_parse_end_map", "}");
     return 1;
 }
 
