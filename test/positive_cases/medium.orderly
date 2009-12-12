@@ -1,4 +1,3 @@
-# { "name": { "first": "Lloyd", "last":"Hilaiel" }, "age": 32  }
 object {
   object {
     string first;

@@ -54,7 +54,7 @@ typedef enum {
     OPS_EndOfStates
 } orderly_parse_state;
 
-#define ORDERLY_DEBUG_PARSER 1
+/* #define ORDERLY_DEBUG_PARSER 1 */
 #if defined(ORDERLY_DEBUG_PARSER)
 #include <stdio.h>
 
@@ -94,7 +94,10 @@ psToString(orderly_parse_state ps)
   DUMP_PARSER_STATE((__s), buf);                   \
 }
 #else
-#define DUMP_PARSER_STATE(__s) ;
+#define DUMP_PARSER_STATE(x,y);
+#define DUMP_PARSER_STATE_DOUBLE(x,y);
+#define DUMP_PARSER_STATE_LONG(x,y);
+#define DUMP_PARSER_STATE_STR(x,y,z);
 #endif
 
 
@@ -323,9 +326,9 @@ orderly_json_parse(orderly_alloc_funcs * alloc,
     }
     else if (stat != yajl_status_ok)
     {
-        unsigned char * str = yajl_get_error(hand, 1, schemaText, schemaTextLen);
-        fprintf(stderr, (const char *) str);
-        yajl_free_error(hand, str);
+/*        unsigned char * str = yajl_get_error(hand, 1, schemaText, schemaTextLen);
+          fprintf(stderr, (const char *) str);
+          yajl_free_error(hand, str); */
         if (final_offset) *final_offset = yajl_get_error_offset(hand);
     }
     else
