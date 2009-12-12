@@ -576,8 +576,9 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     return s;
 }
 
+
 static orderly_parse_status
-orderly_parse_named_entry(orderly_alloc_funcs * alloc,
+orderly_parse_unnamed_entry(orderly_alloc_funcs * alloc,
                           const unsigned char * schemaText,
                           const unsigned int schemaTextLen,
                           orderly_lexer lxr,
@@ -585,7 +586,7 @@ orderly_parse_named_entry(orderly_alloc_funcs * alloc,
                           orderly_node ** n)
 {
     return orderly_parse_entry(alloc, schemaText, schemaTextLen, lxr,
-                               offset, n, 1);
+                               offset, n, 0);
 }
 
 
@@ -618,8 +619,8 @@ orderly_parse(orderly_alloc_funcs * alloc,
     *n = NULL;
     
     lxr = orderly_lex_alloc(alloc);
-    s = orderly_parse_named_entry(alloc, schemaText, schemaTextLen, lxr,
-                                  &offset, n);
+    s = orderly_parse_unnamed_entry(alloc, schemaText, schemaTextLen, lxr,
+                                    &offset, n);
 
     /* if we've parsed ok so far, let's ensure we consumed the entire schema. */
     if (s == orderly_parse_s_ok) {

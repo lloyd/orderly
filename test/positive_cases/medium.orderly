@@ -3,5 +3,5 @@ object {
     string first;
     string last;
   } name;
-  integer age [0,200];
-} person;
+  integer {0,200} age;
+};
