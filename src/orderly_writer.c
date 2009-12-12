@@ -79,7 +79,7 @@ orderly_writer_free(orderly_writer *w)
 static int
 dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
 {
-    static const char * indentStr = "    ";
+    static const char * indentStr = "  ";
     char buf[128];
 
 #define INDENT_IF_DESIRED                                    \
