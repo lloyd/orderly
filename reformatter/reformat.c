@@ -38,10 +38,11 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_INPUT_TEXT (1 << 20)
 
-void
+static void
 usage(const char * progname)
 {
     printf("%s: a filter program to reformat jsonschema or orderly\n"
@@ -77,6 +78,7 @@ main(int argc, char ** argv)
             case 'o': outform = f; break;
             default: usage(argv[0]);
         }
+        a += 2;
     }
     if (a < argc) {
         usage(argv[0]);

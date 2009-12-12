@@ -33,6 +33,8 @@
 #include "api/writer.h"
 #include "orderly_buf.h"
 
+#include <yajl/yajl_gen.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -42,7 +44,7 @@ struct orderly_writer_t
     struct orderly_writer_config cfg;
     orderly_buf b;
 };
-
+    
 orderly_writer
 orderly_writer_new(const struct orderly_writer_config * cfg)
 {
@@ -77,7 +79,7 @@ orderly_writer_free(orderly_writer *w)
 }
 
 static int
-dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
+dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
 {
     static const char * indentStr = "  ";
     char buf[128];
@@ -92,19 +94,7 @@ dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
 
 
     if (n) {
-        const char * type = NULL;
-        switch (n->t) {
-            case orderly_node_empty: type = "empty"; break;
-            case orderly_node_null: type = "null"; break;
-            case orderly_node_string: type = "string"; break;
-            case orderly_node_boolean: type = "boolean"; break;
-            case orderly_node_any: type = "any"; break;
-            case orderly_node_integer: type = "integer"; break;
-            case orderly_node_number: type = "number"; break;
-            case orderly_node_object: type = "object"; break;
-            case orderly_node_array: type = "array"; break;
-            case orderly_node_union: type = "union"; break;
-        }
+        const char * type = orderly_node_type_to_string(n->t);
         if (!type) return 0;
 
         INDENT_IF_DESIRED;
@@ -114,7 +104,7 @@ dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
         if (n->child) {
             orderly_buf_append_string(w->b, " {");
             if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");
-            dumpNode(w, n->child, indent + 1);
+            dumpNodeAsOrderly(w, n->child, indent + 1);
             INDENT_IF_DESIRED;
             orderly_buf_append_string(w->b, "}");
         }
@@ -183,10 +173,119 @@ dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
         if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");        
 
         if (n->sibling) {
-            dumpNode(w, n->sibling, indent);
+            dumpNodeAsOrderly(w, n->sibling, indent);
         }
     }
     return 1;
+}
+
+static int
+dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int indent,
+                     yajl_gen yg)
+{
+    if (n) {
+        const char * type = orderly_node_type_to_string(n->t);
+        if (!type) return 0;
+        
+        /* open up this entry */
+        yajl_gen_map_open(yg);
+        
+        /* dump the type */
+        yajl_gen_string(yg, (const unsigned char *) "type", 4);
+        yajl_gen_string(yg, (const unsigned char *) type, strlen(type));        
+
+        /*  children!  */
+        if (n->child) {
+            const orderly_node * kid = n->child;
+            
+            yajl_gen_string(yg, (const unsigned char *) "properties", 10);
+            yajl_gen_map_open(yg);            
+            for (kid = n->child; kid != NULL; kid = kid->sibling) {
+                if (!kid->name) return 0;
+                yajl_gen_string(yg, (const unsigned char *) kid->name, strlen(kid->name));
+                dumpNodeAsJSONSchema(w, kid, indent + 1, yg);
+                
+            }
+            yajl_gen_map_close(yg);
+            
+        }
+
+/*         /\* optional range *\/ */
+/*         if (ORDERLY_RANGE_SPECIFIED(n->range)) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, "{"); */
+/*             if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info) */
+/*                 sprintf(buf, "%g", n->range.lhs.d); */
+/*             else if (ORDERLY_RANGE_LHS_INT & n->range.info) */
+/*                 sprintf(buf, "%ld", n->range.lhs.i); */
+/*             if (buf[0]) orderly_buf_append_string(w->b, buf); */
+/*             orderly_buf_append_string(w->b, ","); */
+/*             buf[0] = 0; */
+/*             if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info) */
+/*                 sprintf(buf, "%g", n->range.rhs.d); */
+/*             else if (ORDERLY_RANGE_RHS_INT & n->range.info) */
+/*                 sprintf(buf, "%ld", n->range.rhs.i); */
+/*             if (buf[0]) orderly_buf_append_string(w->b, buf); */
+/*             orderly_buf_append_string(w->b, "}"); */
+/*         } */
+
+/*         /\* name time *\/ */
+/*         if (n->name) { */
+/*             /\* XXX: names with spaces an' shit? *\/ */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, n->name); */
+/*         } */
+
+/*         /\* optional regex *\/ */
+/*         if (n->regex) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, n->regex); */
+/*         } */
+
+/*         /\* enumerated possible values *\/ */
+/*         if (n->values) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, n->values); */
+/*         } */
+        
+/*         /\* default value *\/ */
+/*         if (n->default_value) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, "="); */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, n->default_value); */
+/*         } */
+
+/*         /\* requires value *\/ */
+/*         if (n->requires) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, "<"); */
+/*             orderly_buf_append_string(w->b, n->requires); */
+/*             orderly_buf_append_string(w->b, ">"); */
+/*         } */
+
+/*         if (n->optional) { */
+/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
+/*             orderly_buf_append_string(w->b, "?"); */
+/*         } */
+
+/*         orderly_buf_append_string(w->b, ";");         */
+/*         if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");         */
+
+/*         if (n->sibling) { */
+/*             dumpNodeAsJSONSchema(w, n->sibling, indent); */
+/*         } */
+        yajl_gen_map_close(yg);
+
+    }
+    return 1;
+}
+
+
+static void
+bufAppendCallback(void * ctx, const char * str, unsigned int len)
+{
+    orderly_buf_append((orderly_buf) ctx, str, len);
 }
 
 
@@ -196,7 +295,18 @@ orderly_write(orderly_writer w, orderly_format fmt,
 {
     if (!w) return NULL;
     orderly_buf_clear(w->b);
-    /** XXX: respect the fmt */
-    if (!dumpNode(w, node, 0)) return NULL;
+    /** respect the fmt */
+    if (fmt == ORDERLY_JSONSCHEMA) {
+        yajl_gen_config cfg = { 1, NULL };
+        yajl_gen g = yajl_gen_alloc2(bufAppendCallback, &cfg,
+                                     (const yajl_alloc_funcs *) w->cfg.alloc,
+                                     (void *) w->b);
+        int rv = dumpNodeAsJSONSchema(w, node, 0, g);
+        yajl_gen_free(g);
+        if (!rv) return NULL;
+    } else {
+        if (!dumpNodeAsOrderly(w, node, 0)) return NULL;    
+    }
+    
     return (const char *) orderly_buf_data(w->b);
 }
