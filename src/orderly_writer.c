@@ -131,7 +131,7 @@ dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
             else if (ORDERLY_RANGE_LHS_INT & n->range.info)
                 sprintf(buf, "%ld", n->range.lhs.i);
             if (buf[0]) orderly_buf_append_string(w->b, buf);
-            printf(",");
+            orderly_buf_append_string(w->b, ",");
             buf[0] = 0;
             if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
                 sprintf(buf, "%g", n->range.rhs.d);
