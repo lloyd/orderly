@@ -5,4 +5,3 @@ anyone# a keyword and thensome
 "this is a keyword with spaces" // self documenting
 "\""   # escaping alone
 "\"'!#$%&(@%*^!)#)!^\\" # lotsa stuff in addition to escaping
-

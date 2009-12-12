@@ -7,9 +7,8 @@
 (  3, 26): 'normalTemperature' property_name
 (  3, 27): ';' semicolon
 (  4,  1): '}' r_curly
-(  4,  7): 'temps' property_name
-(  5, 59): '[ { "beast": "canine", "normalTemperature": 101.2 },
-          { "beast": "human", "normalTemperature": 98.6 } ]' json_array
-(  6, 59): '{ "beast": "canine", "normalTemperature": 101.2 }' default_value
-(  6, 60): ';' semicolon
+(  5, 53): '[ { "beast": "canine", "normalTemperature": 101.2 },
+    { "beast": "human", "normalTemperature": 98.6 } ]' json_array
+(  6, 53): '{ "beast": "canine", "normalTemperature": 101.2 }' default_value
+(  6, 54): ';' semicolon
 (  7,  0): '' eof

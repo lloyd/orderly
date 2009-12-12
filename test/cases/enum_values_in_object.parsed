@@ -1,5 +1,5 @@
 parse complete (ok):
-obj [object] 
+ [object] 
 children:
     mood [string] 
     --> enum: [ "happy", "sad", "meh" ]

@@ -1,2 +1,2 @@
-parse complete (junk_at_end_of_input):
+parse complete (prop_name_expected):
 (null)

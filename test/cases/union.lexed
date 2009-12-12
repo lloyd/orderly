@@ -6,6 +6,5 @@
 (  3,  8): 'null' kw_null
 (  3,  9): ';' semicolon
 (  4,  1): '}' r_curly
-(  4,  8): 'suffix' property_name
-(  4,  9): ';' semicolon
+(  4,  2): ';' semicolon
 (  5,  0): '' eof

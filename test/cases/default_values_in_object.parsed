@@ -1,5 +1,5 @@
 parse complete (ok):
-mine [object] 
+ [object] 
 children:
     mood [string] 
     --> default: "happy"

@@ -1,8 +1,8 @@
 parse complete (ok):
-temps [object] 
+ [object] 
 --> default: { "beast": "canine", "normalTemperature": 101.2 }
 --> enum: [ { "beast": "canine", "normalTemperature": 101.2 },
-          { "beast": "human", "normalTemperature": 98.6 } ]
+    { "beast": "human", "normalTemperature": 98.6 } ]
 children:
     beast [string] 
     normalTemperature [number] 

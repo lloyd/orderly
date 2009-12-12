@@ -1,3 +1,5 @@
 parse complete (ok):
-myrange [integer] 
---> range: {-100,100}
+ [object] 
+children:
+    myrange [integer] 
+    --> range: {-100,100}

@@ -1,4 +1,4 @@
 Schema is invalid: unexpected rubbish at end of input
-          rubbish: string thisIsAString; rubbish; 
+          emen, this is rubbish: string; rubbish; 
                      (right here) ------^
 

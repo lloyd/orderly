@@ -41,6 +41,5 @@
 (  9, 19): 'null' default_value
 (  9, 20): ';' semicolon
 ( 10,  1): '}' r_curly
-( 10,  6): 'mine' property_name
-( 10,  7): ';' semicolon
-( 12,  0): '' eof
+( 10,  2): ';' semicolon
+( 11,  0): '' eof

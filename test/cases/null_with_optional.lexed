@@ -1,5 +1,4 @@
 (  1,  4): 'null' kw_null
-(  1, 12): 'likeAir' property_name
-(  1, 13): '?' optional_marker
-(  1, 14): ';' semicolon
+(  1,  5): '?' optional_marker
+(  1,  6): ';' semicolon
 (  2,  0): '' eof

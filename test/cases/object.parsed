@@ -1,5 +1,5 @@
 parse complete (ok):
-myobject [object] 
+ [object] 
 children:
     foo [string] 
     bar [integer] 

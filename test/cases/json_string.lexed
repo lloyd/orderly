@@ -1,4 +1,8 @@
-(  2,  6): 'string' kw_string
-(  2, 12): '"foo"' json_string
-(  2, 13): ';' semicolon
-(  3,  0): '' eof
+(  2,  6): 'object' kw_object
+(  2,  8): '{' l_curly
+(  3,  8): 'string' kw_string
+(  3, 14): '"foo"' json_string
+(  3, 15): ';' semicolon
+(  4,  1): '}' r_curly
+(  4,  2): ';' semicolon
+(  4,  2): '' eof

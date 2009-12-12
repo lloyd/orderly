@@ -10,6 +10,5 @@
 (  4, 14): 'baz' property_name
 (  4, 15): ';' semicolon
 (  5,  1): '}' r_curly
-(  5, 10): 'myobject' property_name
-(  5, 11): ';' semicolon
+(  5,  2): ';' semicolon
 (  6,  0): '' eof
