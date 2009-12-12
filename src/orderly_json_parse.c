@@ -252,14 +252,23 @@ static int js_parse_end_map(void * ctx)
         }
         pc->state = OPS_HandleProperties1;
     } else if (pc->state == OPS_HandleProperties1) {
-        /* current becomes child of first node on the stack */
+        /* current becomes child of first node on the stack, also
+         * *reverse* sibling order.  given the way the parser works, otherwise
+         * a straight forward traversal of the parse tree would yield the
+         * opposite order expected.  slightly wasteful. */
+
         if (orderly_ps_length(pc->nodes)) {
-            orderly_node * kid = pc->current;
+            orderly_node * p = pc->current;
             pc->current = orderly_ps_current(pc->nodes);
             orderly_ps_pop(pc->nodes);            
-            pc->current->child = kid;
+            while (p) {
+                orderly_node * n = p->sibling;
+                p->sibling = pc->current->child;
+                pc->current->child = p;
+                p = n;
+            }
         }
-
+        
         pc->state = OPS_ParseNode;        
     }
     return 1;
