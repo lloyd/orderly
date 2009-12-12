@@ -109,12 +109,10 @@ dumpNode(orderly_writer w, const orderly_node * n, unsigned int indent)
 
         INDENT_IF_DESIRED;
         orderly_buf_append_string(w->b, type);
-        orderly_buf_append_string(w->b, " ");
-
 
         /* children! */
         if (n->child) {
-            orderly_buf_append_string(w->b, "{");
+            orderly_buf_append_string(w->b, " {");
             if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");
             dumpNode(w, n->child, indent + 1);
             INDENT_IF_DESIRED;
