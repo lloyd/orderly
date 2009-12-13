@@ -188,7 +188,6 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
         }
 
         if (n->optional) {
-            if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
             orderly_buf_append_string(w->b, "?");
         }
 
