@@ -210,14 +210,46 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int inde
             
         }
 
-/*         /\* optional range *\/ */
-/*         if (ORDERLY_RANGE_SPECIFIED(n->range)) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, "{"); */
-/*             if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info) */
-/*                 sprintf(buf, "%g", n->range.lhs.d); */
-/*             else if (ORDERLY_RANGE_LHS_INT & n->range.info) */
-/*                 sprintf(buf, "%ld", n->range.lhs.i); */
+        /* optional range */
+        if (ORDERLY_RANGE_SPECIFIED(n->range)) { 
+            const char * minword, * maxword;
+
+            switch (n->t) {
+                case orderly_node_integer:
+                case orderly_node_number:
+                    minword = "minimum";
+                    maxword = "maximum";
+                    break;
+                case orderly_node_array:
+                    minword = "minItems";
+                    maxword = "maxItems";
+                    break;
+                case orderly_node_string:
+                    minword = "minLength";
+                    maxword = "maxLength";
+                    break;
+                default:
+                    return 0; /* XXX: error code!  cannot include min/max params on something other
+                               * than the types enumerated above */ 
+            }
+            
+            if (ORDERLY_RANGE_HAS_LHS(n->range)) {
+                yajl_gen_string(yg, (const unsigned char *) minword, strlen(minword));
+                if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info)
+                    yajl_gen_double(yg, n->range.lhs.d);
+                else if (ORDERLY_RANGE_LHS_INT & n->range.info)
+                    yajl_gen_integer(yg, n->range.lhs.i);
+            }
+
+            if (ORDERLY_RANGE_HAS_RHS(n->range)) {
+                yajl_gen_string(yg, (const unsigned char *) minword, strlen(maxword));
+                if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
+                    yajl_gen_double(yg, n->range.rhs.d);
+                else if (ORDERLY_RANGE_RHS_INT & n->range.info)
+                    yajl_gen_integer(yg, n->range.rhs.i);
+            }
+        }
+
 /*             if (buf[0]) orderly_buf_append_string(w->b, buf); */
 /*             orderly_buf_append_string(w->b, ","); */
 /*             buf[0] = 0; */
