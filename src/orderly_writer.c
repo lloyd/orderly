@@ -203,8 +203,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
 }
 
 static int
-dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int indent,
-                     yajl_gen yg)
+dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 {
     if (n) {
         const char * type = orderly_node_type_to_string(n->t);
@@ -218,18 +217,23 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int inde
         yajl_gen_string(yg, (const unsigned char *) type, strlen(type));        
 
         if (n->child) {
-            const orderly_node * kid = n->child;
-            
-            yajl_gen_string(yg, (const unsigned char *) "properties", 10);
-            yajl_gen_map_open(yg);            
-            for (kid = n->child; kid != NULL; kid = kid->sibling) {
-                if (!kid->name) return 0;
-                yajl_gen_string(yg, (const unsigned char *) kid->name, strlen(kid->name));
-                dumpNodeAsJSONSchema(w, kid, indent + 1, yg);
-                
+            if (n->t == orderly_node_array) {
+                /* XXX: handle multiple children! */
+                yajl_gen_string(yg, (const unsigned char *) "items", 5);
+                dumpNodeAsJSONSchema(w, n->child, yg);                
+            } else if (n->t == orderly_node_object) {
+                const orderly_node * kid = n->child;
+                yajl_gen_string(yg, (const unsigned char *) "properties", 10);
+                yajl_gen_map_open(yg);            
+                for (kid = n->child; kid != NULL; kid = kid->sibling) {
+                    if (!kid->name) return 0;
+                    yajl_gen_string(yg, (const unsigned char *) kid->name, strlen(kid->name));
+                    dumpNodeAsJSONSchema(w, kid, yg);
+                }
+                yajl_gen_map_close(yg);
+            } else if (n->t == orderly_node_union) {
+                /* XXX */ 
             }
-            yajl_gen_map_close(yg);
-            
         }
 
         /* optional range */
@@ -355,7 +359,7 @@ orderly_write(orderly_writer w, orderly_format fmt,
         yajl_gen g = yajl_gen_alloc2(bufAppendCallback, &cfg,
                                      (const yajl_alloc_funcs *) w->cfg.alloc,
                                      (void *) w->b);
-        int rv = dumpNodeAsJSONSchema(w, node, 0, g);
+        int rv = dumpNodeAsJSONSchema(w, node, g);
         yajl_gen_free(g);
         if (!rv) return NULL;
     } else {

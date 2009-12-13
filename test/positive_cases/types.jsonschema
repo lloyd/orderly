@@ -17,16 +17,16 @@
       "type": "object"
     },
     "array": {
-      "type": "array"
+      "type": "array",
+      "items": {
+        "type": "any"
+      }
     },
     "null": {
       "type": "null"
     },
     "any": {
       "type": "any"
-      "items": {
-        "type": "any"
-      }
     }
   }
 }

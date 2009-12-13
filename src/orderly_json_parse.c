@@ -51,6 +51,7 @@ typedef enum {
     OPS_HandleProperties1,
     OPS_HandleMinimum,
     OPS_HandleMaximum,
+    OPS_HandleItems,
     OPS_EndOfStates
 } orderly_parse_state;
 
@@ -62,7 +63,7 @@ static const char *
 psToString(orderly_parse_state ps)
 {
     static const char * states[] = {
-        "init", "pnode", "htype",  "hp0", "hp1", "min", "max"
+        "init", "pnode", "htype",  "hp0", "hp1", "min", "max", "item"
     };
     if (ps >= OPS_EndOfStates) return "?????";
     return states[ps];
@@ -104,8 +105,9 @@ psToString(orderly_parse_state ps)
 typedef struct
 {
     orderly_alloc_funcs * alloc;
-    orderly_bytestack keys;
-    orderly_bytestack nodes;
+    orderly_ptrstack keys;
+    orderly_ptrstack nodes;
+    orderly_ptrstack states;
     orderly_parse_state state;
     orderly_node * current;
     orderly_json_parse_status error;
@@ -189,13 +191,17 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE_STR("js_parse_map_key", v, l);
 
-    if (pc->state == OPS_ParseNode) {
+    if (pc->state == OPS_ParseNode)
+    {
         /* great! let's see what kind of element this is */
         if (v && !strncmp((const char *) v, "type", l)) {
             pc->state = OPS_HandleType;
         } else if (v && !strncmp((const char *) v, "properties", l)) {
-            
             pc->state = OPS_HandleProperties0;
+        } else if (v && !strncmp((const char *) v, "items", l)) {
+            /* we need a distinct state (distinct from from handleProperties) 
+             * because items may have EITHER a schema or an array of schemas */
+            pc->state = OPS_HandleItems;
         } else if (v && !strncmp((const char *) v, "minimum", l)) {
             pc->state = OPS_HandleMinimum;
         } else if (v && !strncmp((const char *) v, "maximum", l)) {
@@ -226,10 +232,16 @@ static int js_parse_start_map(void * ctx)
         pc->state = OPS_ParseNode;
         pc->current = orderly_alloc_node(pc->alloc, orderly_node_empty);
         pc->current->sibling = old;
+        orderly_ps_push(pc->alloc, pc->states, (void *) OPS_HandleProperties1);        
     } else if (pc->state == OPS_HandleProperties0) {
         pc->state = OPS_HandleProperties1;
         orderly_ps_push(pc->alloc, pc->nodes, pc->current);
         pc->current = NULL;
+    } else if (pc->state == OPS_HandleItems) {
+        pc->state = OPS_ParseNode;
+        orderly_ps_push(pc->alloc, pc->nodes, pc->current);
+        pc->current = orderly_alloc_node(pc->alloc, orderly_node_empty);
+        orderly_ps_push(pc->alloc, pc->states, (void *) OPS_ParseNode);
     } else {
         pc->error = orderly_json_parse_s_unexpected_json_map;
         return 0;
@@ -245,12 +257,24 @@ static int js_parse_end_map(void * ctx)
     DUMP_PARSER_STATE("js_parse_end_map", "}");
 
     if (pc->state == OPS_ParseNode) {    
-        /* last name on the stack belongs to us */
-        if (orderly_ps_length(pc->keys)) {
-            pc->current->name = orderly_ps_current(pc->keys);
-            orderly_ps_pop(pc->keys);                            
+        pc->state = (orderly_parse_state) orderly_ps_current(pc->states);
+        orderly_ps_pop(pc->states);
+        if (pc->state == OPS_HandleProperties1) {
+            /* last name on the stack belongs to us */
+            if (orderly_ps_length(pc->keys)) {
+                pc->current->name = orderly_ps_current(pc->keys);
+                orderly_ps_pop(pc->keys);                            
+            }
+        } else if (pc->state == OPS_ParseNode) {    
+            /* we just parsed an *items* entry, current becomes child of top of stack */
+            orderly_node * p = pc->current; 
+            pc->current = orderly_ps_current(pc->nodes);
+            orderly_ps_pop(pc->nodes);
+            pc->current->child = p;
+        } else {
+            /* internal error */
+            return 0;
         }
-        pc->state = OPS_HandleProperties1;
     } else if (pc->state == OPS_HandleProperties1) {
         /* current becomes child of first node on the stack, also
          * *reverse* sibling order.  given the way the parser works, otherwise
