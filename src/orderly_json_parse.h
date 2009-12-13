@@ -43,7 +43,10 @@ typedef enum {
     orderly_json_parse_s_unrecognized_node_type,
     orderly_json_parse_s_unexpected_json_property,
     orderly_json_parse_s_unexpected_json_string,
-    orderly_json_parse_s_unexpected_number
+    orderly_json_parse_s_unexpected_number,
+    orderly_json_parse_s_unexpected_null,
+    orderly_json_parse_s_unexpected_boolean,
+    orderly_json_parse_s_internal_error
 } orderly_json_parse_status;
 
 orderly_json_parse_status

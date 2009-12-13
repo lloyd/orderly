@@ -274,24 +274,11 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                     yajl_gen_integer(yg, n->range.rhs.i);
             }
         }
-
-/*             if (buf[0]) orderly_buf_append_string(w->b, buf); */
-/*             orderly_buf_append_string(w->b, ","); */
-/*             buf[0] = 0; */
-/*             if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info) */
-/*                 sprintf(buf, "%g", n->range.rhs.d); */
-/*             else if (ORDERLY_RANGE_RHS_INT & n->range.info) */
-/*                 sprintf(buf, "%ld", n->range.rhs.i); */
-/*             if (buf[0]) orderly_buf_append_string(w->b, buf); */
-/*             orderly_buf_append_string(w->b, "}"); */
-/*         } */
-
-/*         /\* name time *\/ */
-/*         if (n->name) { */
-/*             /\* XXX: names with spaces an' shit? *\/ */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, n->name); */
-/*         } */
+        if (n->optional) {
+            yajl_gen_string(yg, (const unsigned char *) "optional", 8);
+            yajl_gen_bool(yg, 1);
+        }
+        
 
 /*         /\* optional regex *\/ */
 /*         if (n->regex) { */

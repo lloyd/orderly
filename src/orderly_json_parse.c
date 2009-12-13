@@ -47,6 +47,7 @@ typedef enum {
     OPS_Init = 0,
     OPS_ParseNode,
     OPS_HandleType,
+    OPS_HandleOptional,
     OPS_HandleProperties0,
     OPS_HandleProperties1,
     OPS_HandleMinimum,
@@ -63,7 +64,8 @@ static const char *
 psToString(orderly_parse_state ps)
 {
     static const char * states[] = {
-        "init", "pnode", "htype",  "hp0", "hp1", "min", "max", "item"
+        "init", "pnode", "htype",  "hopt", "hp0", "hp1", "min", "max",
+        "item"
     };
     if (ps >= OPS_EndOfStates) return "?????";
     return states[ps];
@@ -118,6 +120,7 @@ int js_parse_null(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_null", "null");
+    pc->error = orderly_json_parse_s_unexpected_null;
     return 1;
 }
 
@@ -126,6 +129,13 @@ static int js_parse_boolean(void * ctx, int boolean)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_boolean", (boolean ? "true" : "false"));
+    if (pc->state == OPS_HandleOptional) {
+        pc->current->optional = boolean;
+        pc->state = OPS_ParseNode;
+    } else {
+        pc->error = orderly_json_parse_s_unexpected_boolean;
+        return 0;
+    }
     return 1;
 }
 
@@ -206,6 +216,8 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
             pc->state = OPS_HandleMinimum;
         } else if (v && !strncmp((const char *) v, "maximum", l)) {
             pc->state = OPS_HandleMaximum;
+        } else if (v && !strncmp((const char *) v, "optional", l)) {
+            pc->state = OPS_HandleOptional;
         } else {
             pc->error = orderly_json_parse_s_unexpected_property_name;
         }
@@ -303,7 +315,9 @@ static int js_parse_start_array(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_start_array", "[");
-    return 1;
+    /* XXX */ 
+    pc->state = orderly_json_parse_s_internal_error;
+    return 0;
 }
 
 
@@ -311,7 +325,9 @@ static int js_parse_end_array(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_end_array", "]");
-    return 1;
+    /* XXX */ 
+    pc->state = orderly_json_parse_s_internal_error;
+    return 0;
 }
 
 

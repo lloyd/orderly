@@ -225,6 +225,12 @@ orderly_get_error(orderly_reader r)
                 case orderly_json_parse_s_unexpected_number:
                     err = "unexpected number in json text";
                     break;
+                case orderly_json_parse_s_unexpected_null:
+                    err = "unexpected null in json text";
+                    break;
+                case orderly_json_parse_s_unexpected_boolean:
+                    err = "unexpected boolean in json text";
+                    break;
             }
         }
     }
