@@ -1,8 +1,11 @@
-// { "first": "Lloyd", "last":"Hilaiel" }
 {
   "type": "object",
   "properties": {
-    "first": { "type": "string" },
-    "last": { "type": "string" }
-  } 
+    "first": {
+      "type": "string"
+    },
+    "last": {
+      "type": "string"
+    }
+  }
 }
