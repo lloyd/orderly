@@ -212,9 +212,13 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
             /* we need a distinct state (distinct from from handleProperties) 
              * because items may have EITHER a schema or an array of schemas */
             pc->state = OPS_HandleItems;
-        } else if (v && !strncmp((const char *) v, "minimum", l)) {
+        } else if (v && (!strncmp((const char *) v, "minimum", l) ||
+                         !strncmp((const char *) v, "minLength", l) ||
+                         !strncmp((const char *) v, "minItems", l))) {
             pc->state = OPS_HandleMinimum;
-        } else if (v && !strncmp((const char *) v, "maximum", l)) {
+        } else if (v && (!strncmp((const char *) v, "maximum", l) ||
+                         !strncmp((const char *) v, "maxLength", l) ||
+                         !strncmp((const char *) v, "maxItems", l))) {
             pc->state = OPS_HandleMaximum;
         } else if (v && !strncmp((const char *) v, "optional", l)) {
             pc->state = OPS_HandleOptional;
