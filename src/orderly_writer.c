@@ -242,7 +242,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int inde
             }
 
             if (ORDERLY_RANGE_HAS_RHS(n->range)) {
-                yajl_gen_string(yg, (const unsigned char *) minword, strlen(maxword));
+                yajl_gen_string(yg, (const unsigned char *) maxword, strlen(maxword));
                 if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
                     yajl_gen_double(yg, n->range.rhs.d);
                 else if (ORDERLY_RANGE_RHS_INT & n->range.info)
