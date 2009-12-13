@@ -79,8 +79,8 @@ orderly_lex_free(orderly_lexer lxr)
 
 /* given a string of characters, is it a keyword or a property name (default)
  */
-static orderly_tok
-keywordCheck(const unsigned char * str, unsigned int len)
+orderly_tok
+orderly_lex_keyword_check(const unsigned char * str, unsigned int len)
 {
     static struct keywords_t {
         const char * kw;
@@ -479,8 +479,8 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
 
                 /* is this a keywords we just lexed?
                  * XXX: optimize this later, perhaps. */ 
-                tok = keywordCheck(schemaText + startOffset,
-                                   *offset - startOffset);
+                tok = orderly_lex_keyword_check(schemaText + startOffset,
+                                                *offset - startOffset);
                 goto lexed;
             }
             case '"': {

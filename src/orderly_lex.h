@@ -105,4 +105,11 @@ orderly_lex_error orderly_lex_get_error(orderly_lexer lexer);
  *  code can drink more beer, and do less bookkeeping.  */
 unsigned int orderly_lex_previous_offset(orderly_lexer lexer);
 
+/** check if a string is an orderly property keyword, returns
+ *  orderly_tok_property_name if not */
+orderly_tok
+orderly_lex_keyword_check(const unsigned char * str, unsigned int len);
+
+
+
 #endif

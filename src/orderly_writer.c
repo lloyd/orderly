@@ -32,6 +32,7 @@
 
 #include "api/writer.h"
 #include "orderly_buf.h"
+#include "orderly_lex.h"
 
 #include <yajl/yajl_gen.h>
 
@@ -100,12 +101,19 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
         INDENT_IF_DESIRED;
         orderly_buf_append_string(w->b, type);
 
-        /* children! */
-        if (n->child) {
-            orderly_buf_append_string(w->b, " {");
-            if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");
-            dumpNodeAsOrderly(w, n->child, indent + 1);
-            INDENT_IF_DESIRED;
+        /*  children!  */
+        if (n->t == orderly_node_array ||
+            n->t == orderly_node_object ||
+            n->t == orderly_node_union)
+        {
+            orderly_buf_append_string(w->b, " {");            
+            if (n->child) {
+                if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");
+                dumpNodeAsOrderly(w, n->child, indent + 1);
+                INDENT_IF_DESIRED;
+            } else {
+                orderly_buf_append_string(w->b, " ");
+            }
             orderly_buf_append_string(w->b, "}");
         }
 
@@ -131,9 +139,24 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
 
         /* name time */
         if (n->name) {
-            /* XXX: names with spaces an' shit? */
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
-            orderly_buf_append_string(w->b, n->name);
+            /* keywords or names with certain chars must be quoted */
+            if (orderly_lex_keyword_check((unsigned char *) n->name, strlen(n->name))
+                != orderly_tok_property_name ||
+                strspn(n->name, "abcdefghijklmnopqrstuvwxyz"
+                       "ABCDEFGHIJKLMNOPQRSTUVWXYZ-_") != strlen(n->name))
+            {
+                unsigned int i = 0;
+                orderly_buf_append_string(w->b, "\"");                
+                for (i=0; i < strlen(n->name); i++) {
+                    if (n->name[i] == '"') orderly_buf_append_string(w->b , "\\\"");
+                    else orderly_buf_append(w->b, n->name + i, 1);                                    
+                }
+                orderly_buf_append_string(w->b, "\"");                
+            } else {
+                orderly_buf_append_string(w->b, n->name);
+            }
+            
         }
 
         /* optional regex */
@@ -194,7 +217,6 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, unsigned int inde
         yajl_gen_string(yg, (const unsigned char *) "type", 4);
         yajl_gen_string(yg, (const unsigned char *) type, strlen(type));        
 
-        /*  children!  */
         if (n->child) {
             const orderly_node * kid = n->child;
             
