@@ -44,7 +44,7 @@ tests.each { |k,v|
       print "test '#{k.sub(/^.*\/([^\/]*)$/, '\1')}' (#{x[0][0]} -> #{x[1][0]}):\t "
       cmd = "#{reformatBinary} -i #{x[0][0]} -o #{x[1][0]}"
       got = nil
-      IO.popen(reformatBinary, "w+") { |lb|      
+      IO.popen(cmd, "w+") { |lb|      
         File.open(x[0][1], "r").each {|l| lb.write(l)}
         lb.close_write
         got = lb.read
