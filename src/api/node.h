@@ -34,6 +34,7 @@
 #define __ORDERLY_NODE_H__
 
 #include "common.h"
+#include "json.h"
 
 typedef enum {
     orderly_node_empty,
@@ -81,14 +82,10 @@ typedef struct
 typedef struct orderly_node_t {
     orderly_node_type t;
     const char * name;
-    /* a json array of possible values
-     * XXX: sure not doing our validators any favors by leaving
-     *      this as a blob of text.  otoh, we'd orderly to be
-     *      *dependent* on a means of parsing and representing json
-     *      to make this more convenient */
-    const char * values;
+    /* a json array of possible values */
+    orderly_json * values;
     /* a json representation of this members default value */
-    const char * default_value;
+    orderly_json * default_value;
     /* Does thes existence of this element require any others? */
     const char * requires;
     /* regular expression constraining allowable values

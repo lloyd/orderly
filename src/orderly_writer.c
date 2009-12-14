@@ -33,6 +33,7 @@
 #include "api/writer.h"
 #include "orderly_buf.h"
 #include "orderly_lex.h"
+#include "orderly_json.h"
 
 #include <yajl/yajl_gen.h>
 
@@ -168,7 +169,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
         /* enumerated possible values */
         if (n->values) {
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
-            orderly_buf_append_string(w->b, n->values);
+            orderly_write_json(w->cfg.alloc, n->values, w->b);
         }
         
         /* default value */
@@ -176,7 +177,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
             orderly_buf_append_string(w->b, "=");
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
-            orderly_buf_append_string(w->b, n->default_value);
+            orderly_write_json(w->cfg.alloc, n->default_value, w->b);
         }
 
         /* requires value */

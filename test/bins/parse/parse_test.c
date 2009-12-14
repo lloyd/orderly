@@ -32,6 +32,8 @@
 
 #include "../../../src/orderly_parse.h"
 #include "../../../src/orderly_alloc.h"
+#include "../../../src/orderly_buf.h"
+#include "../../../src/orderly_json.h"
 
 #include <stdio.h>
 #include <sys/types.h>
@@ -42,8 +44,9 @@
 
 #define MAX_INPUT_TEXT (1 << 20)
 
-static void dumpNode(orderly_node * n, unsigned int indent)
+static void dumpNode(orderly_alloc_funcs * oaf, orderly_node * n, unsigned int indent)
 {
+    orderly_buf b = orderly_buf_alloc(oaf);
     char * indentStr = (char *) malloc(indent * 4 + 1);
     memset((void *) indentStr, ' ', indent * 4);
     indentStr[indent*4] = 0;
@@ -54,9 +57,17 @@ static void dumpNode(orderly_node * n, unsigned int indent)
 
         printf("%s%s [%s] %s\n", indentStr, n->name ? n->name : "", type,
                n->optional ? "OPTIONAL" : "");        
-        if (n->default_value) printf("%s--> default: %s\n",
-                                        indentStr, n->default_value);        
-        if (n->values) printf("%s--> enum: %s\n", indentStr, n->values);        
+        if (n->default_value) {
+            orderly_buf_clear(b);
+            orderly_write_json(oaf, n->default_value, b);
+            printf("%s--> default: %s\n", indentStr, orderly_buf_data(b));
+        }
+        
+        if (n->values) {
+            orderly_buf_clear(b);
+            orderly_write_json(oaf, n->values, b);
+            printf("%s--> enum: %s\n", indentStr, orderly_buf_data(b));
+        }
         if (n->requires) printf("%s--> requires: %s\n", indentStr, n->requires);        
         if (n->regex) printf("%s--> regex: %s\n", indentStr, n->regex);        
         if (ORDERLY_RANGE_SPECIFIED(n->range)) {
@@ -74,15 +85,16 @@ static void dumpNode(orderly_node * n, unsigned int indent)
         }
         if (n->child) {
             printf("%schildren:\n", indentStr);
-            dumpNode(n->child, indent + 1);
+            dumpNode(oaf, n->child, indent + 1);
         }
         if (n->sibling) {
-            dumpNode(n->sibling, indent);
+            dumpNode(oaf, n->sibling, indent);
         }
     } else {
         printf("%s(null)\n", indentStr);
     }
     free(indentStr);
+    orderly_buf_free(b);
 }
 
 static const char * statusToStr(orderly_parse_status s)
@@ -126,7 +138,7 @@ main(int argc, char ** argv)
 
         s = orderly_parse(&oaf, inbuf, tot, &n, NULL);
         printf("parse complete (%s):\n", statusToStr(s));
-        dumpNode(n, 0); /* here's where we'll map over and output the returned tree */ 
+        dumpNode(&oaf, n, 0); /* here's where we'll map over and output the returned tree */ 
         /* TODO: ugly alloc routine crap here, perhaps we should give the
          *       ultimate client a parse handle and make the ownership of
          *       the parse tree held by the parse handle? */

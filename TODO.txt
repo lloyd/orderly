@@ -1,1 +1,15 @@
-1. 
+0. change from string representation of json data to hierarchical representation
+1. enum roundtripping
+2. default value roundtripping
+3. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
+4. additionalProperties
+5. requires
+6. pattern
+7. title/description (??)
+8. format
+9. maxDecimal
+10. disallow
+11. extends
+12. sh1ttons of broken jsonschemas!
+13. simple cgi reformatter program?
+14. orderly-json.org udpate

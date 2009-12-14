@@ -33,6 +33,7 @@
 #include "orderly_parse.h"
 #include "orderly_lex.h"
 #include "orderly_alloc.h"
+#include "orderly_json.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -70,14 +71,18 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
 
     /* optional_enum_values? */
     if (t == orderly_tok_json_array) {
-        BUF_STRDUP(n->values, alloc, outBuf, outLen);
+        unsigned int ol = outLen;
+        n->values = orderly_read_json(alloc, (char *) outBuf, &ol);
+        /* XXX: handle error! */
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
         CHECK_LEX_ERROR(t, lxr);
     }
 
     /* optional_default_value? */
     if (t == orderly_tok_default_value) {
-        BUF_STRDUP(n->default_value, alloc, outBuf, outLen);
+        unsigned int ol = outLen;
+        n->default_value = orderly_read_json(alloc, (char *) outBuf, &ol);
+        /* XXX: handle error! */
         t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);    
         CHECK_LEX_ERROR(t, lxr);
     }

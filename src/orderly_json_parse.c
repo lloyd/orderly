@@ -382,7 +382,7 @@ orderly_json_parse(orderly_alloc_funcs * alloc,
 /*        unsigned char * str = yajl_get_error(hand, 1, schemaText, schemaTextLen);
           fprintf(stderr, (const char *) str);
           yajl_free_error(hand, str); */
-        if (final_offset) *final_offset = yajl_get_error_offset(hand);
+        if (final_offset) *final_offset = yajl_get_bytes_consumed(hand);
     }
     else
     {
