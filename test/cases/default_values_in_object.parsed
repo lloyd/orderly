@@ -8,11 +8,11 @@ children:
     mood [number] 
     --> default: 42.01
     listOfStuff [array] 
-    --> default: [ "a", "b", "c", "d" ]
+    --> default: ["a","b","c","d"]
     children:
          [string] 
     ooh [object] 
-    --> default: { "name": "lloyd" }
+    --> default: {"name":"lloyd"}
     children:
         name [string] 
     stayOrGo [boolean] 

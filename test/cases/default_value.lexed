@@ -25,8 +25,9 @@
 (  6, 22): 'name' property_name
 (  6, 23): ';' semicolon
 (  6, 25): '}' r_curly
-(  6, 47): '{ "name": "lloyd" }' default_value
-(  6, 48): ';' semicolon
+(  6, 29): 'obj' property_name
+(  6, 51): '{ "name": "lloyd" }' default_value
+(  6, 52): ';' semicolon
 (  7,  9): 'boolean' kw_boolean
 (  7, 18): 'stayOrGo' property_name
 (  7, 25): 'true' default_value

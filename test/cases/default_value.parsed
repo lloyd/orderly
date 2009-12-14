@@ -1,2 +1,23 @@
-parse complete (prop_name_expected):
-(null)
+parse complete (ok):
+ [object] 
+children:
+    mood [string] 
+    --> default: "happy"
+    mood [integer] 
+    --> default: 47
+    mood [number] 
+    --> default: 42.01
+    listOfStuff [array] 
+    --> default: ["a","b","c","d"]
+    children:
+         [string] 
+    obj [object] 
+    --> default: {"name":"lloyd"}
+    children:
+        name [string] 
+    stayOrGo [boolean] 
+    --> default: true
+    goOrStay [boolean] 
+    --> default: false
+    likeAir [null] 
+    --> default: null

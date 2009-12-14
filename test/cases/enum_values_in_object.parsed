@@ -2,6 +2,6 @@ parse complete (ok):
  [object] 
 children:
     mood [string] 
-    --> enum: [ "happy", "sad", "meh" ]
+    --> enum: ["happy","sad","meh"]
     secretOfLife [integer] 
-    --> enum: [ 7, 42 ]
+    --> enum: [7,42]

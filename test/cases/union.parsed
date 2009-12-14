@@ -2,5 +2,5 @@ parse complete (ok):
  [union] 
 children:
      [string] 
-    --> enum: [ "Sr.", "Jr.", "III" ]
+    --> enum: ["Sr.","Jr.","III"]
      [null] 
