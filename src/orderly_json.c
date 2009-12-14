@@ -64,11 +64,13 @@ orderly_json * orderly_alloc_json(orderly_alloc_funcs * alloc,
   } else {                                                                      \
       orderly_json * top = (orderly_json *) orderly_ps_current((pc)->nodeStack);\
       if (top->t == orderly_json_array) {                                       \
-          (__n)->next = top->v.child;                                           \
-          top->v.child = (__n);                                                 \
+          if (top->v.children.last) top->v.children.last->next = (__n);         \
+          top->v.children.last = (__n);                                         \
+          if (!top->v.children.first) top->v.children.first = (__n);            \
       } else if (top->t == orderly_json_object) {                               \
-          (__n)->next = top->v.child;                                           \
-          top->v.child = (__n);                                                 \
+          if (top->v.children.last) top->v.children.last->next = (__n);         \
+          top->v.children.last = (__n);                                         \
+          if (!top->v.children.first) top->v.children.first = (__n);            \
           (__n)->k = orderly_ps_current((pc)->keyStack);                        \
           orderly_ps_pop((pc)->keyStack);                                       \
       }                                                                         \
@@ -264,12 +266,12 @@ static int writeJson(yajl_gen g, const orderly_json * j)
                 break;
             case orderly_json_object:
                 s = yajl_gen_map_open(g);
-                rv = writeJson(g, j->v.child);
+                rv = writeJson(g, j->v.children.first);
                 s = yajl_gen_map_close(g);
                 break;
             case orderly_json_array:
                 s = yajl_gen_array_open(g);
-                rv = writeJson(g, j->v.child);
+                rv = writeJson(g, j->v.children.first);
                 s = yajl_gen_array_close(g);
                 break;
         }

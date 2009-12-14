@@ -57,10 +57,14 @@ typedef struct orderly_json_t {
         const char * s;
         unsigned int b;
         unsigned int i;
-        double n;        
-        struct orderly_json_t * child;
+        double n;
+        struct 
+        {
+            struct orderly_json_t * first;
+            struct orderly_json_t * last;            
+        } children;
     } v;
     struct orderly_json_t * next; /* sibling ptr */
-} orderly_json;        /* XXX: parse this fuckin' thing? */
+} orderly_json;
 
 #endif
