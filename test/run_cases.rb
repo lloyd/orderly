@@ -52,7 +52,11 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
         passed += 1
       else
         puts "FAIL"
-        # XXX: give more information
+        puts "<<<want<<<"
+        puts want
+        puts "========"
+        puts got
+        puts ">>got>>"
       end
     end
     total += 1
