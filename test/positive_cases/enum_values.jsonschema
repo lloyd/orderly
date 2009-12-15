@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "mood": {
+      "type": "mood",
+      "enum": [
+        "happy",
+        "sad",
+        "meh"
+      ]
+    },
+    "secretOfLife": {
+      "type": "integer",
+      "enum": [
+        7,
+        42
+      ]
+    }
+  }
+};
