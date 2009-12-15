@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "mood": {
+      "type": "string",
+      "default": "happy"
+    },
+    "mood": {
+      "type": "integer",
+      "default": 47
+    },
+    "mood": {
+      "type": "number",
+      "default": 42.01
+    },
+    "listOfStuff": {
+      "type": "array",
+      "default": [
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "items": {
+        "type": "string"
+      }
+    },
+    "obj": {
+      "type": "object",
+      "default": {
+        "name": "lloyd"
+      },
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "stayOrGo": {
+      "type": "boolean",
+      "default": true
+    },
+    "goOrStay": {
+      "type": "boolean",
+      "default": false
+    },
+    "likeAir": {
+      "type": "null",
+      "default": null
+    }
+  }
+}
