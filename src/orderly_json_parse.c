@@ -33,6 +33,7 @@
 #include "orderly_json_parse.h"
 #include "orderly_ptrstack.h"
 #include "orderly_alloc.h"
+#include "orderly_json.h"
 
 #include <yajl/yajl_parse.h>
 #include <string.h>
@@ -53,6 +54,7 @@ typedef enum {
     OPS_HandleMinimum,
     OPS_HandleMaximum,
     OPS_HandleItems,
+    OPS_HandleEnum,
     OPS_EndOfStates
 } orderly_parse_state;
 
@@ -65,7 +67,7 @@ psToString(orderly_parse_state ps)
 {
     static const char * states[] = {
         "init", "pnode", "htype",  "hopt", "hp0", "hp1", "min", "max",
-        "item"
+        "item", "enum"
     };
     if (ps >= OPS_EndOfStates) return "?????";
     return states[ps];
@@ -113,13 +115,22 @@ typedef struct
     orderly_parse_state state;
     orderly_node * current;
     orderly_json_parse_status error;
+    /* for inline json parsing (enum and default values) */
+    o_json_parse_context json_parse_ctx;
 } orderly_parse_context;
+
 
 static
 int js_parse_null(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
+
     DUMP_PARSER_STATE("js_parse_null", "null");
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_null(&(pc->json_parse_ctx));
+    }
+    
     pc->error = orderly_json_parse_s_unexpected_null;
     return 1;
 }
@@ -129,7 +140,10 @@ static int js_parse_boolean(void * ctx, int boolean)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_boolean", (boolean ? "true" : "false"));
-    if (pc->state == OPS_HandleOptional) {
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_boolean(&(pc->json_parse_ctx), boolean);
+    } else if (pc->state == OPS_HandleOptional) {
         pc->current->optional = boolean;
         pc->state = OPS_ParseNode;
     } else {
@@ -144,7 +158,10 @@ static int js_parse_double(void * ctx, double d)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE_DOUBLE("js_parse_double", d);
-    if (pc->state == OPS_HandleMinimum) {
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_double(&(pc->json_parse_ctx), d);
+    } else if (pc->state == OPS_HandleMinimum) {
         pc->current->range.info |= ORDERLY_RANGE_LHS_DOUBLE;
         pc->current->range.lhs.d = d;
         pc->state = OPS_ParseNode;
@@ -162,7 +179,10 @@ static int js_parse_integer(void * ctx, long l)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE_LONG("js_parse_integer", l);
-    if (pc->state == OPS_HandleMinimum) {
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_integer(&(pc->json_parse_ctx), l);
+    } else if (pc->state == OPS_HandleMinimum) {
         pc->current->range.info |= ORDERLY_RANGE_LHS_INT;
         pc->current->range.lhs.i = l;
         pc->state = OPS_ParseNode;
@@ -181,7 +201,10 @@ static int js_parse_string(void * ctx, const unsigned char * v, unsigned int l)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE_STR("js_parse_string", v, l);
-    if (pc->state == OPS_HandleType) {
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_string(&(pc->json_parse_ctx), v, l);
+    } else if (pc->state == OPS_HandleType) {
         pc->state = OPS_ParseNode;
         pc->current->t = orderly_string_to_node_type((const char*)v, l);
         if (pc->current->t == orderly_node_empty) {
@@ -201,11 +224,14 @@ static int js_parse_map_key(void * ctx, const unsigned char * v,
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE_STR("js_parse_map_key", v, l);
 
-    if (pc->state == OPS_ParseNode)
-    {
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_map_key(&(pc->json_parse_ctx), v, l);
+    } else if (pc->state == OPS_ParseNode) {
         /* great! let's see what kind of element this is */
         if (v && !strncmp((const char *) v, "type", l)) {
             pc->state = OPS_HandleType;
+        } else if (v && !strncmp((const char *) v, "enum", l)) {
+            pc->state = OPS_HandleEnum;
         } else if (v && !strncmp((const char *) v, "properties", l)) {
             pc->state = OPS_HandleProperties0;
         } else if (v && !strncmp((const char *) v, "items", l)) {
@@ -243,7 +269,10 @@ static int js_parse_start_map(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_start_map", "{");
-    if (pc->state == OPS_Init) {
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_start_map(&(pc->json_parse_ctx));
+    } else if (pc->state == OPS_Init) {
         orderly_node * old = pc->current;
         pc->state = OPS_ParseNode;
         pc->current = orderly_alloc_node(pc->alloc, orderly_node_empty);
@@ -272,7 +301,9 @@ static int js_parse_end_map(void * ctx)
 
     DUMP_PARSER_STATE("js_parse_end_map", "}");
 
-    if (pc->state == OPS_ParseNode) {    
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_end_map(&(pc->json_parse_ctx));
+    } else if (pc->state == OPS_ParseNode) {    
         pc->state = (orderly_parse_state) orderly_ps_current(pc->states);
         orderly_ps_pop(pc->states);
         if (pc->state == OPS_HandleProperties1) {
@@ -319,6 +350,11 @@ static int js_parse_start_array(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_start_array", "[");
+
+    if (pc->state == OPS_HandleEnum) {
+        return o_json_parse_start_array(&(pc->json_parse_ctx));
+    }
+        
     /* XXX */ 
     pc->state = orderly_json_parse_s_internal_error;
     return 0;
@@ -329,6 +365,18 @@ static int js_parse_end_array(void * ctx)
 {
     orderly_parse_context * pc = (orderly_parse_context *) ctx;
     DUMP_PARSER_STATE("js_parse_end_array", "]");
+
+    if (pc->state == OPS_HandleEnum) {
+        o_json_parse_end_array(&(pc->json_parse_ctx));
+        if (1 == orderly_ps_length(pc->json_parse_ctx.nodeStack)) {
+            pc->current->values =
+                orderly_ps_current(pc->json_parse_ctx.nodeStack);
+            orderly_ps_pop(pc->json_parse_ctx.nodeStack);
+            pc->state = OPS_ParseNode;
+        }
+        return 1;
+    }
+
     /* XXX */ 
     pc->state = orderly_json_parse_s_internal_error;
     return 0;
@@ -365,6 +413,7 @@ orderly_json_parse(orderly_alloc_funcs * alloc,
 
     memset((void *) &pc, 0, sizeof(pc));
     pc.alloc = alloc;
+    pc.json_parse_ctx.alloc = alloc;
 
     /* allocate a parser */
     hand = yajl_alloc(&callbacks, &cfg,
