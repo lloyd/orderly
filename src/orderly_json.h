@@ -40,6 +40,8 @@
 #include "orderly_ptrstack.h"
 #include "orderly_buf.h"
 
+#include <yajl/yajl_gen.h>
+
 /* a high level interface to non-stream based json parsing */
 orderly_json * orderly_read_json(orderly_alloc_funcs * alloc,
                                  const char * jsonText,
@@ -49,6 +51,10 @@ orderly_json * orderly_read_json(orderly_alloc_funcs * alloc,
 void orderly_write_json(const orderly_alloc_funcs * alloc,
                         const orderly_json * json,
                         orderly_buf buf);
+
+/* a low level interface to dumping a json object into a yajl
+ * generator */
+int orderly_write_json2(yajl_gen g, const orderly_json * j);
 
 void orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node);
 

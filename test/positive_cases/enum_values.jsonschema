@@ -2,7 +2,7 @@
   "type": "object",
   "properties": {
     "mood": {
-      "type": "mood",
+      "type": "string",
       "enum": [
         "happy",
         "sad",
@@ -17,4 +17,4 @@
       ]
     }
   }
-};
+}

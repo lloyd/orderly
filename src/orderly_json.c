@@ -238,7 +238,7 @@ orderly_read_json(orderly_alloc_funcs * alloc,
 }
 
 
-static int writeJson(yajl_gen g, const orderly_json * j)
+int orderly_write_json2(yajl_gen g, const orderly_json * j)
 {
     yajl_gen_status s;
     int rv = 1;
@@ -266,17 +266,17 @@ static int writeJson(yajl_gen g, const orderly_json * j)
                 break;
             case orderly_json_object:
                 s = yajl_gen_map_open(g);
-                rv = writeJson(g, j->v.children.first);
+                rv = orderly_write_json2(g, j->v.children.first);
                 s = yajl_gen_map_close(g);
                 break;
             case orderly_json_array:
                 s = yajl_gen_array_open(g);
-                rv = writeJson(g, j->v.children.first);
+                rv = orderly_write_json2(g, j->v.children.first);
                 s = yajl_gen_array_close(g);
                 break;
         }
 
-        if (rv && j->next) rv = writeJson(g, j->next);
+        if (rv && j->next) rv = orderly_write_json2(g, j->next);
     }
 
     return rv;
@@ -298,6 +298,6 @@ orderly_write_json(const orderly_alloc_funcs * alloc,
     yajl_gen g = yajl_gen_alloc2(bufAppendCallback, &cfg,
                                  (const yajl_alloc_funcs *) alloc,
                                  (void *) b);
-    int rv = writeJson(g, json);
+    int rv = orderly_write_json2(g, json);
     yajl_gen_free(g);
 }

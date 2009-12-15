@@ -287,11 +287,11 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 /*             orderly_buf_append_string(w->b, n->regex); */
 /*         } */
 
-/*         /\* enumerated possible values *\/ */
-/*         if (n->values) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, n->values); */
-/*         } */
+        /* enumerated possible values */
+        if (n->values) { 
+            yajl_gen_string(yg, (const unsigned char *) "enum", 4);
+            orderly_write_json2(yg, n->values);
+        } 
         
 /*         /\* default value *\/ */
 /*         if (n->default_value) { */
