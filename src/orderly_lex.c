@@ -310,6 +310,7 @@ orderly_lex_json_object(orderly_lexer lexer, const unsigned char * schemaText,
             tok = orderly_lex_json_string(lexer, schemaText, schemaTextLen,
                                           offset);
             if (tok != orderly_tok_json_string) break;
+            (*offset)--;
         } else if ('{' == c) {
             ++nesting;
         } else if ('}' == c) {

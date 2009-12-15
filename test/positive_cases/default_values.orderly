@@ -3,7 +3,7 @@ object {
   integer mood = 47;
   number mood = 42.01;
   array {
-    string
+    string;
   } listOfStuff = ["a","b","c","d"];
   object {
     string name;
