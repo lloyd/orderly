@@ -1,6 +1,6 @@
 parse complete (ok):
- [union] 
+ [union]
 children:
-     [string] 
+     [string]
     --> enum: ["Sr.","Jr.","III"]
-     [null] 
+     [null]

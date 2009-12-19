@@ -1,7 +1,7 @@
 parse complete (ok):
- [object] 
+ [object]
 children:
-    myArrayOfSmallInts [array] 
+    myArrayOfSmallInts [array]
     --> range: {0,10}
     children:
-         [integer] 
+         [integer]

@@ -66,6 +66,7 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_json_integer: return "json_integer";
         case orderly_tok_optional_marker: return "optional_marker";
         case orderly_tok_default_value: return "default_value";
+        case orderly_tok_additional_marker: return "additional_marker";
         case orderly_tok_regex: return "regex";
     }
     return "unknown";

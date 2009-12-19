@@ -1,5 +1,5 @@
 parse complete (ok):
- [object] 
+ [object]
 children:
-    weight [number] 
+    weight [number]
     --> range: {0,1}

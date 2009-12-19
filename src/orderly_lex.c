@@ -429,6 +429,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case '?':
                 tok = orderly_tok_optional_marker;
                 goto lexed;
+            case '*':
+                tok = orderly_tok_additional_marker;
+                goto lexed;
             case '\t': case '\v': case '\f': case '\r': case ' ': 
                 startOffset++; 
                 break; 

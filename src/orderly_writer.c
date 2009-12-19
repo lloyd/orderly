@@ -117,6 +117,13 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
             }
             orderly_buf_append_string(w->b, "}");
         }
+        
+        if ((n->t == orderly_node_array ||
+             n->t == orderly_node_object) &&
+            n->additionalProperties)
+        {
+            orderly_buf_append_string(w->b, "*");
+        }
 
         /* optional range */
         if (ORDERLY_RANGE_SPECIFIED(n->range)) {

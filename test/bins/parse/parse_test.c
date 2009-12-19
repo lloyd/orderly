@@ -55,8 +55,9 @@ static void dumpNode(orderly_alloc_funcs * oaf, orderly_node * n, unsigned int i
         const char * type = orderly_node_type_to_string(n->t);
         if (NULL == type) type = "unknown";
 
-        printf("%s%s [%s] %s\n", indentStr, n->name ? n->name : "", type,
-               n->optional ? "OPTIONAL" : "");        
+        printf("%s%s [%s]%s%s\n", indentStr, n->name ? n->name : "", type,
+               n->optional ? " OPTIONAL" : "",
+               n->additionalProperties ? " OPEN" : "");
         if (n->default_value) {
             orderly_buf_clear(b);
             orderly_write_json(oaf, n->default_value, b);

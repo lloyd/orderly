@@ -1,7 +1,7 @@
 parse complete (ok):
- [object] 
+ [object]
 children:
-    mood [string] 
+    mood [string]
     --> enum: ["happy","sad","meh"]
-    secretOfLife [integer] 
+    secretOfLife [integer]
     --> enum: [7,42]

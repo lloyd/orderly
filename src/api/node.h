@@ -93,6 +93,9 @@ typedef struct orderly_node_t {
     const char * regex;
     /* is this node optional? */
     unsigned int optional;
+    /* for an array or object, should properties or elements not
+     * explicitly mentioned be allowed */
+    unsigned int additionalProperties;
     /* range specifications for nodes that support it
      * (i.e. string {0,10} foo;) */
     orderly_range range;

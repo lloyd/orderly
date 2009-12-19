@@ -341,6 +341,24 @@ orderly_parse_optional_range(orderly_alloc_funcs * alloc,
     return s;
 }
 
+static orderly_parse_status
+orderly_parse_optional_additional(orderly_alloc_funcs * alloc,
+                                  const unsigned char * schemaText,
+                                  const unsigned int schemaTextLen,
+                                  orderly_lexer lxr,
+                                  unsigned int * offset,
+                                  orderly_node * n)
+{
+    if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset)
+        == orderly_tok_additional_marker)
+    {
+        (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
+                               NULL, NULL);
+        n->additionalProperties = 1;
+    }
+    return orderly_parse_s_ok;
+}
+
 /* forward decl neccesitated by mutual recursion */
 static orderly_parse_status
 orderly_parse_entry(orderly_alloc_funcs * alloc,
@@ -492,10 +510,15 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
-            } else if ((named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
-                                                                  lxr, offset, *n))) || 
-                       (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
-                                                            lxr, offset, *n)))
+            } else if ((s = orderly_parse_optional_additional(
+                            alloc, schemaText, schemaTextLen,
+                            lxr, offset, *n)) || 
+                       (named && (s = orderly_parse_property_name(
+                                      alloc, schemaText, schemaTextLen,
+                                      lxr, offset, *n))) || 
+                       (s = orderly_parse_definition_suffix(
+                           alloc, schemaText, schemaTextLen,
+                           lxr, offset, *n)))
             {
                 orderly_free_node(alloc, n);                            
             }
@@ -527,8 +550,12 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
-            } else if ((s = orderly_parse_optional_range(alloc, schemaText, schemaTextLen,
-                                             lxr, offset, *n)) ||
+            } else if ((s = orderly_parse_optional_additional(
+                            alloc, schemaText, schemaTextLen,
+                            lxr, offset, *n)) || 
+                       (s = orderly_parse_optional_range(
+                           alloc, schemaText, schemaTextLen,
+                           lxr, offset, *n)) ||
                        (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
                                                                   lxr, offset, *n))) || 
                        (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
