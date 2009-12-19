@@ -1,15 +1,14 @@
 1. requires (property names only)
 2. pattern
-3. default value roundtripping
-4. additionalProperties
-5. maxDecimal
-6. title/description (??)
-7. format
-8. disallow
-9. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
-10. sh1ttons of broken jsonschemas!
-11. simple CGI reformatter program?
-12. orderly-json.org udpate
+3. additionalProperties
+4. maxDecimal
+5. title/description (??)
+6. format
+7. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
+8. sh1ttons of broken jsonschemas!
+9. simple CGI reformatter program?
+10. orderly-json.org udpate
 
-other:
-6. extends
+other/later:
+1. extends
+2. disallow

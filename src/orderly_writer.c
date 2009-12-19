@@ -287,20 +287,18 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 /*             orderly_buf_append_string(w->b, n->regex); */
 /*         } */
 
+        /* default value */
+        if (n->default_value) { 
+            yajl_gen_string(yg, (const unsigned char *) "default", 7);
+            orderly_write_json2(yg, n->default_value);
+        }
+
         /* enumerated possible values */
         if (n->values) { 
             yajl_gen_string(yg, (const unsigned char *) "enum", 4);
             orderly_write_json2(yg, n->values);
         } 
         
-/*         /\* default value *\/ */
-/*         if (n->default_value) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, "="); */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, n->default_value); */
-/*         } */
-
 /*         /\* requires value *\/ */
 /*         if (n->requires) { */
 /*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
@@ -308,14 +306,6 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 /*             orderly_buf_append_string(w->b, n->requires); */
 /*             orderly_buf_append_string(w->b, ">"); */
 /*         } */
-
-/*         if (n->optional) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, "?"); */
-/*         } */
-
-/*         orderly_buf_append_string(w->b, ";");         */
-/*         if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");         */
 
 /*         if (n->sibling) { */
 /*             dumpNodeAsJSONSchema(w, n->sibling, indent); */

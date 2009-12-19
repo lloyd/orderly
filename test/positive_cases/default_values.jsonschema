@@ -15,25 +15,25 @@
     },
     "listOfStuff": {
       "type": "array",
+      "items": {
+        "type": "string"
+      },
       "default": [
         "a",
         "b",
         "c",
         "d"
-      ],
-      "items": {
-        "type": "string"
-      }
+      ]
     },
     "obj": {
       "type": "object",
-      "default": {
-        "name": "lloyd"
-      },
       "properties": {
         "name": {
           "type": "string"
         }
+      },
+      "default": {
+        "name": "lloyd"
       }
     },
     "stayOrGo": {
