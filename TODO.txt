@@ -1,4 +1,4 @@
-1. address flaw in orderly: tuple typing an array of a single element!
+1. parsing support for 'simple array typing' using parens (as opposed to tuple typing)
 2. requires (property names only, support 1 or more)
 3. pattern
 4. maxDecimal

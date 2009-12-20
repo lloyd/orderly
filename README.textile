@@ -113,19 +113,24 @@ bc.     object {
 
 h3. array types
 
-Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members:
+Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members, with the schema enclosed by parenthesis:
 
-bc.     array {
+bc.     array (
         numbers{0.00, 1.00};
-    } weights; # an array of floating point weights between 0 and 1.
+    ) weights; # an array of floating point weights between 0 and 1.
 
-The second way of specifying sub-structure is via "tuple typing", where you may specify a list of schemas that apply to each member of the array in sequence:
+Alternately, "tuple typing" may be used to specify the allowable values for an array, in this case a list of schemas that apply to each member of the array in sequence:
 
 bc.     array {
         integer;
         string;
         number;
     } artificial;
+
+Finally, when tuple typing is used, the @*@ operator may be used to allow additional elements at the end of an array.  For instance, to specify an array where
+ the first element is an integer and the remaining are of arbitrary number and type, one might use the following schema:
+
+bc.     array { integer; }* intFollowedByWhatever; 
 
 Finally, array types also support range semantics, for min/max number of elements:
 
@@ -259,7 +264,8 @@ definition_prefix
     'boolean'
     'null'
     'any'
-    'array'  '{' unnamed_entries '}' optional_additional_marker optional_range
+    'array'  '{' unnamed_entries '}' optional_additional_marker optional_range # a tuple-typed array 
+    'array'  '(' unnamed_entry ')' optional_additional_marker optional_range   # a simple-typed array
     'object' '{' named_entries '}' optional_additional_marker   
     'union'  '{' unnamed_entries '}'
 
