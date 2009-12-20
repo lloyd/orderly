@@ -227,7 +227,16 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             if (n->t == orderly_node_array) {
                 /* XXX: handle multiple children! */
                 yajl_gen_string(yg, (const unsigned char *) "items", 5);
-                dumpNodeAsJSONSchema(w, n->child, yg);                
+                if (n->child && n->child->sibling) {
+                    const orderly_node * k = NULL;
+                    yajl_gen_array_open(yg);
+                    for (k = n->child; k; k = k->sibling) {
+                        dumpNodeAsJSONSchema(w, k, yg);
+                    }
+                    yajl_gen_array_close(yg);
+                } else {
+                    dumpNodeAsJSONSchema(w, n->child, yg);                
+                }
             } else if (n->t == orderly_node_object) {
                 const orderly_node * kid = n->child;
                 yajl_gen_string(yg, (const unsigned char *) "properties", 10);
@@ -305,6 +314,13 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             yajl_gen_string(yg, (const unsigned char *) "enum", 4);
             orderly_write_json2(yg, n->values);
         } 
+
+        /* additionalProperties */
+        if (n->additionalProperties) { 
+            static const char * ap = "additionalProperties";
+            yajl_gen_string(yg, (const unsigned char *) ap, strlen(ap));
+            yajl_gen_bool(yg, 1);
+        } 
         
 /*         /\* requires value *\/ */
 /*         if (n->requires) { */
@@ -314,9 +330,6 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 /*             orderly_buf_append_string(w->b, ">"); */
 /*         } */
 
-/*         if (n->sibling) { */
-/*             dumpNodeAsJSONSchema(w, n->sibling, indent); */
-/*         } */
         yajl_gen_map_close(yg);
 
     }

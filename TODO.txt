@@ -1,14 +1,13 @@
-1. array tuple typing suport
-2. additionalProperties
-3. requires (property names only, support 1 or more)
-4. pattern
-5. maxDecimal
-6. title/description (??)
-7. format
-8. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
-9. sh1ttons of broken jsonschemas!
-10. simple CGI reformatter program?
-11. orderly-json.org udpate
+1. address flaw in orderly: tuple typing an array of a single element!
+2. requires (property names only, support 1 or more)
+3. pattern
+4. maxDecimal
+5. title/description (??)
+6. format
+7. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
+8. sh1ttons of broken jsonschemas!
+9. simple CGI reformatter program?
+10. orderly-json.org udpate
 
 other/later:
 1. extends

@@ -50,7 +50,9 @@ typedef enum {
     orderly_json_parse_s_minlength_requires_integer,
     orderly_json_parse_s_maxlength_requires_integer,
     orderly_json_parse_s_minitems_requires_integer,
-    orderly_json_parse_s_maxitems_requires_integer
+    orderly_json_parse_s_maxitems_requires_integer,
+    orderly_json_parse_s_items_gets_object_or_array,
+    orderly_json_parse_s_addprop_requires_boolean
 } orderly_json_parse_status;
 
 orderly_json_parse_status

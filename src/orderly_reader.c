@@ -246,10 +246,15 @@ orderly_get_error(orderly_reader r)
                 case orderly_json_parse_s_maxitems_requires_integer:
                     err = "'maxItems' property requires an integer";
                     break;
+                case orderly_json_parse_s_items_gets_object_or_array:
+                    err = "'items' property requires schema or array of schemas";
+                    break;
+                case orderly_json_parse_s_addprop_requires_boolean:
+                    err = "'additionalProperties' property requires boolean value";
+                    break;
             }
         }
     }
-
     
     return err;
 }

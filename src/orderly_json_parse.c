@@ -102,16 +102,30 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                 }
             }
             else if (!strcmp(k->k, "items")) {
-                /* XXX: support items containing an *array* of schema
+                /* support items containing an *array* of schema
                 *  for tuple typing */
-                orderly_node * pn = NULL;
-
-                s = parse_json_schema(alloc, k, &pn);
-                if (s != orderly_json_parse_s_ok) {
+                if (k->t == orderly_json_array) {
+                    orderly_json * pj = NULL;
+                    orderly_node ** last = &((*n)->child);
+                    for (pj = k->v.children.first; pj; pj = pj->next)
+                    {
+                        s = parse_json_schema(alloc, pj, last);
+                        if (s != orderly_json_parse_s_ok) {
+                            goto toErrIsHuman;
+                        }
+                        last = &((*last)->sibling);
+                    }
+                } else if (k->t == orderly_json_object) {
+                    orderly_node * pn = NULL;
+                    s = parse_json_schema(alloc, k, &pn);
+                    if (s != orderly_json_parse_s_ok) {
+                        goto toErrIsHuman;
+                    }
+                    (*n)->child = pn;
+                } else {
+                    s = orderly_json_parse_s_items_gets_object_or_array;
                     goto toErrIsHuman;
                 }
-                
-                (*n)->child = pn;
             }
             else if (!strcmp(k->k, "optional")) {
                 if (k->t != orderly_json_boolean) {
@@ -183,6 +197,14 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     goto toErrIsHuman;
                 }
 
+            }
+            else if (!strcmp(k->k, "additionalProperties")) {
+                if (k->t == orderly_json_boolean) {
+                    (*n)->additionalProperties = k->v.b;
+                } else {
+                    s = orderly_json_parse_s_addprop_requires_boolean;
+                    goto toErrIsHuman;
+                }
             }
             else if (!strcmp(k->k, "default")) {
                 /* XXX: copy! */
