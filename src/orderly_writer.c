@@ -170,7 +170,9 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
         /* optional regex */
         if (n->regex) {
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
+            orderly_buf_append_string(w->b, "/");
             orderly_buf_append_string(w->b, n->regex);
+            orderly_buf_append_string(w->b, "/");
         }
 
         /* enumerated possible values */
@@ -209,6 +211,9 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
     return 1;
 }
 
+#define YAJL_GEN_STRING_WLEN(yg, s) \
+    yajl_gen_string((yg), (const unsigned char *) (s), strlen(s));
+
 static int
 dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
 {
@@ -220,13 +225,12 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         yajl_gen_map_open(yg);
         
         /* dump the type */
-        yajl_gen_string(yg, (const unsigned char *) "type", 4);
-        yajl_gen_string(yg, (const unsigned char *) type, strlen(type));        
+        YAJL_GEN_STRING_WLEN(yg, "type");
+        YAJL_GEN_STRING_WLEN(yg, type);        
 
         if (n->child) {
             if (n->t == orderly_node_array) {
-                /* XXX: handle multiple children! */
-                yajl_gen_string(yg, (const unsigned char *) "items", 5);
+                YAJL_GEN_STRING_WLEN(yg, "items");
                 if (n->child && n->child->sibling) {
                     const orderly_node * k = NULL;
                     yajl_gen_array_open(yg);
@@ -239,11 +243,11 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                 }
             } else if (n->t == orderly_node_object) {
                 const orderly_node * kid = n->child;
-                yajl_gen_string(yg, (const unsigned char *) "properties", 10);
+                YAJL_GEN_STRING_WLEN(yg, "properties");
                 yajl_gen_map_open(yg);            
                 for (kid = n->child; kid != NULL; kid = kid->sibling) {
                     if (!kid->name) return 0;
-                    yajl_gen_string(yg, (const unsigned char *) kid->name, strlen(kid->name));
+                    YAJL_GEN_STRING_WLEN(yg, kid->name);
                     dumpNodeAsJSONSchema(w, kid, yg);
                 }
                 yajl_gen_map_close(yg);
@@ -276,7 +280,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             }
             
             if (ORDERLY_RANGE_HAS_LHS(n->range)) {
-                yajl_gen_string(yg, (const unsigned char *) minword, strlen(minword));
+                YAJL_GEN_STRING_WLEN(yg, minword);
                 if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info)
                     yajl_gen_double(yg, n->range.lhs.d);
                 else if (ORDERLY_RANGE_LHS_INT & n->range.info)
@@ -284,7 +288,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             }
 
             if (ORDERLY_RANGE_HAS_RHS(n->range)) {
-                yajl_gen_string(yg, (const unsigned char *) maxword, strlen(maxword));
+                YAJL_GEN_STRING_WLEN(yg, maxword);
                 if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
                     yajl_gen_double(yg, n->range.rhs.d);
                 else if (ORDERLY_RANGE_RHS_INT & n->range.info)
@@ -292,33 +296,31 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             }
         }
         if (n->optional) {
-            yajl_gen_string(yg, (const unsigned char *) "optional", 8);
+            YAJL_GEN_STRING_WLEN(yg, "optional");
             yajl_gen_bool(yg, 1);
         }
-        
 
-/*         /\* optional regex *\/ */
-/*         if (n->regex) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, n->regex); */
-/*         } */
+        /* optional regex */
+        if (n->regex) { 
+            YAJL_GEN_STRING_WLEN(yg, "pattern");
+            YAJL_GEN_STRING_WLEN(yg, n->regex);
+        } 
 
         /* default value */
         if (n->default_value) { 
-            yajl_gen_string(yg, (const unsigned char *) "default", 7);
+            YAJL_GEN_STRING_WLEN(yg, "default");
             orderly_write_json2(yg, n->default_value);
         }
 
         /* enumerated possible values */
         if (n->values) { 
-            yajl_gen_string(yg, (const unsigned char *) "enum", 4);
+            YAJL_GEN_STRING_WLEN(yg, "enum");
             orderly_write_json2(yg, n->values);
         } 
 
         /* additionalProperties */
         if (n->additionalProperties) { 
-            static const char * ap = "additionalProperties";
-            yajl_gen_string(yg, (const unsigned char *) ap, strlen(ap));
+            YAJL_GEN_STRING_WLEN(yg, "additionalProperties");
             yajl_gen_bool(yg, 1);
         } 
         

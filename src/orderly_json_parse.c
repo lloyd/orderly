@@ -186,7 +186,6 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     s = orderly_json_parse_s_minitems_requires_integer;
                     goto toErrIsHuman;
                 }
-
             }
             else if (!strcmp(k->k, "maxItems")) {
                 if (k->t == orderly_json_integer) {
@@ -196,7 +195,6 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     s = orderly_json_parse_s_maxitems_requires_integer;
                     goto toErrIsHuman;
                 }
-
             }
             else if (!strcmp(k->k, "additionalProperties")) {
                 if (k->t == orderly_json_boolean) {
@@ -217,6 +215,17 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                 OR_FREE(alloc, (char *) k->k);
                 k->k = NULL;
                 (*n)->values = k;
+            }
+            else if (!strcmp(k->k, "pattern")) {
+                if (k->t == orderly_json_string) {
+                    BUF_STRDUP((*n)->regex, alloc, k->v.s, strlen(k->v.s));
+                } else {
+                    s = orderly_json_parse_s_pattern_requires_string;
+                    goto toErrIsHuman;
+                }
+
+                
+                
             }
             else {
                 

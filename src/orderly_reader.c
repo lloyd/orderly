@@ -252,6 +252,9 @@ orderly_get_error(orderly_reader r)
                 case orderly_json_parse_s_addprop_requires_boolean:
                     err = "'additionalProperties' property requires boolean value";
                     break;
+                case orderly_json_parse_s_pattern_requires_string:
+                    err = "'pattern' property requires a string value";
+                    break;
             }
         }
     }

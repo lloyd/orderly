@@ -1,13 +1,13 @@
 1. parsing support for 'simple array typing' using parens (as opposed to tuple typing)
 2. requires (property names only, support 1 or more)
-3. pattern
-4. maxDecimal
-5. title/description (??)
-6. format
-7. union type handling (support only schema arrays in type?  Somehow convert all other cases automagically? (difficult if we stick to the stream parsing :/))
-8. sh1ttons of broken jsonschemas!
-9. simple CGI reformatter program?
-10. orderly-json.org udpate
+3. maxDecimal
+4. title/description (??)
+5. format
+6. union type handling (support only schema arrays in type?
+   Somehow convert all other cases automagically? 
+7. sh1ttons of broken jsonschemas!
+8. simple CGI reformatter program?
+9. orderly-json.org udpate
 
 other/later:
 1. extends
