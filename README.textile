@@ -220,7 +220,6 @@ h3. open design challenges
 
 A number of design challenges remain before orderly is "complete":
 * A decision is needed regarding support of the JSONSchema notion of making type values that are not explicitly mentioned analogous with 'any'.
-* @additionalProperties@ functionality must be figured out, as documented above
 * @maxDecimal@ support
 * Extending and Referencing (perhaps requiring the introduction of 'id' cruft?)
 
