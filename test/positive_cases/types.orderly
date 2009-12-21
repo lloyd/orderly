@@ -4,9 +4,7 @@ object {
   integer "integer";
   boolean "boolean";
   object { } "object";
-  array {
-    any;
-  } "array";
+  array [any] "array";
   null "null";
   any "any";
 };

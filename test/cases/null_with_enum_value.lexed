@@ -1,4 +1,6 @@
 (  1,  4): 'null' kw_null
-(  1, 13): '[ null ]' json_array
+(  1,  6): '[' l_bracket
+(  1, 11): 'null' kw_null
+(  1, 13): ']' r_bracket
 (  1, 14): ';' semicolon
 (  2,  0): '' eof

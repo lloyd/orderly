@@ -1,4 +1,5 @@
 (  1,  4): 'null' kw_null
-(  1, 11): 'null' default_value
+(  1,  6): '=' eq
+(  1, 11): 'null' kw_null
 (  1, 12): ';' semicolon
 (  2,  0): '' eof

@@ -107,6 +107,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                 if (k->t == orderly_json_array) {
                     orderly_json * pj = NULL;
                     orderly_node ** last = &((*n)->child);
+                    (*n)->tupleTyped = 1;
                     for (pj = k->v.children.first; pj; pj = pj->next)
                     {
                         s = parse_json_schema(alloc, pj, last);

@@ -2,11 +2,21 @@
 (  1,  8): '{' l_curly
 (  2,  8): 'string' kw_string
 (  2, 13): 'mood' property_name
-(  2, 39): '[ "happy", "sad", "meh" ]' json_array
+(  2, 15): '[' l_bracket
+(  2, 23): '"happy"' json_string
+(  2, 24): ',' comma
+(  2, 30): '"sad"' json_string
+(  2, 31): ',' comma
+(  2, 37): '"meh"' json_string
+(  2, 39): ']' r_bracket
 (  2, 40): ';' semicolon
 (  3,  9): 'integer' kw_integer
 (  3, 22): 'secretOfLife' property_name
-(  3, 32): '[ 7, 42 ]' json_array
+(  3, 24): '[' l_bracket
+(  3, 26): '7' json_integer
+(  3, 27): ',' comma
+(  3, 30): '42' json_integer
+(  3, 32): ']' r_bracket
 (  3, 33): ';' semicolon
 (  4,  1): '}' r_curly
 (  4,  2): ';' semicolon

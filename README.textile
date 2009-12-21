@@ -113,11 +113,11 @@ bc.     object {
 
 h3. array types
 
-Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members, with the schema enclosed by parenthesis:
+Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members, with the schema enclosed by square brackets:
 
-bc.     array (
+bc.     array [
         numbers{0.00, 1.00};
-    ) weights; # an array of floating point weights between 0 and 1.
+    ] weights; # an array of floating point weights between 0 and 1.
 
 Alternately, "tuple typing" may be used to specify the allowable values for an array, in this case a list of schemas that apply to each member of the array in sequence:
 
@@ -267,7 +267,7 @@ definition_prefix
     # a tuple-typed array 
     'array'  '{' unnamed_entries '}' optional_additional_marker optional_range 
     # a simple-typed array (notice the '*' marker is disallowed)
-    'array'  '(' unnamed_entry ')' optional_range   
+    'array'  '[' unnamed_entry ']' optional_range   
     'object' '{' named_entries '}' optional_additional_marker   
     'union'  '{' unnamed_entries '}'
 

@@ -177,6 +177,12 @@ orderly_get_error(orderly_reader r)
                     /* outer if should keep this code from ever executing */
                     err = "internal error";
                     break;
+                case orderly_parse_s_right_bracket_expected:
+                    err = "expected a right square bracket ']'";
+                    break;
+                case orderly_parse_s_invalid_json:
+                    err = "invalid json";
+                    break;
             }
         } else if (r->status < orderly_parse_s_jsonschema_error) {
             switch ((orderly_lex_error) r->status - orderly_parse_s_lex_error) {

@@ -81,7 +81,8 @@ orderly_writer_free(orderly_writer *w)
 }
 
 static int
-dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
+dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
+                  unsigned int omitSemi)
 {
     static const char * indentStr = "  ";
     char buf[128];
@@ -103,14 +104,28 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
         orderly_buf_append_string(w->b, type);
 
         /*  children!  */
-        if (n->t == orderly_node_array ||
-            n->t == orderly_node_object ||
-            n->t == orderly_node_union)
+        if (n->t == orderly_node_array && !n->tupleTyped)
+        {
+            orderly_buf_append_string(w->b, " [");            
+            if (n->child) {
+                /* temporarily *disable* pretty printing.  simple
+                 * typed array types will be inlined */ 
+                unsigned int p = w->cfg.pretty;
+                w->cfg.pretty = 0;
+                dumpNodeAsOrderly(w, n->child, indent + 1, 1);
+                w->cfg.pretty = p;
+            }
+            orderly_buf_append_string(w->b, "]");
+
+        }
+        else if (n->t == orderly_node_array ||
+                 n->t == orderly_node_object ||
+                 n->t == orderly_node_union)
         {
             orderly_buf_append_string(w->b, " {");            
             if (n->child) {
                 if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");
-                dumpNodeAsOrderly(w, n->child, indent + 1);
+                dumpNodeAsOrderly(w, n->child, indent + 1, 0);
                 INDENT_IF_DESIRED;
             } else {
                 orderly_buf_append_string(w->b, " ");
@@ -201,11 +216,11 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent)
             orderly_buf_append_string(w->b, "?");
         }
 
-        orderly_buf_append_string(w->b, ";");        
+        if (!omitSemi) orderly_buf_append_string(w->b, ";");        
         if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");        
 
         if (n->sibling) {
-            dumpNodeAsOrderly(w, n->sibling, indent);
+            dumpNodeAsOrderly(w, n->sibling, indent, 0);
         }
     }
     return 1;
@@ -231,7 +246,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         if (n->child) {
             if (n->t == orderly_node_array) {
                 YAJL_GEN_STRING_WLEN(yg, "items");
-                if (n->child && n->child->sibling) {
+                if (n->tupleTyped) {
                     const orderly_node * k = NULL;
                     yajl_gen_array_open(yg);
                     for (k = n->child; k; k = k->sibling) {
@@ -362,7 +377,7 @@ orderly_write(orderly_writer w, orderly_format fmt,
         yajl_gen_free(g);
         if (!rv) return NULL;
     } else {
-        if (!dumpNodeAsOrderly(w, node, 0)) return NULL;    
+        if (!dumpNodeAsOrderly(w, node, 0, 0)) return NULL;    
     }
     
     return (const char *) orderly_buf_data(w->b);

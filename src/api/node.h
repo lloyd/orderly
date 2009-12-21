@@ -96,6 +96,13 @@ typedef struct orderly_node_t {
     /* for an array or object, should properties or elements not
      * explicitly mentioned be allowed */
     unsigned int additionalProperties;
+    /* an array may be "simple typed" or "tuple typed",
+     * simple typed arrays have a single single child schema
+     * that constrains all members of the array.  Tuple typed
+     * arrays have any number of children schemas that apply to
+     * corresponding array members (first schema to first child in
+     * instance document, second to second, etc) */
+    unsigned int tupleTyped;
     /* range specifications for nodes that support it
      * (i.e. string {0,10} foo;) */
     orderly_range range;

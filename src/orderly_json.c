@@ -212,17 +212,16 @@ orderly_read_json(orderly_alloc_funcs * alloc,
 
     /* read file data, pass to parser */
     stat = yajl_parse(hand, (const unsigned char *) jsonText, *len);
-    if (stat == yajl_status_insufficient_data || stat == yajl_status_ok)
-    {
+    *len = yajl_get_bytes_consumed(hand);
+    if (stat == yajl_status_insufficient_data) {
         stat = yajl_parse_complete(hand);
     }
 
     if (stat != yajl_status_ok)
     {
-        unsigned char * str = yajl_get_error(hand, 1, (const unsigned char *) jsonText, *len);
-        fprintf(stderr, (const char *) str);
-        yajl_free_error(hand, str);
-        /* if (final_offset) *final_offset = yajl_get_error_offset(hand); */
+        /* unsigned char * str = yajl_get_error(hand, 1, (const unsigned char *) jsonText, *len); */
+        /* fprintf(stderr, (const char *) str); */
+        /* yajl_free_error(hand, str); */
     }
     else if (!orderly_ps_length(pc.nodeStack))
     {
@@ -233,6 +232,8 @@ orderly_read_json(orderly_alloc_funcs * alloc,
         /* we're ok! */
         j = orderly_ps_current(pc.nodeStack);
     }
+
+    yajl_free(hand);
 
     return j;
 }
