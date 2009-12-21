@@ -69,10 +69,21 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                         s = orderly_json_parse_s_invalid_type_value;
                         goto toErrIsHuman;
                     }
-                } else if (k->t == orderly_json_string) {
-                    /* XXX: implement union */
-                    s = orderly_json_parse_s_type_expects_string_or_array;
-                    goto toErrIsHuman;
+                } else if (k->t == orderly_json_array) {
+                    /* support items containing an *array* of schema
+                     * for tuple typing */
+                    orderly_json * pj = NULL;
+                    orderly_node ** last = &((*n)->child);
+                    (*n)->t = orderly_node_union;
+
+                    for (pj = k->v.children.first; pj; pj = pj->next)
+                    {
+                        s = parse_json_schema(alloc, pj, last);
+                        if (s != orderly_json_parse_s_ok) {
+                            goto toErrIsHuman;
+                        }
+                        last = &((*last)->sibling);
+                    }
                 } else {
                     s = orderly_json_parse_s_type_expects_string_or_array;
                     goto toErrIsHuman;
