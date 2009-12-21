@@ -69,7 +69,17 @@ static void dumpNode(orderly_alloc_funcs * oaf, orderly_node * n, unsigned int i
             orderly_write_json(oaf, n->values, b);
             printf("%s--> enum: %s\n", indentStr, orderly_buf_data(b));
         }
-        if (n->requires) printf("%s--> requires: %s\n", indentStr, n->requires);        
+        if (n->requires) {
+            const char ** p = n->requires;
+            printf("%s--> requires: ", indentStr);
+            while (p && *p) {
+                if (p != n->requires) printf(", ");
+                printf("%s", *p);
+                p++;
+            }
+            printf("\n");
+        }
+        
         if (n->regex) printf("%s--> regex: %s\n", indentStr, n->regex);        
         if (ORDERLY_RANGE_SPECIFIED(n->range)) {
             printf("%s--> range: {", indentStr);
