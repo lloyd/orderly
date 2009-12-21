@@ -245,9 +245,11 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         yajl_gen_map_open(yg);
         
         /* dump the type */
-        YAJL_GEN_STRING_WLEN(yg, "type");
-        YAJL_GEN_STRING_WLEN(yg, type);        
-
+        if (n->t != orderly_node_union) {
+            YAJL_GEN_STRING_WLEN(yg, "type");
+            YAJL_GEN_STRING_WLEN(yg, type);        
+        }
+        
         if (n->child) {
             if (n->t == orderly_node_array) {
                 YAJL_GEN_STRING_WLEN(yg, "items");
@@ -272,7 +274,14 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                 }
                 yajl_gen_map_close(yg);
             } else if (n->t == orderly_node_union) {
-                /* XXX */ 
+                const orderly_node * k = NULL;
+
+                YAJL_GEN_STRING_WLEN(yg, "type");
+                yajl_gen_array_open(yg);
+                for (k = n->child; k; k = k->sibling) {
+                    dumpNodeAsJSONSchema(w, k, yg);
+                }
+                yajl_gen_array_close(yg);
             }
         }
 

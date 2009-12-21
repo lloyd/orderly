@@ -1,4 +1,4 @@
 union {
-    string ["Sr.","Jr.","III"];
-    null; 
+  string ["Sr.","Jr.","III"];
+  null;
 };
