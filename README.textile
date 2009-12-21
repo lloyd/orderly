@@ -408,6 +408,7 @@ Many people have offered feedback and ideas which shaped this project.  Those pe
 
 * Alexandre Morgaut  	 	
 * David Grigsby
+* Greg Olszewski
 * Hatem Nassrat 
 * Steve Spencer
 * Tatu Saloranta
