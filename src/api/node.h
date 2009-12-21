@@ -86,8 +86,11 @@ typedef struct orderly_node_t {
     orderly_json * values;
     /* a json representation of this members default value */
     orderly_json * default_value;
-    /* Does thes existence of this element require any others? */
-    const char * requires;
+    /* Does thes existence of this element require any others?
+     * a null terminated array of strings which are property names
+     * of required siblings.  May be null if nothing else is required
+     * to be present */
+    const char ** requires;
     /* regular expression constraining allowable values
      * (optional for string nodes) */
     const char * regex;

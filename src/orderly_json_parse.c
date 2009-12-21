@@ -224,9 +224,39 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     s = orderly_json_parse_s_pattern_requires_string;
                     goto toErrIsHuman;
                 }
+            }
+            else if (!strcmp(k->k, "requires")) {
+                if ((*n)->requires) {
+                    s = orderly_json_parse_s_duplicate_requires;
+                    goto toErrIsHuman;
+                }
+                
+                if (k->t == orderly_json_string) {
+                    (*n)->requires = OR_MALLOC(alloc, 2 * sizeof(char *));
+                    BUF_STRDUP((*n)->requires[0], alloc, k->v.s, strlen(k->v.s));
+                    (*n)->requires[1] = NULL;
+                } else if (k->t == orderly_json_array) {
+                    unsigned int num = 0;
+                    orderly_json * ks;
+                    
+                    for (ks = k->v.children.first; ks; ks = ks->next)
+                    {
+                        unsigned int i;
+                        char ** p;
 
-                
-                
+                        if (ks->t != orderly_json_string) {
+                            s = orderly_json_parse_s_requires_value_error;
+                            goto toErrIsHuman;
+                        }
+                        num++;
+                        p = OR_MALLOC(alloc, sizeof(char *) * (num + 1));
+                        for (i = 0; i < num - 1; i++) p[i] = (char *) (*n)->requires[i];
+                        BUF_STRDUP(p[i], alloc, ks->v.s, strlen(ks->v.s));
+                        p[++i] = NULL;
+                        if ((*n)->requires) OR_FREE(alloc, (*n)->requires);
+                        (*n)->requires = (const char **) p;
+                    }
+                }
             }
             else {
                 

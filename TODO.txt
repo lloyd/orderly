@@ -1,14 +1,13 @@
-1. requires (property names only, support 1 or more)
-2. backticks to include jsonschema properties/values directly in
+1. backticks to include jsonschema properties/values directly in
    an orderly schema (gno's idea)
   a. maxDecimal
   b. title/description (??)
   c. format
-3. union type handling (support only schema arrays in type?
+2. union type handling (support only schema arrays in type?
    Somehow convert all other cases automagically? 
-4. sh1ttons of broken jsonschemas!
-5. simple CGI reformatter program?
-6. orderly-json.org udpate
+3. sh1ttons of broken jsonschemas!
+4. simple CGI reformatter program?
+5. orderly-json.org udpate
 
 other/later:
 1. extends

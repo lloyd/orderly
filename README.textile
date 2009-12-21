@@ -61,7 +61,11 @@ bc.     string name?;
 The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present.  In orderly a requirement on another type is expressed by placing the property name (optionally quoted) enclosed in angle brackets at the end of a type definition:
 
 bc.     string town <state>;
- 
+
+Multiple properties may required, and should be separated with commas:
+
+bc.     string town <state,zip>;
+    
 The @enum@ propery specifies a set of allowable values for a key in the json document.
 
 bc.     string mood [ "happy", "sad", "meh" ];
@@ -280,9 +284,13 @@ string_suffix
 definition_suffix
     optional_enum_values optional_default_value optional_requires optional_optional_marker optional_additional_marker 
     # nothing
-    
+
+csv_property_names
+    property_name "," csv_property_names
+    property_name
+     
 optional_requires
-    '<' property_name '>'
+    '<' csv_property_name '>'
     # nothing
 
 optional_optional_marker

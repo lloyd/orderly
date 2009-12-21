@@ -206,9 +206,14 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
 
         /* requires value */
         if (n->requires) {
+            const char ** p;
+
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
             orderly_buf_append_string(w->b, "<");
-            orderly_buf_append_string(w->b, n->requires);
+            for (p = n->requires; p && *p; p++) {
+                if (p != n->requires) orderly_buf_append_string(w->b, ",");
+                orderly_buf_append_string(w->b, *p);
+            }
             orderly_buf_append_string(w->b, ">");
         }
 
@@ -339,13 +344,20 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             yajl_gen_bool(yg, 1);
         } 
         
-/*         /\* requires value *\/ */
-/*         if (n->requires) { */
-/*             if (w->cfg.pretty) orderly_buf_append_string(w->b, " "); */
-/*             orderly_buf_append_string(w->b, "<"); */
-/*             orderly_buf_append_string(w->b, n->requires); */
-/*             orderly_buf_append_string(w->b, ">"); */
-/*         } */
+         /* requires value */
+        if (n->requires && *n->requires) { 
+            YAJL_GEN_STRING_WLEN(yg, "requires");
+            if (*(n->requires + 1)) {
+                const char ** p;
+                yajl_gen_array_open(yg);                
+                for (p = n->requires; p && *p; p++) {
+                    YAJL_GEN_STRING_WLEN(yg, *p);
+                }
+                yajl_gen_array_close(yg);
+            } else {
+                YAJL_GEN_STRING_WLEN(yg, *(n->requires));
+            }
+        }
 
         yajl_gen_map_close(yg);
 

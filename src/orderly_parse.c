@@ -99,14 +99,28 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
 
     /* optional_requires? */
     if (t == orderly_tok_lt) {
-        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
-        CHECK_LEX_ERROR(t, lxr);
-        if (t != orderly_tok_property_name) {
-            return orderly_parse_s_prop_name_expected;
-        }
-        BUF_STRDUP(n->requires, alloc, outBuf, outLen);
-        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
-        CHECK_LEX_ERROR(t, lxr);
+        unsigned int num = 0;
+        
+        do {
+            unsigned int i;
+            char ** p;
+            
+            t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+            CHECK_LEX_ERROR(t, lxr);
+            if (t != orderly_tok_property_name) {
+                return orderly_parse_s_prop_name_expected;
+            }
+            num++;
+            p = OR_MALLOC(alloc, sizeof(char *) * (num + 1));
+            for (i = 0; i < num - 1; i++) p[i] = (char*) n->requires[i];
+            BUF_STRDUP(p[i], alloc, outBuf, outLen);
+            p[++i] = NULL;
+            if (n->requires) OR_FREE(alloc, n->requires);
+            n->requires = (const char **) p;
+            t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, &outBuf, &outLen);            
+            CHECK_LEX_ERROR(t, lxr);
+        } while (t == orderly_tok_comma);
+
         if (t != orderly_tok_gt) {
             return orderly_parse_s_gt_expected;
         }
