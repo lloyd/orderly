@@ -31,8 +31,8 @@ typedef struct orderly_ptrstack_t
 
 
 /* initialize a ptrstack */
-#define orderly_ps_free(ops)                 \
-    if ((ops).stack) free((ops).stack);
+#define orderly_ps_free(alloc, ops)                 \
+    if ((ops).stack) OR_FREE(alloc, (ops).stack);
 
 #define orderly_ps_current(ops)               \
     (assert((ops).used > 0), (ops).stack[(ops).used - 1])

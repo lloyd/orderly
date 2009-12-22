@@ -286,8 +286,8 @@ orderly_read_json(orderly_alloc_funcs * alloc,
     }
 
     yajl_free(hand);
-    orderly_ps_free(pc.nodeStack);
-    orderly_ps_free(pc.keyStack);
+    orderly_ps_free(alloc, pc.nodeStack);
+    orderly_ps_free(alloc, pc.keyStack);
 
     return j;
 }
