@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 rv = 0 
+ENV["BINARY_DIR"] = ARGV[0]
 
 mypath = File.dirname(__FILE__)
 

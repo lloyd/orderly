@@ -1,11 +1,13 @@
 #!/usr/bin/env ruby
 
+binaryDir = ENV["BINARY_DIR"]
+
 # arguments are a string that must match the test name
 substrpat = ARGV.length ? ARGV[0] : ""
 
 thisDir = File.dirname(__FILE__)
 casesDir = File.join(thisDir, "negative_cases")
-checkBinary = File.join(thisDir, "..", "build", "checker", "orderly_check")
+checkBinary = File.join(binaryDir, "checker", "orderly_check")
 if !File.executable? checkBinary
   throw "Can't find orderly_check binary: #{checkBinary}"
 end
