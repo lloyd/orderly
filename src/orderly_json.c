@@ -45,10 +45,22 @@
     memcpy((void *)(dst), (void *) (ob), (ol));  \
     ((char *) (dst))[(ol)] = 0;  }
 
-void orderly_free_json(orderly_alloc_funcs * alloc,
-                       orderly_json ** node)
+void
+orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node)
 {
-    /* XXX */
+    if (node && *node) {
+        if ((*node)->k) OR_FREE(alloc, (void *) (*node)->k);
+
+        if ((*node)->t == orderly_json_string) {
+            OR_FREE(alloc, (void *) (*node)->v.s);
+        } else if ((*node)->t == orderly_json_array ||
+                   (*node)->t == orderly_json_object)
+        {
+            orderly_free_json(alloc, &((*node)->v.children.first));
+        }
+        if ((*node)->next) orderly_free_json(alloc, &((*node)->next));
+        OR_FREE(alloc, (void *) (*node));        
+    }
 }
 
 orderly_json *

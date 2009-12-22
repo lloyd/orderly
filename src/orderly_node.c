@@ -32,6 +32,7 @@
 
 #include "api/node.h"
 #include "orderly_alloc.h"
+#include "orderly_json.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -41,10 +42,23 @@ void orderly_free_node(orderly_alloc_funcs * alloc,
 {
     if (node && *node) {
         if ((*node)->name) OR_FREE(alloc, (void *)((*node)->name));
-        if ((*node)->values) OR_FREE(alloc, (void *)((*node)->values));
-        if ((*node)->default_value) OR_FREE(alloc, (void *)((*node)->default_value));
-        if ((*node)->requires) OR_FREE(alloc, (void *)((*node)->requires));
+        if ((*node)->values) orderly_free_json(alloc, &((*node)->values));
+        if ((*node)->default_value) {
+            orderly_free_json(alloc, &((*node)->default_value));
+        }
+        if ((*node)->requires) {
+            const char ** p;
+            for (p = (*node)->requires; *p; p++) {
+                OR_FREE(alloc, (void *) *p);
+            }
+            OR_FREE(alloc, (void *)((*node)->requires));
+        }
         if ((*node)->regex) OR_FREE(alloc, (void *)((*node)->regex));
+        if ((*node)->passthrough_properties) {
+            orderly_free_json(alloc, &((*node)->passthrough_properties));
+        }
+        if ((*node)->child) orderly_free_node(alloc, &((*node)->child));
+        if ((*node)->sibling) orderly_free_node(alloc, &((*node)->sibling));
         OR_FREE(alloc, *node);
         *node = NULL;
     }

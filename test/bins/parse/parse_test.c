@@ -132,6 +132,7 @@ static const char * statusToStr(orderly_parse_status s)
     return "unknown";
 }
 
+#include "../debug_alloc_routines.h"
 
 int
 main(int argc, char ** argv) 
@@ -144,12 +145,16 @@ main(int argc, char ** argv)
         tot += rd;
 
     {
-        orderly_alloc_funcs oaf;
         orderly_node * n;
+        orderlyTestMemoryContext memStats;
         orderly_parse_status s;
-
-        orderly_set_default_alloc_funcs(&oaf);
-
+        orderly_alloc_funcs oaf = {
+            orderlyTestMalloc,
+            orderlyTestRealloc,
+            orderlyTestFree,
+            &memStats
+        };
+        
         s = orderly_parse(&oaf, inbuf, tot, &n, NULL);
         printf("parse complete (%s):\n", statusToStr(s));
         dumpNode(&oaf, n, 0); /* here's where we'll map over and output the returned tree */ 
@@ -157,6 +162,13 @@ main(int argc, char ** argv)
          *       ultimate client a parse handle and make the ownership of
          *       the parse tree held by the parse handle? */
         orderly_free_node(&oaf, &n);
+
+        /* now memstats! */
+        if (memStats.numFrees < memStats.numMallocs)
+        {
+            printf("MEMORY LEAK: %d allocations/%d frees\n",
+                   memStats.numMallocs, memStats.numFrees);
+        }
     }
     
     return 0;
