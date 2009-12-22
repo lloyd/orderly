@@ -127,6 +127,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_jsonschema_error: return "jsonschema_parse_error";
         case orderly_parse_s_right_bracket_expected: return "right_bracket_expected";
         case orderly_parse_s_invalid_json: return "invalid_json";
+        case orderly_parse_s_backtick_expected: return "backtick_expected";
     }
     return "unknown";
 }
