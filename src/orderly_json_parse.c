@@ -33,6 +33,7 @@
 #include "orderly_json_parse.h"
 #include "orderly_ptrstack.h"
 #include "orderly_alloc.h"
+#include "orderly_json.h"
 
 #include <yajl/yajl_parse.h>
 #include <string.h>
@@ -43,237 +44,243 @@
     memcpy((void *)(dst), (void *) (ob), (ol));  \
     ((char *) (dst))[(ol)] = 0;
 
-typedef enum {
-    OPS_Init = 0,
-    OPS_ParseNode,
-    OPS_HandleType,
-    OPS_HandleProperties,
-    OPS_HandleMinimum,
-    OPS_HandleMaximum,
-    OPS_EndOfStates
-} orderly_parse_state;
 
-#define ORDERLY_DEBUG_PARSER 1
-#if defined(ORDERLY_DEBUG_PARSER)
-#include <stdio.h>
-
-static const char *
-psToString(orderly_parse_state ps)
+static orderly_json_parse_status
+parse_json_schema(orderly_alloc_funcs * alloc,
+                  orderly_json * j, orderly_node ** n)
 {
-    static const char * states[] = {
-        "init", "pnode", "htype",  "props", "min", "max"
-    };
-    if (ps >= OPS_EndOfStates) return "?????";
-    return states[ps];
-}
-
-#define DUMP_PARSER_STATE(__s, __str)                                         \
-    printf("%20s [%5s] cur:%10p val:%s\n", (__s), psToString(pc->state), (void *) pc->current, __str);
-
-#define DUMP_PARSER_STATE_STR(__s, __str, __len)   \
-{                                                  \
-  char buf[64];                                    \
-  unsigned int i = __len;                          \
-  if (63 < i) i = 63;                              \
-  snprintf(buf, i+1, "%s", __str);               \
-  buf[i] = 0;                                      \
-  DUMP_PARSER_STATE((__s), buf);                   \
-}
-
-#define DUMP_PARSER_STATE_DOUBLE(__s, __d)         \
-{                                                  \
-  char buf[64];                                    \
-  sprintf(buf, "%g", (__d));                       \
-  DUMP_PARSER_STATE((__s), buf);                   \
-}
-#define DUMP_PARSER_STATE_LONG(__s, __l)         \
-{                                                  \
-  char buf[64];                                    \
-  sprintf(buf, "%ld", (__l));                       \
-  DUMP_PARSER_STATE((__s), buf);                   \
-}
-#else
-#define DUMP_PARSER_STATE(__s) ;
-#endif
-
-
-typedef struct
-{
-    orderly_alloc_funcs * alloc;
-    orderly_bytestack keys;
-    orderly_bytestack nodes;
-    orderly_parse_state state;
-    orderly_node * current;
-    orderly_json_parse_status error;
-} orderly_parse_context;
-
-static
-int js_parse_null(void * ctx)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE("js_parse_null", "null");
-    return 1;
-}
-
-
-static int js_parse_boolean(void * ctx, int boolean)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE("js_parse_boolean", (boolean ? "true" : "false"));
-    return 1;
-}
-
-
-static int js_parse_double(void * ctx, double d)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE_DOUBLE("js_parse_double", d);
-    if (pc->state == OPS_HandleMinimum) {
-        pc->current->range.info |= ORDERLY_RANGE_LHS_DOUBLE;
-        pc->current->range.lhs.d = d;
-        pc->state = OPS_ParseNode;
-    } else if (pc->state == OPS_HandleMaximum) {
-        pc->current->range.info |= ORDERLY_RANGE_RHS_DOUBLE;
-        pc->current->range.rhs.d = d;
-        pc->state = OPS_ParseNode;
-    } else {
-        pc->error = orderly_json_parse_s_unexpected_number;
-    }
-    return (pc->error == orderly_json_parse_s_ok);
-}
-
-static int js_parse_integer(void * ctx, long l)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE_LONG("js_parse_integer", l);
-    if (pc->state == OPS_HandleMinimum) {
-        pc->current->range.info |= ORDERLY_RANGE_LHS_INT;
-        pc->current->range.lhs.i = l;
-        pc->state = OPS_ParseNode;
-    } else if (pc->state == OPS_HandleMaximum) {
-        pc->current->range.info |= ORDERLY_RANGE_RHS_INT;
-        pc->current->range.rhs.i = l;
-        pc->state = OPS_ParseNode;
-    } else {
-        pc->error = orderly_json_parse_s_unexpected_number;
-    }
-    return (pc->error == orderly_json_parse_s_ok);
-}
-
-
-static int js_parse_string(void * ctx, const unsigned char * v, unsigned int l)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE_STR("js_parse_string", v, l);
-    if (pc->state == OPS_HandleType) {
-        pc->state = OPS_ParseNode;
-        pc->current->t = orderly_string_to_node_type((const char*)v, l);
-        if (pc->current->t == orderly_node_empty) {
-            pc->error = orderly_json_parse_s_unrecognized_node_type;
-        }
-    } else {
-        pc->error = orderly_json_parse_s_unexpected_json_string;
+    orderly_json_parse_status s = orderly_json_parse_s_ok;
+    
+    orderly_json * k;
+    *n = NULL;
+    if (j->t != orderly_json_object) {
+        /* XXX: offset into the buffer!? */
+        return orderly_json_parse_s_object_expected;
     }
 
-    return (pc->error == orderly_json_parse_s_ok);
-}
+    *n = orderly_alloc_node(alloc, orderly_node_empty);
 
+    for (k=j->v.children.first; k != NULL; k=k->next) {
+        if (k->k != NULL) {
+            if (!strcmp(k->k, "type")) {
+                if (k->t == orderly_json_string) {
+                    (*n)->t = orderly_string_to_node_type(k->v.s, strlen(k->v.s));
+                    if ((*n)->t == orderly_node_empty) {
+                        s = orderly_json_parse_s_invalid_type_value;
+                        goto toErrIsHuman;
+                    }
+                } else if (k->t == orderly_json_array) {
+                    /* support items containing an *array* of schema
+                     * for tuple typing */
+                    orderly_json * pj = NULL;
+                    orderly_node ** last = &((*n)->child);
+                    (*n)->t = orderly_node_union;
 
-static int js_parse_map_key(void * ctx, const unsigned char * v,
-                            unsigned int l)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE_STR("js_parse_map_key", v, l);
+                    for (pj = k->v.children.first; pj; pj = pj->next)
+                    {
+                        s = parse_json_schema(alloc, pj, last);
+                        if (s != orderly_json_parse_s_ok) {
+                            goto toErrIsHuman;
+                        }
+                        last = &((*last)->sibling);
+                    }
+                } else {
+                    s = orderly_json_parse_s_type_expects_string_or_array;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "properties")) {
+                orderly_json * p = NULL;
+                orderly_node ** last = &((*n)->child);
 
-    if (pc->state == OPS_ParseNode) {
-        /* great! let's see what kind of element this is */
-        if (v && !strncmp((const char *) v, "type", l)) {
-            pc->state = OPS_HandleType;
-        } else if (v && !strncmp((const char *) v, "properties", l)) {
-            pc->state = OPS_HandleProperties;
-        } else if (v && !strncmp((const char *) v, "minimum", l)) {
-            pc->state = OPS_HandleMinimum;
-        } else if (v && !strncmp((const char *) v, "maximum", l)) {
-            pc->state = OPS_HandleMaximum;
-        } else {
-            pc->error = orderly_json_parse_s_unexpected_property_name;
-        }
-    } else if (pc->state == OPS_HandleProperties) {
-        /* push this key onto the keystack */
-        char * key;
-        BUF_STRDUP(key, pc->alloc, v, l);
-        orderly_ps_push(pc->alloc, pc->keys, key);
-        pc->state = OPS_Init;
-    } else {
-        pc->error = orderly_json_parse_s_unexpected_json_property;
-    }
+                if (k->t != orderly_json_object) {                
+                    s = orderly_json_parse_s_invalid_properties_value;
+                    goto toErrIsHuman;
+                }
 
-    return (pc->error == orderly_json_parse_s_ok);
-}
+                for (p=k->v.children.first; p != NULL; p=p->next) {
+                    orderly_node * pn = NULL;
+                    s = parse_json_schema(alloc, p, &pn);
+                    if (pn) {
+                        *last = pn;
+                        last = &(pn->sibling);
+                        BUF_STRDUP(pn->name, alloc, p->k, strlen(p->k));
+                    }
+                    
+                    if (s != orderly_json_parse_s_ok) {
+                        goto toErrIsHuman;
+                    }
+                }
+            }
+            else if (!strcmp(k->k, "items")) {
+                /* support items containing an *array* of schema
+                *  for tuple typing */
+                if (k->t == orderly_json_array) {
+                    orderly_json * pj = NULL;
+                    orderly_node ** last = &((*n)->child);
+                    (*n)->tupleTyped = 1;
+                    for (pj = k->v.children.first; pj; pj = pj->next)
+                    {
+                        s = parse_json_schema(alloc, pj, last);
+                        if (s != orderly_json_parse_s_ok) {
+                            goto toErrIsHuman;
+                        }
+                        last = &((*last)->sibling);
+                    }
+                } else if (k->t == orderly_json_object) {
+                    orderly_node * pn = NULL;
+                    s = parse_json_schema(alloc, k, &pn);
+                    if (s != orderly_json_parse_s_ok) {
+                        goto toErrIsHuman;
+                    }
+                    (*n)->child = pn;
+                } else {
+                    s = orderly_json_parse_s_items_gets_object_or_array;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "optional")) {
+                if (k->t != orderly_json_boolean) {
+                    s = orderly_json_parse_s_invalid_optional_value;
+                    goto toErrIsHuman;
+                }
+                (*n)->optional = k->v.b;
+            }
+            else if (!strcmp(k->k, "minimum")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
+                    (*n)->range.lhs.i = k->v.i;
+                } else if (k->t == orderly_json_number) {
+                    (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
+                    (*n)->range.lhs.d = k->v.n;
+                } else {
+                    s = orderly_json_parse_s_minimum_requires_number;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "maximum")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
+                    (*n)->range.rhs.i = k->v.i;
+                } else if (k->t == orderly_json_number) {
+                    (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
+                    (*n)->range.rhs.d = k->v.n;
+                } else {
+                    s = orderly_json_parse_s_maximum_requires_number;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "minLength")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
+                    (*n)->range.lhs.i = k->v.i;
+                } else {
+                    s = orderly_json_parse_s_minlength_requires_integer;
+                    goto toErrIsHuman;
+                }
 
+            }
+            else if (!strcmp(k->k, "maxLength")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
+                    (*n)->range.rhs.i = k->v.i;
+                } else {
+                    s = orderly_json_parse_s_maxlength_requires_integer;
+                    goto toErrIsHuman;
+                }
 
-static int js_parse_start_map(void * ctx)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE("js_parse_start_map", "{");
-    if (pc->state == OPS_Init) {
-        orderly_node * old = pc->current;
-        pc->state = OPS_ParseNode;
-        pc->current = orderly_alloc_node(pc->alloc, orderly_node_empty);
-        pc->current->sibling = old;
-    } else if (pc->state == OPS_HandleProperties) {
-        orderly_ps_push(pc->alloc, pc->nodes, pc->current);
-        pc->current = NULL;
-    } else {
-        pc->error = orderly_json_parse_s_unexpected_json_map;
-        return 0;
-    }
-    return 1;
-}
+            }
+            else if (!strcmp(k->k, "minItems")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
+                    (*n)->range.lhs.i = k->v.i;
+                } else {
+                    s = orderly_json_parse_s_minitems_requires_integer;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "maxItems")) {
+                if (k->t == orderly_json_integer) {
+                    (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
+                    (*n)->range.rhs.i = k->v.i;
+                } else {
+                    s = orderly_json_parse_s_maxitems_requires_integer;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "additionalProperties")) {
+                if (k->t == orderly_json_boolean) {
+                    (*n)->additionalProperties = k->v.b;
+                } else {
+                    s = orderly_json_parse_s_addprop_requires_boolean;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "default")) {
+                /* XXX: copy! */
+                OR_FREE(alloc, (char *) k->k);
+                k->k = NULL;
+                (*n)->default_value = k;
+            }
+            else if (!strcmp(k->k, "enum")) {
+                /* XXX: copy! */
+                OR_FREE(alloc, (char *) k->k);
+                k->k = NULL;
+                (*n)->values = k;
+            }
+            else if (!strcmp(k->k, "pattern")) {
+                if (k->t == orderly_json_string) {
+                    BUF_STRDUP((*n)->regex, alloc, k->v.s, strlen(k->v.s));
+                } else {
+                    s = orderly_json_parse_s_pattern_requires_string;
+                    goto toErrIsHuman;
+                }
+            }
+            else if (!strcmp(k->k, "requires")) {
+                if ((*n)->requires) {
+                    s = orderly_json_parse_s_duplicate_requires;
+                    goto toErrIsHuman;
+                }
+                
+                if (k->t == orderly_json_string) {
+                    (*n)->requires = OR_MALLOC(alloc, 2 * sizeof(char *));
+                    BUF_STRDUP((*n)->requires[0], alloc, k->v.s, strlen(k->v.s));
+                    (*n)->requires[1] = NULL;
+                } else if (k->t == orderly_json_array) {
+                    unsigned int num = 0;
+                    orderly_json * ks;
+                    
+                    for (ks = k->v.children.first; ks; ks = ks->next)
+                    {
+                        unsigned int i;
+                        char ** p;
 
-
-static int js_parse_end_map(void * ctx)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    if (pc->state == OPS_ParseNode) {    
-        /* current will become a child of the top node on the
-         * stack, and will inherit the name of the top key on the
-         * keystack.  True *except for the outermost node */
-        if (orderly_ps_length(pc->nodes)) {
-            orderly_node * kid = pc->current;
-            pc->current = orderly_ps_current(pc->nodes);
-            orderly_ps_pop(pc->nodes);            
-            pc->current->child = kid;
-            if (orderly_ps_length(pc->keys)) {
-                pc->current->name = orderly_ps_current(pc->keys);
-                orderly_ps_pop(pc->keys);                            
+                        if (ks->t != orderly_json_string) {
+                            s = orderly_json_parse_s_requires_value_error;
+                            goto toErrIsHuman;
+                        }
+                        num++;
+                        p = OR_MALLOC(alloc, sizeof(char *) * (num + 1));
+                        for (i = 0; i < num - 1; i++) p[i] = (char *) (*n)->requires[i];
+                        BUF_STRDUP(p[i], alloc, ks->v.s, strlen(ks->v.s));
+                        p[++i] = NULL;
+                        if ((*n)->requires) OR_FREE(alloc, (*n)->requires);
+                        (*n)->requires = (const char **) p;
+                    }
+                }
+            }
+            else {
+                
             }
         }
-        pc->state = OPS_HandleProperties;
-    } else if (pc->state == OPS_HandleProperties) {
-
     }
-    
-    DUMP_PARSER_STATE("js_parse_end_map", "}");
-    return 1;
+
+    return s;
+
+  toErrIsHuman:
+    if (*n) orderly_free_node(alloc, n);
+    return s;
 }
-
-
-static int js_parse_start_array(void * ctx)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE("js_parse_start_array", "[");
-    return 1;
-}
-
-
-static int js_parse_end_array(void * ctx)
-{
-    orderly_parse_context * pc = (orderly_parse_context *) ctx;
-    DUMP_PARSER_STATE("js_parse_end_array", "]");
-    return 1;
-}
-
 
 orderly_json_parse_status
 orderly_json_parse(orderly_alloc_funcs * alloc,
@@ -282,53 +289,21 @@ orderly_json_parse(orderly_alloc_funcs * alloc,
                    orderly_node ** n,
                    unsigned int * final_offset)
 {
-    static yajl_callbacks callbacks = {
-        js_parse_null,
-        js_parse_boolean,
-        js_parse_integer,
-        js_parse_double,
-        NULL,
-        js_parse_string,
-        js_parse_start_map,
-        js_parse_map_key,
-        js_parse_end_map,
-        js_parse_start_array,
-        js_parse_end_array
-    };
+    /* a high level interface to non-stream based json parsing */
+    orderly_json_parse_status s;
+    orderly_json * j;
 
+    *final_offset = schemaTextLen;
+    
+    j = orderly_read_json(alloc, (const char *) schemaText, final_offset);
+    if (j == NULL) return orderly_json_parse_s_invalid_json;
+    
+    /* we've parsed the json into a memory representation, now let's
+     * interpret it's semantic meaning as we merge it over into a
+     * orderly_node representation */
+    s = parse_json_schema(alloc, j, n);
 
-    yajl_handle hand;
-    yajl_status stat;
-    /* allow comments! */
-    yajl_parser_config cfg = { 1, 1 };
-    orderly_parse_context pc;
-
-    memset((void *) &pc, 0, sizeof(pc));
-    pc.alloc = alloc;
-
-    /* allocate a parser */
-    hand = yajl_alloc(&callbacks, &cfg,
-                      (const yajl_alloc_funcs *) alloc,
-                      (void *) &pc);
-
-    /* read file data, pass to parser */
-    stat = yajl_parse(hand, schemaText, schemaTextLen);
-
-    if (stat == yajl_status_insufficient_data)
-    {
-    }
-    else if (stat != yajl_status_ok)
-    {
-        unsigned char * str = yajl_get_error(hand, 1, schemaText, schemaTextLen);
-        fprintf(stderr, (const char *) str);
-        yajl_free_error(hand, str);
-        if (final_offset) *final_offset = yajl_get_error_offset(hand);
-    }
-    else
-    {
-        /* we're ok! */
-        *n = pc.current;
-    }
-
-    return pc.error;
+    (void) orderly_free_json(alloc, &j);
+    
+    return s;
 }

@@ -1,4 +1,4 @@
 Schema is invalid: greater than '>' expected
-                         string foo <bar ;  
+                             string <bar ; 
                      (right here) ------^
 

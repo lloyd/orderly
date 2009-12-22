@@ -1,1 +1,1 @@
-string name /^((john)|(bob)|(susan)|(георги)|(цветанка))$/;
+string /^((john)|(bob)|(susan)|(георги)|(цветанка))$/;

@@ -1,6 +1,6 @@
 parse complete (ok):
-myobject [object] 
+ [object]
 children:
-    foo [string] 
-    bar [integer] 
-    baz [number] 
+    foo [string]
+    bar [integer]
+    baz [number]

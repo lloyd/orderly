@@ -30,10 +30,10 @@
 
 SET (SRCS orderly_node.c orderly_lex.c orderly_alloc.c orderly_buf.c
           orderly_parse.c orderly_writer.c orderly_reader.c
-          orderly_json_parse.c)
+          orderly_json_parse.c orderly_json.c)
 SET (HDRS orderly_common.h orderly_lex.h orderly_parse.h
-     orderly_json_parse.h)
-SET (PUB_HDRS api/common.h api/node.h api/reader.h api/writer.h)
+     orderly_json_parse.h orderly_json.h)
+SET (PUB_HDRS api/common.h api/node.h api/reader.h api/writer.h api/json.h)
 
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)

@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "simpleTypedArrayOfIntegers": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      }
+    },
+    "tupleTypedArrayOfOneInteger": {
+      "type": "array",
+      "items": [
+        {
+          "type": "integer"
+        }
+      ]
+    },
+    "tupleTypedArrayOfOneIntegerFollowedByAnything": {
+      "type": "array",
+      "items": [
+        {
+          "type": "integer"
+        }
+      ],
+      "additionalProperties": true
+    }
+  }
+}

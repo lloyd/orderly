@@ -177,6 +177,12 @@ orderly_get_error(orderly_reader r)
                     /* outer if should keep this code from ever executing */
                     err = "internal error";
                     break;
+                case orderly_parse_s_right_bracket_expected:
+                    err = "expected a right square bracket ']'";
+                    break;
+                case orderly_parse_s_invalid_json:
+                    err = "invalid json";
+                    break;
             }
         } else if (r->status < orderly_parse_s_jsonschema_error) {
             switch ((orderly_lex_error) r->status - orderly_parse_s_lex_error) {
@@ -207,28 +213,57 @@ orderly_get_error(orderly_reader r)
                 case orderly_json_parse_s_ok:
                     err = "no error, it's all good.";
                     break;
-                case orderly_json_parse_s_unexpected_property_name:
-                    err = "unexpected property name encountered";
+                case orderly_json_parse_s_object_expected:
+                    err = "expected a json schema (which is an object)";
                     break;
-                case orderly_json_parse_s_unexpected_json_map:
-                    err = "unexpected json map encountered";
+                case orderly_json_parse_s_internal_error:
+                    err = "internal error";
                     break;
-                case orderly_json_parse_s_unrecognized_node_type:
-                    err = "schema node type is unrecognized";
+                case orderly_json_parse_s_type_expects_string_or_array:
+                    err = "the type property requires either a string or array value";
                     break;
-                case orderly_json_parse_s_unexpected_json_property:
-                    err = "unexpected property encountered in json text";
+                case orderly_json_parse_s_invalid_type_value:
+                    err = "invalid type specified";
                     break;
-                case orderly_json_parse_s_unexpected_json_string:
-                    err = "unexpected json string encountered";
+                case orderly_json_parse_s_invalid_properties_value:
+                    err = "the 'properties' property expects an object value";
                     break;
-                case orderly_json_parse_s_unexpected_number:
-                    err = "unexpected number in json text";
+                case orderly_json_parse_s_invalid_json:            
+                    err = "json syntax error";
+                    break;
+                case orderly_json_parse_s_invalid_optional_value:
+                    err = "'optional' property requires a boolean value";
+                    break;
+                case orderly_json_parse_s_minimum_requires_number:
+                    err = "'minimum' property requires a numeric value";
+                    break;
+                case orderly_json_parse_s_maximum_requires_number:
+                    err = "'maximum' property requires an integer";
+                    break;
+                case orderly_json_parse_s_minlength_requires_integer:
+                    err = "'minLength' property requires an integer";
+                    break;
+                case orderly_json_parse_s_maxlength_requires_integer:
+                    err = "'maxLength' property requires an integer";
+                    break;
+                case orderly_json_parse_s_minitems_requires_integer:
+                    err = "'minItems' property requires an integer";
+                    break;
+                case orderly_json_parse_s_maxitems_requires_integer:
+                    err = "'maxItems' property requires an integer";
+                    break;
+                case orderly_json_parse_s_items_gets_object_or_array:
+                    err = "'items' property requires schema or array of schemas";
+                    break;
+                case orderly_json_parse_s_addprop_requires_boolean:
+                    err = "'additionalProperties' property requires boolean value";
+                    break;
+                case orderly_json_parse_s_pattern_requires_string:
+                    err = "'pattern' property requires a string value";
                     break;
             }
         }
     }
-
     
     return err;
 }

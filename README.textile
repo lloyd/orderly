@@ -61,7 +61,11 @@ bc.     string name?;
 The @requires@ property indicates a that if a value is present in the instance JSON, another named value must also be present.  In orderly a requirement on another type is expressed by placing the property name (optionally quoted) enclosed in angle brackets at the end of a type definition:
 
 bc.     string town <state>;
- 
+
+Multiple properties may required, and should be separated with commas:
+
+bc.     string town <state,zip>;
+    
 The @enum@ propery specifies a set of allowable values for a key in the json document.
 
 bc.     string mood [ "happy", "sad", "meh" ];
@@ -113,19 +117,24 @@ bc.     object {
 
 h3. array types
 
-Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members:
+Arrays are specified using the @array@ type specifier.  Schemas for arrays elements may be specified in one of two ways.  First we can specify a single schema that governs all array members, with the schema enclosed by square brackets:
 
-bc.     array {
+bc.     array [
         numbers{0.00, 1.00};
-    } weights; # an array of floating point weights between 0 and 1.
+    ] weights; # an array of floating point weights between 0 and 1.
 
-The second way of specifying sub-structure is via "tuple typing", where you may specify a list of schemas that apply to each member of the array in sequence:
+Alternately, "tuple typing" may be used to specify the allowable values for an array, in this case a list of schemas that apply to each member of the array in sequence:
 
 bc.     array {
         integer;
         string;
         number;
     } artificial;
+
+Finally, when tuple typing is used, the @*@ operator may be used to allow additional elements at the end of an array.  For instance, to specify an array where
+ the first element is an integer and the remaining are of arbitrary number and type, one might use the following schema:
+
+bc.     array { integer; }* intFollowedByWhatever; 
 
 Finally, array types also support range semantics, for min/max number of elements:
 
@@ -137,7 +146,16 @@ JSONSchema provides the @additionalProperties@ attribute which allows a schema a
 # specify that a valid instance object/array may not have any properties not in the schema 
 # specify an additional schema that applies to any additional properties in the instance object/array that are not explicitly mentioned in the schema
 
-It is *not known* yet how/if orderly will support this feature. 
+Orderly supports expressing wether or not additional properties should be allowed, but does not allow you to specify a schema which governs these additional properties.  A trailing @*@ in orderly indicates additional properties are allowed, and occurs immediately after the definition of nested schemas (the closing curly brace) for both objects:
+
+bc.    object {
+        string name;
+        string title;
+    }* employee;
+
+and arrays
+
+bc.    array { integer; string; }* myOpenTupleTypedArray;
 
 h3. null types
 
@@ -169,10 +187,24 @@ bc.     union {
 
 A key syntactic feature to note is the supported (required?) ommission of property names where they would be meaningless.
 
+h3. "extra properties"
+
+Textual is capable of concisely representing a subset of JSONSchema, however at times it might be desirable to be able to represent properties in JSONSchema that are not supported natively in orderly.  For this reason the backtick operators will allow you to encode a json object as part of an orderly schema.  For example to attach a description to a schema entry one might generate something like:
+
+bc.      string `{"description": "The name of the service"}`;
+
+The author has full control over formatting, as whitespace is ignored:
+
+bc.      string `{
+      "title": "Service Name",
+      "description": "The name of the service",
+      "ui_hints": "Use the blink tag"
+    }`;
+
 h3. references
 
 *TODO*.  We'll probably use the @reference@ type specifier and allow the consumer to override the value name.  for example:
-
+¡™
 bc.      object {
         string name;
         string title;
@@ -202,7 +234,6 @@ h3. open design challenges
 
 A number of design challenges remain before orderly is "complete":
 * A decision is needed regarding support of the JSONSchema notion of making type values that are not explicitly mentioned analogous with 'any'.
-* @additionalProperties@ functionality must be figured out, as documented above
 * @maxDecimal@ support
 * Extending and Referencing (perhaps requiring the introduction of 'id' cruft?)
 
@@ -250,8 +281,11 @@ definition_prefix
     'boolean'
     'null'
     'any'
-    'array'  '{' unnamed_entries '}' optional_range
-    'object' '{' named_entries '}'    
+    # a tuple-typed array 
+    'array'  '{' unnamed_entries '}' optional_additional_marker optional_range 
+    # a simple-typed array (notice the '*' marker is disallowed)
+    'array'  '[' unnamed_entry ']' optional_range   
+    'object' '{' named_entries '}' optional_additional_marker   
     'union'  '{' unnamed_entries '}'
 
 string_prefix
@@ -261,15 +295,26 @@ string_suffix
     optional_perl_regex definition_suffix
 
 definition_suffix
-    optional_enum_values optional_default_value optional_requires optional_optional_marker 
+    optional_enum_values optional_default_value optional_requires optional_optional_marker optional_additional_marker optional_extra_properties
     # nothing
-    
+
+csv_property_names
+    property_name "," csv_property_names
+    property_name
+
+optional_extra_properties
+    '`' json_object '`'
+     
 optional_requires
-    '<' property_name '>'
+    '<' csv_property_name '>'
     # nothing
 
 optional_optional_marker
     '?'
+    # nothing  
+
+optional_additional_marker
+    '*'
     # nothing  
 
 optional_enum_values
@@ -380,6 +425,7 @@ Many people have offered feedback and ideas which shaped this project.  Those pe
 
 * Alexandre Morgaut  	 	
 * David Grigsby
+* Greg Olszewski
 * Hatem Nassrat 
 * Steve Spencer
 * Tatu Saloranta

@@ -79,8 +79,8 @@ orderly_lex_free(orderly_lexer lxr)
 
 /* given a string of characters, is it a keyword or a property name (default)
  */
-static orderly_tok
-keywordCheck(const unsigned char * str, unsigned int len)
+orderly_tok
+orderly_lex_keyword_check(const unsigned char * str, unsigned int len)
 {
     static struct keywords_t {
         const char * kw;
@@ -251,136 +251,6 @@ orderly_lex_json_string(orderly_lexer lexer, const unsigned char * schemaText,
     return tok;
 }
 
-/* a very basic extraction of JSON arrays, as with strings we'll leave it up
- * to the parser to handle the more complicated bits of JSON array parsing.
- *
- * precondition: offset should point to the first char *after* a left brace
- *               ('[').
- */
-static orderly_tok
-orderly_lex_json_array(orderly_lexer lexer, const unsigned char * schemaText,
-                       unsigned int schemaTextLen, unsigned int * offset)
-{
-    orderly_tok tok = orderly_tok_error;
-    unsigned int nesting = 1;
-    
-    do {
-        char c = schemaText[*offset];
-        if ('"' == c) {
-            tok = orderly_lex_json_string(lexer, schemaText, schemaTextLen,
-                                          offset);
-            if (tok != orderly_tok_json_string) break;
-        } else if ('[' == c) {
-            ++nesting;
-        } else if (']' == c) {
-            if (!(--nesting)) break;
-        } else {
-            /* ignore! */
-        }
-    } while (++(*offset) < schemaTextLen);
-    
-    if (!nesting) {
-        tok = orderly_tok_json_array;
-        (*offset)++;
-    } else {
-        lexer->error = orderly_lex_unterminated_array;
-        tok = orderly_tok_error;                    
-    }
-
-    return tok;
-}
-
-/* a very basic extraction of JSON objects, as with strings we'll leave it up
- * to the parser to handle the more complicated bits of JSON array parsing.
- *
- * precondition: offset should point to the first char *after* a left curly
- *               ('{').
- */
-static orderly_tok
-orderly_lex_json_object(orderly_lexer lexer, const unsigned char * schemaText,
-                        unsigned int schemaTextLen, unsigned int * offset)
-{
-    orderly_tok tok = orderly_tok_error;
-    unsigned int nesting = 1;
-    
-    do {
-        char c = schemaText[*offset];
-        if ('"' == c) {
-            tok = orderly_lex_json_string(lexer, schemaText, schemaTextLen,
-                                          offset);
-            if (tok != orderly_tok_json_string) break;
-        } else if ('{' == c) {
-            ++nesting;
-        } else if ('}' == c) {
-            if (!(--nesting)) break;
-        } else {
-            /* ignore! */
-        }
-    } while (++(*offset) < schemaTextLen);
-    
-    if (!nesting) {
-        tok = orderly_tok_json_array;
-        (*offset)++;
-    } else {
-        lexer->error = orderly_lex_unterminated_array;
-        tok = orderly_tok_error;                    
-    }
-
-    return tok;
-}
-
-#define CHECK_KEYWORD(_kw)                             \
-    if (((*offset) + (strlen(_kw)) < schemaTextLen) && \
-        !strncmp((_kw), (const char *) (schemaText + *offset), strlen(_kw))) { \
-        *offset += strlen(_kw);                        \
-        tok = orderly_tok_default_value;               \
-    } 
-
-/* scan a single json value
- * precondition: offset should point to first char of json value */
-static orderly_tok
-orderly_lex_json_value(orderly_lexer lexer, const unsigned char * schemaText,
-                       unsigned int schemaTextLen, unsigned int * offset)
-{
-    orderly_tok tok = orderly_tok_error;
-    switch (schemaText[*offset]) {
-        case '"': /* string */
-            (*offset)++;
-            tok = orderly_lex_json_string(lexer, schemaText,
-                                          schemaTextLen, offset);
-            break;
-        case '[': /* array */
-            (*offset)++;
-            tok = orderly_lex_json_array(lexer, schemaText,
-                                         schemaTextLen, offset);
-            break;
-        case '{': /* object */
-            (*offset)++;
-            tok = orderly_lex_json_object(lexer, schemaText,
-                                          schemaTextLen, offset);
-            break;            
-        case '-': /* number */
-        case '0': case '1': case '2': case '3': case '4':  
-        case '5': case '6': case '7': case '8': case '9': { 
-            tok = orderly_lex_number(lexer, (const unsigned char *) schemaText,
-                                     schemaTextLen, offset);
-            break;
-        }
-        case 't':
-            CHECK_KEYWORD("true");
-            break;
-        case 'f':            
-            CHECK_KEYWORD("false");
-            break;
-        case 'n':
-            CHECK_KEYWORD("null");
-            break;
-    }
-    
-    return ((tok == orderly_tok_error || tok == orderly_tok_eof)
-            ? orderly_tok_error : orderly_tok_default_value);
-}
-
 
 orderly_tok
 orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
@@ -415,6 +285,12 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case '}':
                 tok = orderly_tok_right_curly;
                 goto lexed;
+            case '[':
+                tok = orderly_tok_left_bracket;
+                goto lexed;
+            case ']':
+                tok = orderly_tok_right_bracket;
+                goto lexed;
             case '<':
                 tok = orderly_tok_lt;
                 goto lexed;
@@ -426,6 +302,12 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                 goto lexed;
             case '?':
                 tok = orderly_tok_optional_marker;
+                goto lexed;
+            case '*':
+                tok = orderly_tok_additional_marker;
+                goto lexed;
+            case '=':
+                tok = orderly_tok_equals;
                 goto lexed;
             case '\t': case '\v': case '\f': case '\r': case ' ': 
                 startOffset++; 
@@ -479,8 +361,8 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
 
                 /* is this a keywords we just lexed?
                  * XXX: optimize this later, perhaps. */ 
-                tok = keywordCheck(schemaText + startOffset,
-                                   *offset - startOffset);
+                tok = orderly_lex_keyword_check(schemaText + startOffset,
+                                                *offset - startOffset);
                 goto lexed;
             }
             case '"': {
@@ -488,30 +370,6 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
                                               schemaTextLen, offset);
                 goto lexed;
             }
-            case '[': {
-                /* A json array! let's scan past the bugger */
-                tok = orderly_lex_json_array(lexer, schemaText,
-                                             schemaTextLen, offset);
-                goto lexed;
-            }
-            case '=':
-                /* '=' is not returned by the lexer to parser */
-                startOffset++; 
-
-                /* The assignment operator is followed by a json object.
-                 * first, we'll skip whitespace, then we'll pass it to a
-                 * function capable of scanning the value */
-                while (*offset < schemaTextLen) {
-                    c = schemaText[*offset];
-                    if (NULL == strchr("\t\v\f\r\n ", c)) {
-                        break;
-                    }
-                    startOffset++; 
-                    (*offset)++;
-                }
-                tok = orderly_lex_json_value(lexer, schemaText,
-                                             schemaTextLen, offset);
-                goto lexed;
             case '-': 
             case '0': case '1': case '2': case '3': case '4':  
             case '5': case '6': case '7': case '8': case '9': { 

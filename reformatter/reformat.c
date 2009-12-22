@@ -38,16 +38,53 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 #define MAX_INPUT_TEXT (1 << 20)
+
+static void
+usage(const char * progname)
+{
+    printf("%s: a filter program to reformat jsonschema or orderly\n"
+           "usage: %s [-i orderly|jsonschema] [-o orderly|jsonschema]\n",
+           progname, progname);
+    exit(1);
+}
+
+
 int
 main(int argc, char ** argv) 
 {
     int rv = 0;
-
+    orderly_format inform = ORDERLY_UNKNOWN;
+    orderly_format outform = ORDERLY_TEXTUAL;    
     /* XXX: 1 meg max schema size... */
     static char inbuf[MAX_INPUT_TEXT];
     size_t tot = 0, rd;
+
+    /* check arguments.*/
+    int a = 1;
+    while ((a + 1 < argc) && (argv[a][0] == '-') && (strlen(argv[a]) == 2)) {
+        orderly_format f;
+        if (!strcmp("jsonschema", argv[a+1])) {
+            f = ORDERLY_JSONSCHEMA;
+        } else if (!strcmp("orderly", argv[a+1])) {
+            f = ORDERLY_TEXTUAL;
+        } else {
+            usage(argv[0]);            
+        }
+        switch (argv[a][1]) {
+            case 'i': inform = f; break;
+            case 'o': outform = f; break;
+            default: usage(argv[0]);
+        }
+        a += 2;
+    }
+    if (a < argc) {
+        usage(argv[0]);
+    }
+
+
     while (0 < (rd = read(0, (void *) (inbuf + tot), MAX_INPUT_TEXT)))
     {
         tot += rd;
@@ -60,7 +97,7 @@ main(int argc, char ** argv)
         const char * schema;
 
         /* now read and parse the schema */
-        n = orderly_read(r, ORDERLY_UNKNOWN, inbuf, tot);
+        n = orderly_read(r, inform, inbuf, tot);
 
         if (!n) {
             rv = 1;            
@@ -68,7 +105,7 @@ main(int argc, char ** argv)
                     orderly_get_error_context(r, inbuf, tot));
         } else {
             /* now write the schema */
-            schema = orderly_write(w, ORDERLY_TEXTUAL, n);
+            schema = orderly_write(w, outform, n);
         
             if (schema) {
                 fwrite(schema, strlen(schema), 1, stdout);

@@ -45,10 +45,13 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_error: return "error";
         case orderly_tok_eof: return "eof";
         case orderly_tok_semicolon:     return "semicolon";
+        case orderly_tok_left_bracket: return "l_bracket";
+        case orderly_tok_right_bracket: return "r_bracket";
         case orderly_tok_left_curly: return "l_curly";
         case orderly_tok_right_curly: return "r_curly";
         case orderly_tok_lt:     return "lt";
         case orderly_tok_gt: return "gt";
+        case orderly_tok_equals: return "eq";
         case orderly_tok_comma: return "comma";
         case orderly_tok_kw_string: return "kw_string";
         case orderly_tok_kw_integer: return "kw_integer";
@@ -61,11 +64,10 @@ static const char * tokToStr(orderly_tok t)
         case orderly_tok_kw_union: return "kw_union";
         case orderly_tok_property_name: return "property_name";
         case orderly_tok_json_string: return "json_string";
-        case orderly_tok_json_array: return "json_array";
         case orderly_tok_json_number: return "json_number";
         case orderly_tok_json_integer: return "json_integer";
         case orderly_tok_optional_marker: return "optional_marker";
-        case orderly_tok_default_value: return "default_value";
+        case orderly_tok_additional_marker: return "additional_marker";
         case orderly_tok_regex: return "regex";
     }
     return "unknown";

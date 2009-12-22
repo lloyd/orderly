@@ -1,5 +1,6 @@
 (  1,  4): 'null' kw_null
-(  1, 12): 'likeAir' property_name
-(  1, 21): '[ null ]' json_array
-(  1, 22): ';' semicolon
+(  1,  6): '[' l_bracket
+(  1, 11): 'null' kw_null
+(  1, 13): ']' r_bracket
+(  1, 14): ';' semicolon
 (  2,  0): '' eof

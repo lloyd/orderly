@@ -39,10 +39,8 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
 
     print "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>:\t "
     if !File.exist? wantFile
-      puts "FAIL"    
-      puts "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
-      File.open(gotFile, "w+") { |gf| gf.write got }
-      puts got
+      puts "skipped"    
+      passed += 1
     else
       want = IO.read(wantFile)
       if (got == want)
@@ -50,7 +48,11 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
         passed += 1
       else
         puts "FAIL"
-        # XXX: give more information
+        puts "<<<want<<<"
+        puts want
+        puts "========"
+        puts got
+        puts ">>got>>"
       end
     end
     total += 1

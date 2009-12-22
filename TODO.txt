@@ -1,5 +1,12 @@
-1. introduce macros in lexer for char reading and counter advancing to maintain correct line/char counts
-2. plenty of lexical errors to be added to tests
-3. complete lexing of regular expressions
-4. stub out parser (how does the testing framework function? How dynamic
-   are input/output formats?)
+1. backticks to include jsonschema properties/values directly in
+   an orderly schema (gno's idea)
+  a. maxDecimal
+  b. title/description (??)
+  c. format
+2. sh1ttons of broken jsonschemas!
+3. simple CGI reformatter program?
+4. orderly-json.org udpate
+
+other/later:
+1. extends
+2. disallow

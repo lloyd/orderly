@@ -7,5 +7,4 @@ object { string name; } ooh = { "name": "lloyd" };
 boolean stayOrGo = true;
 boolean goOrStay = false;
 null likeAir = null;
-} mine;
-
+};

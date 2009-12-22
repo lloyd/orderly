@@ -1,1 +1,1 @@
-array { integer; } {0,10} myArrayOfSmallInts;
+object { array { integer; } {0,10} myArrayOfSmallInts; };

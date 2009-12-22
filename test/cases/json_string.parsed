@@ -1,2 +1,4 @@
 parse complete (ok):
-foo [string] 
+ [object]
+children:
+    foo [string]

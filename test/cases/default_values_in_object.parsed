@@ -1,23 +1,23 @@
 parse complete (ok):
-mine [object] 
+ [object]
 children:
-    mood [string] 
+    mood [string]
     --> default: "happy"
-    mood [integer] 
+    mood [integer]
     --> default: 47
-    mood [number] 
+    mood [number]
     --> default: 42.01
-    listOfStuff [array] 
-    --> default: [ "a", "b", "c", "d" ]
+    listOfStuff [array]
+    --> default: ["a","b","c","d"]
     children:
-         [string] 
-    ooh [object] 
-    --> default: { "name": "lloyd" }
+         [string]
+    ooh [object]
+    --> default: {"name":"lloyd"}
     children:
-        name [string] 
-    stayOrGo [boolean] 
+        name [string]
+    stayOrGo [boolean]
     --> default: true
-    goOrStay [boolean] 
+    goOrStay [boolean]
     --> default: false
-    likeAir [null] 
+    likeAir [null]
     --> default: null

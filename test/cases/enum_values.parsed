@@ -1,2 +1,7 @@
-parse complete (junk_at_end_of_input):
-(null)
+parse complete (ok):
+ [object]
+children:
+    mood [string]
+    --> enum: ["happy","sad","meh"]
+    secretOfLife [integer]
+    --> enum: [7,42]

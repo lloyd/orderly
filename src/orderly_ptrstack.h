@@ -15,14 +15,14 @@
 
 #define ORDERLY_PS_INC 128
 
-typedef struct orderly_bytestack_t
+typedef struct orderly_ptrstack_t
 {
     void ** stack;
     unsigned int size;
     unsigned int used;
-} orderly_bytestack;
+} orderly_ptrstack;
 
-/* initialize a bytestack */
+/* initialize a ptrstack */
 #define orderly_ps_init(ops) {                  \
         (ops).stack = NULL;                     \
         (ops).size = 0;                         \
@@ -30,7 +30,7 @@ typedef struct orderly_bytestack_t
     }
 
 
-/* initialize a bytestack */
+/* initialize a ptrstack */
 #define orderly_ps_free(ops)                 \
     if ((ops).stack) free((ops).stack);
 

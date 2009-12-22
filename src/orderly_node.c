@@ -108,4 +108,3 @@ orderly_node_type orderly_string_to_node_type(const char * type,
     }
     return t;
 }
-

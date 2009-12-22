@@ -35,4 +35,4 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(parse_test ${SRCS})
 
-TARGET_LINK_LIBRARIES(parse_test orderly_s)
+TARGET_LINK_LIBRARIES(parse_test orderly_s yajl)

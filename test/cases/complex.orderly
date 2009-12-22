@@ -1,6 +1,6 @@
 object {
   string beast;
   number normalTemperature;
-} temps [ { "beast": "canine", "normalTemperature": 101.2 },
-          { "beast": "human", "normalTemperature": 98.6 } ]
-        = { "beast": "canine", "normalTemperature": 101.2 };
+} [ { "beast": "canine", "normalTemperature": 101.2 },
+    { "beast": "human", "normalTemperature": 98.6 } ]
+  = { "beast": "canine", "normalTemperature": 101.2 };

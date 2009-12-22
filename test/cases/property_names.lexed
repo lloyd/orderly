@@ -5,4 +5,4 @@
 (  5, 31): '"this is a keyword with spaces"' json_string
 (  6,  4): '"\""' json_string
 (  7, 23): '"\"'!#$%&(@%*^!)#)!^\\"' json_string
-(  9,  0): '' eof
+(  8,  0): '' eof

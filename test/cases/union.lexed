@@ -1,11 +1,16 @@
 (  1,  5): 'union' kw_union
 (  1,  7): '{' l_curly
 (  2, 10): 'string' kw_string
-(  2, 34): '[ "Sr.", "Jr.", "III" ]' json_array
+(  2, 12): '[' l_bracket
+(  2, 18): '"Sr."' json_string
+(  2, 19): ',' comma
+(  2, 25): '"Jr."' json_string
+(  2, 26): ',' comma
+(  2, 32): '"III"' json_string
+(  2, 34): ']' r_bracket
 (  2, 35): ';' semicolon
 (  3,  8): 'null' kw_null
 (  3,  9): ';' semicolon
 (  4,  1): '}' r_curly
-(  4,  8): 'suffix' property_name
-(  4,  9): ';' semicolon
+(  4,  2): ';' semicolon
 (  5,  0): '' eof

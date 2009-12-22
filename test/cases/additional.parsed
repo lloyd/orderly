@@ -1,0 +1,11 @@
+parse complete (ok):
+ [object]
+children:
+    employee [object] OPEN
+    children:
+        name [string]
+        title [string]
+    myOpenTupleTypedArray [array] OPEN
+    children:
+         [integer]
+         [string]

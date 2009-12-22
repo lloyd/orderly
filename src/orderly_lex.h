@@ -41,8 +41,11 @@ typedef enum {
     orderly_tok_semicolon,    
     orderly_tok_left_curly,
     orderly_tok_right_curly,
+    orderly_tok_left_bracket,
+    orderly_tok_right_bracket,
     orderly_tok_lt,    
     orderly_tok_gt,
+    orderly_tok_equals,
     orderly_tok_kw_string,
     orderly_tok_kw_integer,
     orderly_tok_kw_number,
@@ -54,11 +57,10 @@ typedef enum {
     orderly_tok_kw_union,
     orderly_tok_property_name,
     orderly_tok_json_string,
-    orderly_tok_json_array,
     orderly_tok_json_integer,
     orderly_tok_json_number,
     orderly_tok_optional_marker /* '?' */,
-    orderly_tok_default_value /* '=' <json text> */,
+    orderly_tok_additional_marker /* '*' */,
     orderly_tok_comma /* ',' */,
     orderly_tok_regex
 } orderly_tok;
@@ -104,5 +106,12 @@ orderly_lex_error orderly_lex_get_error(orderly_lexer lexer);
  *  parsed.  This is a convenience for error reporting so higher level
  *  code can drink more beer, and do less bookkeeping.  */
 unsigned int orderly_lex_previous_offset(orderly_lexer lexer);
+
+/** check if a string is an orderly property keyword, returns
+ *  orderly_tok_property_name if not */
+orderly_tok
+orderly_lex_keyword_check(const unsigned char * str, unsigned int len);
+
+
 
 #endif

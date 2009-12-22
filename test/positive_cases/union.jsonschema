@@ -1,0 +1,15 @@
+{
+  "type": [
+    {
+      "type": "string",
+      "enum": [
+        "Sr.",
+        "Jr.",
+        "III"
+      ]
+    },
+    {
+      "type": "null"
+    }
+  ]
+}

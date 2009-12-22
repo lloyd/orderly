@@ -38,12 +38,24 @@
 
 typedef enum {
     orderly_json_parse_s_ok = 0,
-    orderly_json_parse_s_unexpected_property_name,
-    orderly_json_parse_s_unexpected_json_map,
-    orderly_json_parse_s_unrecognized_node_type,
-    orderly_json_parse_s_unexpected_json_property,
-    orderly_json_parse_s_unexpected_json_string,
-    orderly_json_parse_s_unexpected_number
+    orderly_json_parse_s_object_expected,
+    orderly_json_parse_s_internal_error,
+    orderly_json_parse_s_type_expects_string_or_array,
+    orderly_json_parse_s_invalid_type_value,
+    orderly_json_parse_s_invalid_properties_value,
+    orderly_json_parse_s_invalid_json,
+    orderly_json_parse_s_invalid_optional_value,
+    orderly_json_parse_s_minimum_requires_number,
+    orderly_json_parse_s_maximum_requires_number,
+    orderly_json_parse_s_minlength_requires_integer,
+    orderly_json_parse_s_maxlength_requires_integer,
+    orderly_json_parse_s_minitems_requires_integer,
+    orderly_json_parse_s_maxitems_requires_integer,
+    orderly_json_parse_s_items_gets_object_or_array,
+    orderly_json_parse_s_addprop_requires_boolean,
+    orderly_json_parse_s_pattern_requires_string,
+    orderly_json_parse_s_duplicate_requires,
+    orderly_json_parse_s_requires_value_error
 } orderly_json_parse_status;
 
 orderly_json_parse_status

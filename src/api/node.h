@@ -34,6 +34,7 @@
 #define __ORDERLY_NODE_H__
 
 #include "common.h"
+#include "json.h"
 
 typedef enum {
     orderly_node_empty,
@@ -81,21 +82,30 @@ typedef struct
 typedef struct orderly_node_t {
     orderly_node_type t;
     const char * name;
-    /* a json array of possible values
-     * XXX: sure not doing our validators any favors by leaving
-     *      this as a blob of text.  otoh, we'd orderly to be
-     *      *dependent* on a means of parsing and representing json
-     *      to make this more convenient */
-    const char * values;
+    /* a json array of possible values */
+    orderly_json * values;
     /* a json representation of this members default value */
-    const char * default_value;
-    /* Does thes existence of this element require any others? */
-    const char * requires;
+    orderly_json * default_value;
+    /* Does thes existence of this element require any others?
+     * a null terminated array of strings which are property names
+     * of required siblings.  May be null if nothing else is required
+     * to be present */
+    const char ** requires;
     /* regular expression constraining allowable values
      * (optional for string nodes) */
     const char * regex;
     /* is this node optional? */
     unsigned int optional;
+    /* for an array or object, should properties or elements not
+     * explicitly mentioned be allowed */
+    unsigned int additionalProperties;
+    /* an array may be "simple typed" or "tuple typed",
+     * simple typed arrays have a single single child schema
+     * that constrains all members of the array.  Tuple typed
+     * arrays have any number of children schemas that apply to
+     * corresponding array members (first schema to first child in
+     * instance document, second to second, etc) */
+    unsigned int tupleTyped;
     /* range specifications for nodes that support it
      * (i.e. string {0,10} foo;) */
     orderly_range range;
