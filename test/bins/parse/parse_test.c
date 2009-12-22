@@ -154,6 +154,7 @@ main(int argc, char ** argv)
             orderlyTestFree,
             &memStats
         };
+        memset((void *) &memStats, 0, sizeof(memStats));
         
         s = orderly_parse(&oaf, inbuf, tot, &n, NULL);
         printf("parse complete (%s):\n", statusToStr(s));
