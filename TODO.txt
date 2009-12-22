@@ -1,12 +1,9 @@
-1. backticks to include jsonschema properties/values directly in
-   an orderly schema (gno's idea)
-  a. maxDecimal
-  b. title/description (??)
-  c. format
-2. sh1ttons of broken jsonschemas!
-3. simple CGI reformatter program?
-4. orderly-json.org udpate
+1. sh1ttons of broken jsonschemas!
+2. simple CGI reformatter program?
+3. orderly-json.org udpate
 
-other/later:
+other/later (add explicit support for?):
 1. extends
 2. disallow
+3. maxDecimal
+4. format
