@@ -204,7 +204,7 @@ bc.      string `{
 h3. references
 
 *TODO*.  We'll probably use the @reference@ type specifier and allow the consumer to override the value name.  for example:
-¡™
+
 bc.      object {
         string name;
         string title;
