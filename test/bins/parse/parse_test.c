@@ -57,16 +57,16 @@ static void dumpNode(orderly_alloc_funcs * oaf, orderly_node * n, unsigned int i
 
         printf("%s%s [%s]%s%s\n", indentStr, n->name ? n->name : "", type,
                n->optional ? " OPTIONAL" : "",
-               n->additionalProperties ? " OPEN" : "");
+               n->additional_properties ? " OPEN" : "");
         if (n->default_value) {
             orderly_buf_clear(b);
-            orderly_write_json(oaf, n->default_value, b);
+            orderly_write_json(oaf, n->default_value, b, 0);
             printf("%s--> default: %s\n", indentStr, orderly_buf_data(b));
         }
         
         if (n->values) {
             orderly_buf_clear(b);
-            orderly_write_json(oaf, n->values, b);
+            orderly_write_json(oaf, n->values, b, 0);
             printf("%s--> enum: %s\n", indentStr, orderly_buf_data(b));
         }
         if (n->requires) {

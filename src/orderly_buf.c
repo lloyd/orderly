@@ -95,6 +95,30 @@ void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len)
     }
 }
 
+
+void
+orderly_buf_chomp(orderly_buf buf)
+{
+    if (buf->used && buf->data) {
+        unsigned int final = buf->used;
+        do {
+            switch (buf->data[final - 1]) {
+                case '\r': case '\n': case ' ': case '\t':
+                    break;
+                default:
+                    goto done;
+            }
+            if (final == 0) break;
+            final--;
+        } while (1);
+      done:
+        buf->data[final] = 0;
+        buf->used = final;
+    }
+    return;
+}
+
+
 void orderly_buf_clear(orderly_buf buf)
 {
     buf->used = 0;

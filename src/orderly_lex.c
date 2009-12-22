@@ -309,6 +309,9 @@ orderly_lex_lex(orderly_lexer lexer, const unsigned char * schemaText,
             case '=':
                 tok = orderly_tok_equals;
                 goto lexed;
+            case '`':
+                tok = orderly_tok_backtick;
+                goto lexed;
             case '\t': case '\v': case '\f': case '\r': case ' ': 
                 startOffset++; 
                 break; 

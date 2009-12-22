@@ -46,6 +46,7 @@ typedef enum {
     orderly_tok_lt,    
     orderly_tok_gt,
     orderly_tok_equals,
+    orderly_tok_backtick,
     orderly_tok_kw_string,
     orderly_tok_kw_integer,
     orderly_tok_kw_number,

@@ -118,7 +118,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                 if (k->t == orderly_json_array) {
                     orderly_json * pj = NULL;
                     orderly_node ** last = &((*n)->child);
-                    (*n)->tupleTyped = 1;
+                    (*n)->tuple_typed = 1;
                     for (pj = k->v.children.first; pj; pj = pj->next)
                     {
                         s = parse_json_schema(alloc, pj, last);
@@ -210,23 +210,26 @@ parse_json_schema(orderly_alloc_funcs * alloc,
             }
             else if (!strcmp(k->k, "additionalProperties")) {
                 if (k->t == orderly_json_boolean) {
-                    (*n)->additionalProperties = k->v.b;
+                    (*n)->additional_properties = k->v.b;
                 } else {
                     s = orderly_json_parse_s_addprop_requires_boolean;
                     goto toErrIsHuman;
                 }
             }
             else if (!strcmp(k->k, "default")) {
-                /* XXX: copy! */
-                OR_FREE(alloc, (char *) k->k);
-                k->k = NULL;
-                (*n)->default_value = k;
+                /* clone */
+                (*n)->default_value = orderly_clone_json(alloc, k);
+                /* remove the key */
+                OR_FREE(alloc, (char *) (*n)->default_value->k);
+                (*n)->default_value->k = NULL;
+
             }
             else if (!strcmp(k->k, "enum")) {
-                /* XXX: copy! */
-                OR_FREE(alloc, (char *) k->k);
-                k->k = NULL;
-                (*n)->values = k;
+                /* clone */
+                (*n)->values = orderly_clone_json(alloc, k);
+                /* remove the key */
+                OR_FREE(alloc, (char *) (*n)->values->k);
+                (*n)->values->k = NULL;
             }
             else if (!strcmp(k->k, "pattern")) {
                 if (k->t == orderly_json_string) {
@@ -270,11 +273,23 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                 }
             }
             else {
-                
+                orderly_json ** jPtr;
+                    
+                /* all unexpected properties are passed through using
+                 * the passthrough_properties element of the node. */
+                /* XXX: should this behavior be configurable? */
+                if ((*n)->passthrough_properties == NULL) {
+                    (*n)->passthrough_properties =
+                        orderly_alloc_json(alloc, orderly_json_object);
+                }
+                jPtr = &((*n)->passthrough_properties->v.children.first);
+                while (*jPtr) jPtr = &((*jPtr)->next);
+                /* clone onto the passthrough object */
+                (*jPtr) = orderly_clone_json(alloc, k);
             }
         }
     }
-
+    
     return s;
 
   toErrIsHuman:

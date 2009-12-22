@@ -98,17 +98,23 @@ typedef struct orderly_node_t {
     unsigned int optional;
     /* for an array or object, should properties or elements not
      * explicitly mentioned be allowed */
-    unsigned int additionalProperties;
+    unsigned int additional_properties;
     /* an array may be "simple typed" or "tuple typed",
      * simple typed arrays have a single single child schema
      * that constrains all members of the array.  Tuple typed
      * arrays have any number of children schemas that apply to
      * corresponding array members (first schema to first child in
      * instance document, second to second, etc) */
-    unsigned int tupleTyped;
+    unsigned int tuple_typed;
     /* range specifications for nodes that support it
      * (i.e. string {0,10} foo;) */
     orderly_range range;
+    /* its possible to tuck an arbirtary amount of additional data inside
+     * orderly or a JSONSchema.  These are properties that are not neccesarily
+     * understood by the validator but can be represented in either orderly
+     * (via the backtick operator) or JSONSchema (as additional properties
+     * on the schema instance object.  This will either be NULL or an object*/
+    orderly_json * passthrough_properties;
     /* If this node has children (in the case of arrays, unions, or
      * objects), the first child is reference here and subsequent
      * children are referenced via the first child's sibling ptr */

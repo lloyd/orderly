@@ -135,6 +135,27 @@ orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
         CHECK_LEX_ERROR(t, lxr);
     }
 
+    /* backtick escaped passthrough properties? */    
+    if (t == orderly_tok_backtick) {
+        /* parse out json array */
+        unsigned int l = schemaTextLen - *offset;
+        n->passthrough_properties =
+            orderly_read_json(alloc, (char *) schemaText + *offset, &l);
+        *offset += l;
+        if (n->passthrough_properties == NULL) {
+            return orderly_parse_s_invalid_json;
+        }
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
+                            &outBuf, &outLen);    
+        CHECK_LEX_ERROR(t, lxr);
+        if (t != orderly_tok_backtick) {
+            return orderly_parse_s_backtick_expected;
+        }
+        t = orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
+                            &outBuf, &outLen);    
+        CHECK_LEX_ERROR(t, lxr);
+    }
+
     /* "unlex" the last token.  let higher level code deal with it */
     /* XXX: this will mess up our "previous offset" routine.  we should
      * introduce a real unlex function and the required additional bit
@@ -378,7 +399,7 @@ orderly_parse_optional_additional(orderly_alloc_funcs * alloc,
     {
         (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
                                NULL, NULL);
-        n->additionalProperties = 1;
+        n->additional_properties = 1;
     }
     return orderly_parse_s_ok;
 }
@@ -570,7 +591,7 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
 
         if (t == orderly_tok_left_curly) {
             /* curlies indicate tuple typing (rather than simple typing) */
-            (*n)->tupleTyped = 1;
+            (*n)->tuple_typed = 1;
 
             /* now parse unnamed entries (a.k.a. kiddies) */
             s = orderly_parse_entries(alloc, schemaText, schemaTextLen,

@@ -61,6 +61,9 @@ void orderly_buf_append(orderly_buf buf, const void * data, unsigned int len);
 /* append a number of bytes to the buffer */
 void orderly_buf_append_string(orderly_buf buf, const char * s);
 
+/* eliminate trailing whitespace in the buffer */
+void orderly_buf_chomp(orderly_buf buf);
+
 /* empty the buffer */
 void orderly_buf_clear(orderly_buf buf);
 

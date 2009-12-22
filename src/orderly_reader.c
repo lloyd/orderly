@@ -183,6 +183,9 @@ orderly_get_error(orderly_reader r)
                 case orderly_parse_s_invalid_json:
                     err = "invalid json";
                     break;
+                case orderly_parse_s_backtick_expected:
+                    err = "expected a closing backtick: '`'";
+                    break;
             }
         } else if (r->status < orderly_parse_s_jsonschema_error) {
             switch ((orderly_lex_error) r->status - orderly_parse_s_lex_error) {

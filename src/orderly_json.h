@@ -50,7 +50,8 @@ orderly_json * orderly_read_json(orderly_alloc_funcs * alloc,
 /* a high level interface to non-stream based json parsing */
 void orderly_write_json(const orderly_alloc_funcs * alloc,
                         const orderly_json * json,
-                        orderly_buf buf);
+                        orderly_buf buf,
+                        int pretty);
 
 /* a low level interface to dumping a json object into a yajl
  * generator */
@@ -60,6 +61,11 @@ void orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node);
 
 orderly_json * orderly_alloc_json(orderly_alloc_funcs * alloc,
                                   orderly_json_type t);
+
+/* make a deep copy of a json object, copying everything except sibling
+ * pointers */
+orderly_json * orderly_clone_json(orderly_alloc_funcs * alloc,
+                                  orderly_json * j);
 
 /* callbacks capable of building up orderly_json objects from yajl parse
  * events, used by orderly_json_parse to build json structures directly out

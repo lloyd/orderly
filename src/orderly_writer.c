@@ -104,7 +104,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         orderly_buf_append_string(w->b, type);
 
         /*  children!  */
-        if (n->t == orderly_node_array && !n->tupleTyped)
+        if (n->t == orderly_node_array && !n->tuple_typed)
         {
             orderly_buf_append_string(w->b, " [");            
             if (n->child) {
@@ -135,7 +135,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         
         if ((n->t == orderly_node_array ||
              n->t == orderly_node_object) &&
-            n->additionalProperties)
+            n->additional_properties)
         {
             orderly_buf_append_string(w->b, "*");
         }
@@ -193,7 +193,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         /* enumerated possible values */
         if (n->values) {
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
-            orderly_write_json(w->cfg.alloc, n->values, w->b);
+            orderly_write_json(w->cfg.alloc, n->values, w->b, 0);
         }
         
         /* default value */
@@ -201,7 +201,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
             orderly_buf_append_string(w->b, "=");
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
-            orderly_write_json(w->cfg.alloc, n->default_value, w->b);
+            orderly_write_json(w->cfg.alloc, n->default_value, w->b, 0);
         }
 
         /* requires value */
@@ -219,6 +219,17 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
 
         if (n->optional) {
             orderly_buf_append_string(w->b, "?");
+        }
+
+         /* passthrough properties? */
+        if (n->passthrough_properties) { 
+            if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
+            orderly_buf_append_string(w->b, "`");
+            orderly_write_json(w->cfg.alloc, n->passthrough_properties,
+                               w->b, w->cfg.pretty);
+            /* pretty can involve a trailing newline */
+            orderly_buf_chomp(w->b);
+            orderly_buf_append_string(w->b, "`");
         }
 
         if (!omitSemi) orderly_buf_append_string(w->b, ";");        
@@ -253,7 +264,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         if (n->child) {
             if (n->t == orderly_node_array) {
                 YAJL_GEN_STRING_WLEN(yg, "items");
-                if (n->tupleTyped) {
+                if (n->tuple_typed) {
                     const orderly_node * k = NULL;
                     yajl_gen_array_open(yg);
                     for (k = n->child; k; k = k->sibling) {
@@ -348,7 +359,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         } 
 
         /* additionalProperties */
-        if (n->additionalProperties) { 
+        if (n->additional_properties) { 
             YAJL_GEN_STRING_WLEN(yg, "additionalProperties");
             yajl_gen_bool(yg, 1);
         } 
@@ -366,6 +377,14 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
             } else {
                 YAJL_GEN_STRING_WLEN(yg, *(n->requires));
             }
+        }
+
+         /* passthrough properties? */
+        if (n->passthrough_properties &&
+            n->passthrough_properties->t == orderly_json_object)
+        {
+            orderly_write_json2(
+                yg, n->passthrough_properties->v.children.first);
         }
 
         yajl_gen_map_close(yg);

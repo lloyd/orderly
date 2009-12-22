@@ -40,6 +40,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define BUF_STRDUP(dst, a, ob, ol)               \
+{   (dst) = OR_MALLOC((a), (ol) + 1);       \
+    memcpy((void *)(dst), (void *) (ob), (ol));  \
+    ((char *) (dst))[(ol)] = 0;  }
 
 void orderly_free_json(orderly_alloc_funcs * alloc,
                        orderly_json ** node)
@@ -47,9 +51,52 @@ void orderly_free_json(orderly_alloc_funcs * alloc,
     /* XXX */
 }
 
+orderly_json *
+orderly_clone_json(orderly_alloc_funcs * alloc, orderly_json * j)
+{
+    orderly_json * copy = NULL;
+    if (!j) return copy;
+    copy = orderly_alloc_json(alloc, j->t);
+    if (j->k) BUF_STRDUP(copy->k, alloc, j->k, strlen(j->k));
+    
+    switch(j->t) {
+        case orderly_json_none:
+        case orderly_json_null:
+            break;
+        case orderly_json_string:
+            if (j->v.s) BUF_STRDUP(copy->v.s, alloc, j->v.s, strlen(j->v.s));
+            break;
+        case orderly_json_boolean:
+            copy->v.b = j->v.b;
+            break;
+        case orderly_json_integer:
+            copy->v.i = j->v.i;
+            break;
+        case orderly_json_number:
+            copy->v.n = j->v.n;
+            break;
+        case orderly_json_object:
+        case orderly_json_array: {
+            /* here's the deep copy part */
+            orderly_json * p;
 
-orderly_json * orderly_alloc_json(orderly_alloc_funcs * alloc,
-                                  orderly_json_type t)
+            for (p = j->v.children.first; p != NULL; p = p->next) {
+                orderly_json * nk = orderly_clone_json(alloc, p);
+                if (copy->v.children.last) {
+                    copy->v.children.last->next = nk;
+                    copy->v.children.last = nk;
+                } else {
+                    copy->v.children.first = copy->v.children.last = nk;
+                }
+            }
+            break;
+        }
+    }
+    return copy;
+}
+
+orderly_json *
+orderly_alloc_json(orderly_alloc_funcs * alloc, orderly_json_type t)
 {
     orderly_json * n = (orderly_json *) OR_MALLOC(alloc, sizeof(orderly_json));
     memset((void *) n, 0, sizeof(orderly_json));
@@ -75,13 +122,6 @@ orderly_json * orderly_alloc_json(orderly_alloc_funcs * alloc,
           orderly_ps_pop((pc)->keyStack);                                       \
       }                                                                         \
   }
-
-
-#define BUF_STRDUP(dst, a, ob, ol)               \
-    (dst) = OR_MALLOC((a), (ol) + 1);            \
-    memcpy((void *)(dst), (void *) (ob), (ol));  \
-    ((char *) (dst))[(ol)] = 0;
-
 
 int o_json_parse_start_array(void * ctx)
 {
@@ -293,9 +333,10 @@ bufAppendCallback(void * ctx, const char * str, unsigned int len)
 void
 orderly_write_json(const orderly_alloc_funcs * alloc,
                    const orderly_json * json,
-                   orderly_buf b)
+                   orderly_buf b,
+                   int pretty)
 {
-    yajl_gen_config cfg = { 0, NULL };
+    yajl_gen_config cfg = { pretty, NULL };
     yajl_gen g = yajl_gen_alloc2(bufAppendCallback, &cfg,
                                  (const yajl_alloc_funcs *) alloc,
                                  (void *) b);
