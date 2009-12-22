@@ -1,3 +1,6 @@
 ADD_SUBDIRECTORY(bins/lex)
 ADD_SUBDIRECTORY(bins/parse)
-ADD_CUSTOM_TARGET(test ${CMAKE_CURRENT_SOURCE_DIR}/run_tests.rb)
+ADD_CUSTOM_TARGET(test ${CMAKE_CURRENT_SOURCE_DIR}/run_tests.rb ${YetAnotherJSONParser_BINARY_DIR})
+
+
+

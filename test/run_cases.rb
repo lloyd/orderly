@@ -1,19 +1,17 @@
 #!/usr/bin/env ruby
 
+binaryDir = ENV["BINARY_DIR"]
+
 # arguments are a string that must match the test name
 substrpat = ARGV.length ? ARGV[0] : ""
 
 thisDir = File.dirname(__FILE__)
 casesDir = File.join(thisDir, "cases")
-lexBinary = File.join(thisDir, "..", "build", "test", "bins", "lex", "lex_test")
+lexBinary = File.join(binaryDir,  "test",  "bins", "lex", "lex_test")
 if !File.executable? lexBinary
   throw "Can't find lex test binary: #{lexBinary}"
 end
-parseBinary = File.join(thisDir, "..", "build", "test", "bins", "parse", "parse_test")
-if !File.executable? parseBinary
-  throw "Can't find parse test binary: #{parseBinary}"
-end
-parseBinary = File.join(thisDir, "..", "build", "test", "bins", "parse", "parse_test")
+parseBinary = File.join(binaryDir, "test", "bins", "parse", "parse_test")
 if !File.executable? parseBinary
   throw "Can't find parse test binary: #{parseBinary}"
 end
