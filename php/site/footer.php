@@ -1,5 +1,5 @@
 <div id="ccBadge">
-Lloyd&nbsp;Hilaiel<br><a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-nc-sa/3.0/us/80x15.png" /></a>
+Lloyd&nbsp;Hilaiel<br><a rel="license" href="http://creativecommons.org/licenses/by-sa/3.0/us/"><img alt="Creative Commons License" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/3.0/us/80x15.png" /></a>
 </div>
 <script type="text/javascript" src="/prettify/prettify.js"></script>
 
