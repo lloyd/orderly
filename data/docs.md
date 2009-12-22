@@ -1,5 +1,3 @@
-is this *really* markdown?
-
     orderly_schema
         named_entry ';'
         named_entry

@@ -1,0 +1,20 @@
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
+  <title> Orderly JSON </title>
+  <link href="/css/sitewide.css" media="screen" rel="stylesheet" type="text/css" />
+</head>
+<body>
+  <div id="topnav">
+    <div id="nav">
+      <div class="nav_item"c><a href="/code">code</a></div> 
+      <div class="nav_item"><a href="/apidocs">api</a></div> 
+      <div class="nav_item"><a href="/grammar">grammar</a></div> 
+      <div class="nav_item"><a href="/tryit">try it</a></div> 
+      <div class="nav_item"><a href="/">overview</a></div> 
+    </div>
+    <div id="titlearea">
+      <div id="logo"><img src="/img/orderly.gif"></div>
+      <div id="subtitle">A Schema Language for JSON</a>
+    </div>
+  </div>

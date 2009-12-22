@@ -1,0 +1,67 @@
+body {
+  font-family: georgia, times, serif;
+}
+
+pre {
+  padding: 5px;
+  border: 1px solid rgb(216, 216, 216);
+  background-color: rgb(240, 240, 240);
+  font-size: 90%;
+  margin-left:10px;
+  margin-right:10px;
+}
+
+#nav .nav_item {
+  float: right;
+  padding-left:20px;
+  padding-right:20px;
+  margin-top: 30px;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+
+#nav .nav_item a {
+  color: rgb(153, 17, 0);
+  text-decoration:none;
+  font-family: 'lucida console', monaco, 'andale mono', 'bitstream vera sans mono', consolas, monospace;
+  font-size: 1em;
+}
+
+#nav .nav_item a:hover {
+  text-decoration:underline;
+}
+
+#topnav #titlearea {
+  margin:10px;
+}
+
+#topnav {
+  min-width:800px;
+}
+
+#highlevel {
+  margin-bottom: 50px;
+  font-size: 1.5em;
+  color: rgb(85, 85, 85);
+  text-align: center;
+}
+
+.narrowContent {
+  top:40px;
+  left:20%;
+  width: 60%;
+  position: relative;
+}
+
+.codeBox {
+  width:0%;  
+}
+
+#ccBadge {
+  padding:5px;
+  position: fixed;
+  right:5px;
+  bottom:5px;
+  font-size: .5em;
+  text-align:right;
+}
