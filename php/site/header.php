@@ -9,7 +9,7 @@
   <div id="topnav">
     <div id="nav">
       <div class="nav_item"c><a href="http://github.com/lloyd/orderly">CODE</a></div> 
-      <div class="nav_item"><a href="/apidocs">API</a></div> 
+      <div class="nav_item"><a href="/discuss">DISCUSS</a></div> 
       <div class="nav_item"><a href="/docs">DOCUMENTATION</a></div> 
       <div class="nav_item"><a href="/tryit">TRY IT</a></div> 
       <div class="nav_item"><a href="/">OVERVIEW</a></div> 

@@ -6,9 +6,22 @@ pre {
   padding: 5px;
   border: 1px solid rgb(216, 216, 216);
   background-color: rgb(240, 240, 240);
-  font-size: 90%;
+
   margin-left:10px;
   margin-right:10px;
+  font-size: 80%;
+  font-family: 'lucida console', monaco, 'andale mono', 'bitstream vera sans mono', consolas, monospace;
+}
+
+textarea {
+  margin: 12px;
+  border: 1px solid rgb(216, 216, 216);
+  background-color: rgb(240, 240, 240);
+
+  margin-left:10px;
+  margin-right:10px;
+  font-size: 80%;
+  font-family: 'lucida console', monaco, 'andale mono', 'bitstream vera sans mono', consolas, monospace;
 }
 
 #nav .nav_item {
@@ -64,4 +77,27 @@ pre {
   bottom:5px;
   font-size: .5em;
   text-align:right;
+}
+
+.editableCode {
+  min-width: 320px;
+  width: 39%;
+}
+
+.fullWidth {
+  min-width: 800px;
+}
+
+.fullWidth .lhs {
+  float:left;
+  margin-left:10%;
+}
+
+.fullWidth .rhs {
+  float:right;
+  margin-right:10%;
+}
+
+.editableCode textarea {
+  width:100%;
 }
