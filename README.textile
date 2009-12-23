@@ -8,10 +8,6 @@ h2. abstract
 
 Orderly is an ergonomic micro-language that can represent a subset of "JSONSchema":http://json-schema.org.  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.
 
-h2. WARNING
-
-This proposal is HIGHLY subject to change, it may evolve in drastic and jarring ways.  This is not real.  Do not believe it
-
 h2. a subset of JSONSchema
 
 JSONSchema is good in many ways, but not perfect.  JSONSchema attempts to provide a representation for three distinct types of information about JSON structures:
