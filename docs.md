@@ -1,9 +1,7 @@
 Abstract
 --------
 
-Orderly is an ergonomic micro-language that can represent a subset of
-[JSONSchema](http://json-schema.org).  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.  This document provides a conversation overview of orderly as well as the
-normative grammar.
+Orderly is an ergonomic micro-language that can represent a subset of [JSONSchema](http://json-schema.org).  Orderly is designed to _feel_ familiar to the average programmer and to be extremely easy to learn and remember.  This document provides a conversational overview of orderly as well as a normative grammar.
 
 A subset of JSONSchema
 ----------------------
