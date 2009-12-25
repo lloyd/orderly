@@ -251,8 +251,8 @@ The Normative Grammar
 ----------------------
 
     orderly_schema
-        named_entry ';'
-        named_entry
+        unnamed_entry ';'
+        unnamed_entry
     
     named_entries
         named_entry ';' named_entries
@@ -293,7 +293,7 @@ The Normative Grammar
     
     definition_suffix
         optional_enum_values optional_default_value optional_requires \
-            optional_optional_marker optional_additional_marker optional_extra_properties
+            optional_optional_marker optional_extra_properties
         # nothing
     
     csv_property_names
@@ -302,9 +302,10 @@ The Normative Grammar
     
     optional_extra_properties
         '`' json_object '`'
+        # nothing
          
     optional_requires
-        '<' csv_property_name '>'
+        '<' csv_property_names '>'
         # nothing
     
     optional_optional_marker
@@ -332,7 +333,7 @@ The Normative Grammar
         
     property_name
         json_string
-        [A-Za-z_\-]+ (alphanumeric & underbar & dash)
+        [A-Za-z_\-]+                         # (alpha & underbar & dash)
     
     optional_perl_regex # perl compatible regular expressions are supported
         '/' ([^/]|\/) '/' # a Perl 5 compatible regular expression
