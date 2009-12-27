@@ -3,21 +3,21 @@
 
 # why the outer object, github?
 object {
-  array {
-    array { object { string id; }; } parents;
+  array [
     object {
-      string name;
-      string email;
-    } author;
-    string url; // we could use a regex here
-    string id;
-    string committed_date;
-    string authored_date;
-    string message; 
-    string tree; 
-    object {
-      string name;
-      string email;
-    } committer;
-  } commits;
-}
+      string url;
+      string id;
+      object { string name; string email; } author;
+      object { string name; string email; } committer;
+      array {
+        object {
+          string id;
+        };
+      } parents;
+      string committed_date;
+      string authored_date;
+      string message;
+      string tree;
+    };
+  ] commits;
+};
