@@ -90,13 +90,32 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
                                const yajl_alloc_funcs * allocFuncs,
                                void * ctx,
                                const char *schema) {
-
+  
   orderly_reader r = orderly_reader_new(NULL);
   const orderly_node *n;
-  n = orderly_read(r, ORDERLY_UNKNOWN, schema, sizeof(schema));
+  n = orderly_read(r, ORDERLY_UNKNOWN, schema, strlen(schema));
+  if (!n) {
+    fprintf(stderr, "Schema is invalid: %s\n%s\n", orderly_get_error(r),
+            orderly_get_error_context(r, schema, strlen(schema)));
+  }
+
+  {
+    static orderly_alloc_funcs orderlyAllocFuncBuffer;
+    static orderly_alloc_funcs * orderlyAllocFuncBufferPtr = NULL;
+    
+    if (orderlyAllocFuncBufferPtr == NULL) {
+            orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
+            orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
+        }
+    if (allocFuncs == NULL) allocFuncs = orderlyAllocFuncBufferPtr;
+    }
+
   struct ajv_state_t *ajv_state = 
     (struct ajv_state_t *)
     OR_MALLOC(allocFuncs, sizeof(struct ajv_state_t));
+
+  ajv_state->node = 
+    ajv_alloc_node_recursive(allocFuncs, n, NULL);
 
   ajv_state->cb = callbacks;
   ajv_state->cbctx = ctx;
@@ -163,7 +182,7 @@ static int ajv_number(void * ctx, const char * numberVal,
 }
 
 /* XXX: takes args, do something here */
-#define VALIDATE_FAILED(x,y,z) 1
+#define VALIDATE_FAILED(x,y,z) { return 0;}
 
 /** strings are returned as pointers into the JSON text when,
  * possible, as a result, they are _not_ null padded */
@@ -197,8 +216,12 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
   if (on->regex) {
     /* XXX: validate regex */
   }
-
-  return state->cb->yajl_string(ctx,stringVal,stringLen);
+  if (state->cb && state->cb->yajl_string) {
+    return state->cb->yajl_string(ctx,stringVal,stringLen);
+  } else {
+    return 1;
+  }
+  
 }
 
 
