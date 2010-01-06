@@ -1,4 +1,4 @@
-# Copyright 2009, Lloyd Hilaiel.
+# Copyright 2009, 2010, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -72,7 +72,7 @@ ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(test)
 ADD_SUBDIRECTORY(reformatter)
 ADD_SUBDIRECTORY(checker)
-
+ADD_SUBDIRECTORY(validator)
 #INCLUDE(ORDERLYDoc.cmake)
 
 # a test target

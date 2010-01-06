@@ -31,12 +31,17 @@
  */ 
 
 #include "ajv_state.h"
-
+#include "api/ajv_parse.h"
+#include "api/reader.h"
+#include "api/node.h"
+#include <assert.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdio.h>
+
 static int ajv_map_key(void * ctx, const unsigned char * key, 
                        unsigned int stringLen);
 static int ajv_start_map (void * ctx);
@@ -49,7 +54,11 @@ static int ajv_start_array(void * ctx);
 static int ajv_end_array(void * ctx);
 
 
-const static yajl_callbacks ajv_callbacks = {
+#define AJV_STATE(x)                    \
+  struct ajv_state_t *state = (struct ajv_state_t *) x;
+
+
+static const yajl_callbacks ajv_callbacks = {
   NULL, /* yajl_null */
   NULL, /* XXX ? boolean */
   NULL, /* integer */
@@ -62,6 +71,19 @@ const static yajl_callbacks ajv_callbacks = {
   ajv_start_array,
   ajv_end_array
 };
+
+static void push_state(ajv_state state) {
+  /* only maps and array have children */
+  assert(state->node->node->t == orderly_node_object
+         || state->node->node->t == orderly_node_array);
+  state->node = state->node->child;
+}
+
+static void pop_state(ajv_state state) {
+  /* only maps and array have children */
+  assert(state->node->parent != NULL);
+  state->node = state->node->parent;
+}
 
 YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
                                const yajl_parser_config * config,
@@ -88,38 +110,36 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
 
 
 static int ajv_start_map (void * ctx) {
-  Ajv_STATE(ctx);
-  if (typecheck(state,orderly_node_map,state->on.t)) {  
-    return 1;
-  }
+  AJV_STATE(ctx);
+
+  assert(0);
   push_state(state);
-  
+  return 0;
 }
 
 static int ajv_map_key(void * ctx, const unsigned char * key, 
                        unsigned int stringLen) {
-  YALJV_STATE(ctx);
+  AJV_STATE(ctx);
   ajv_node *cur;
-  const char *name;
-
-  ASSERT(orderly_node_map == ORDERLY_NODE(state->node->parent)->t);
+  const char *this_is_utf8_dont_do_math = (const char *)key;
+  assert(orderly_node_object == state->node->parent->node->t);
 
   for (cur = state->node->parent->child; cur; cur = cur->sibling) {
-    ASSERT(ORDERLY_NODE(cur)->name);
-    if (!strncmp(ORDERLY_NODE(cur)->name,key,stringLen)) {
+    assert(cur->node->name);
+    if (!strncmp(cur->node->name,this_is_utf8_dont_do_math,stringLen)) {
       cur->seen = 1;
       /* XXX: can we have multiple schemas for a key ?! */
     }
   }
-  return *(ctx->cb->map_key)(key, stringLen);
+  return state->cb->yajl_map_key(state->cbctx, key, stringLen);
 }
 
 
 static int ajv_end_map(void * ctx) {
   AJV_STATE(ctx);
-  find_node(ctx,key,len) 
 
-  POP_STATE(st);
+  pop_state(state);
+  return 0;
 }
         
 
@@ -137,12 +157,13 @@ int ajv_null(void * ctx) {
 static int ajv_number(void * ctx, const char * numberVal,
                  unsigned int numberLen) {
   AJV_STATE(ctx);
-  if (typecheck(state,orderly_node_number,state->on.t)) {
-    return 1;
-  }
+  state = state;
+  return 0;
   
 }
 
+/* XXX: takes args, do something here */
+#define VALIDATE_FAILED(x,y,z) 1
 
 /** strings are returned as pointers into the JSON text when,
  * possible, as a result, they are _not_ null padded */
@@ -169,7 +190,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
   }
 
   if (on->values) {
-    ASSERT(on->values->t == orderly_json_array); /* docs say so */
+    assert(on->values->t == orderly_json_array); /* docs say so */
     /* XXX  validate this is a value in the array */
   }
 
@@ -184,9 +205,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
 
 static int ajv_start_array(void * ctx) {
   AJV_STATE(ctx);
-  if (typecheck(state,orderly_node_array,state->on.t)) {  
-    return 1;
-  }
+
   push_state(state);
   return state->cb->yajl_start_array(ctx);
 }

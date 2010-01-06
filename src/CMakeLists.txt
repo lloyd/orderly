@@ -1,4 +1,4 @@
-# Copyright 2009, Lloyd Hilaiel.
+# Copyright 2009, 2010, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -28,12 +28,38 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-SET (SRCS orderly_node.c orderly_lex.c orderly_alloc.c orderly_buf.c
-          orderly_parse.c orderly_writer.c orderly_reader.c
-          orderly_json_parse.c orderly_json.c)
-SET (HDRS orderly_common.h orderly_lex.h orderly_parse.h
-     orderly_json_parse.h orderly_json.h)
-SET (PUB_HDRS api/common.h api/node.h api/reader.h api/writer.h api/json.h)
+SET (SRCS
+  ajv_state.c
+  ajv_util.c
+  orderly_alloc.c 
+  orderly_buf.c
+  orderly_json.c
+  orderly_json_parse.c 
+  orderly_lex.c 
+  orderly_node.c
+  orderly_parse.c 
+  orderly_reader.c
+  orderly_writer.c 
+  yajl_interface.c
+  )
+
+SET (HDRS
+  orderly_common.h
+  orderly_lex.h
+  orderly_parse.h
+  orderly_json_parse.h
+  orderly_json.h
+  ajv_state.h
+  )
+
+SET (PUB_HDRS 
+  api/common.h
+  api/node.h
+  api/reader.h
+  api/writer.h
+  api/json.h
+  api/ajv_parse.h
+)
 
 # set up some paths
 SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)

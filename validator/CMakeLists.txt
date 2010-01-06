@@ -1,4 +1,4 @@
-# Copyright 2009, Lloyd Hilaiel.
+# Copyright 2009, 2010, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -27,57 +27,30 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-# set up some paths
 
-SET (SRCS 
-  ajv_state.c 
-  yajl_interface.c
-  )
-SET (HDRS 
-  ajv_state.h
-  )
+# set up a paths
+SET (binDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/bin)
+SET (exeName orderly_verify)
 
-SET (PUB_HDRS 
-  api/ajv_parse.h
-  )
+# create a directories
+FILE(MAKE_DIRECTORY ${binDir})
 
-SET (libDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
-SET (incDir ${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/include/orderly)
+SET (SRCS json_verify.c)
 
-# set the output path for libraries
-SET(LIBRARY_OUTPUT_PATH ${libDir})
+# use the library we build, duh.
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/include)
+LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
 
-ADD_LIBRARY(orderly_ajv_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
+ADD_EXECUTABLE(${exeName} ${SRCS})
 
-ADD_LIBRARY(orderly_ajv   SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
+TARGET_LINK_LIBRARIES(${exeName} orderly)
 
-TARGET_LINK_LIBRARIES(orderly orderly_ajv yajl)
+# copy the binary into the output directory
+GET_TARGET_PROPERTY(binPath ${exeName} LOCATION)
 
-#### setup shared library version number
-SET_TARGET_PROPERTIES(orderly PROPERTIES
-                      SOVERSION ${ORDERLY_MAJOR}
-                      VERSION ${ORDERLY_MAJOR}.${ORDERLY_MINOR}.${ORDERLY_MICRO})
+ADD_CUSTOM_COMMAND(TARGET ${exeName} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${binPath} ${binDir})
 
-#### build up an sdk as a post build step
-
-# create some directories
-FILE(MAKE_DIRECTORY ${libDir})
-FILE(MAKE_DIRECTORY ${incDir})
-
-# copy public headers to output directory as a pre-build step
-FOREACH (header ${PUB_HDRS})
-  SET (header ${CMAKE_CURRENT_SOURCE_DIR}/${header})
-  EXEC_PROGRAM(${CMAKE_COMMAND} ARGS -E copy_if_different ${header} ${incDir})
-  ADD_CUSTOM_COMMAND(TARGET orderly_s PRE_BUILD
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${header} ${incDir}
-      COMMAND ${CMAKE_COMMAND} -E echo copy_if_different ${header} ${incDir}      )
-ENDFOREACH (header ${PUB_HDRS})
-
-INCLUDE_DIRECTORIES(${incDir}/..)
-
-IF(NOT WIN32)
-  INSTALL(TARGETS orderly LIBRARY DESTINATION lib)
-  INSTALL(TARGETS orderly_s ARCHIVE DESTINATION lib)
-  INSTALL(DIRECTORY api/ DESTINATION include/orderly
-          FILES_MATCHING PATTERN "*.h")
-ENDIF()
+IF (NOT WIN32)
+  INSTALL(TARGETS ${exeName} RUNTIME DESTINATION bin)
+ENDIF ()

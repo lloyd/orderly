@@ -1,4 +1,5 @@
 #include "ajv_state.h"
+#include <string.h>
 
 ajv_node * ajv_alloc_node( orderly_alloc_funcs * alloc ) {
   ajv_node * n = (ajv_node *)
@@ -9,7 +10,6 @@ ajv_node * ajv_alloc_node( orderly_alloc_funcs * alloc ) {
 
 ajv_node * ajv_alloc_node_recursive( orderly_alloc_funcs * alloc, 
                                      orderly_node *n, ajv_node *parent) {
-  orderly_node *cur;
   ajv_node *an = ajv_alloc_node(alloc);
 
   if (n->sibling) {
@@ -25,7 +25,7 @@ ajv_node * ajv_alloc_node_recursive( orderly_alloc_funcs * alloc,
   return an;
 }
 
-ajv_node * ajv_free_node ( orderly_alloc_funcs * alloc, ajv_node ** n) {
+void ajv_free_node ( orderly_alloc_funcs * alloc, ajv_node ** n) {
   if (n && *n) {
     if ((*n)->sibling) ajv_free_node(alloc,&((*n)->sibling));
     if ((*n)->child) ajv_free_node(alloc,&((*n)->child));
@@ -35,9 +35,10 @@ ajv_node * ajv_free_node ( orderly_alloc_funcs * alloc, ajv_node ** n) {
   }
 }
 
-ajv_node * ajv_reset_node (ajv_node * n) {
+void ajv_reset_node (ajv_node * n) {
   n->seen = 0;
-  if (n->sibling) ajv_reset_node_state(n->sibling);
-  if (n->child) ajv_reset_node_state(n->child);
+  n->required = 0;
+  if (n->sibling) ajv_reset_node(n->sibling);
+  if (n->child) ajv_reset_node(n->child);
 }
   

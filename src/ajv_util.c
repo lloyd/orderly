@@ -26,22 +26,9 @@ int typecheck(ajv_state *state,
   }
   
 }
-
 #define AJV_STATE(x)                    \
   ajv_state *state = (struct ajv_state) x;
   
 
-static void push_state(ajv_state * state) {
-  /* only maps and array have children */
-  ASSERT(state->node->node->t == orderly_node_object
-         || state->node->node->t == orderly_node_array);
-  state->node = state->node->child;
-}
-
-static void pop_state(ajv_state * state) {
-  ajv_node *cur;
-  /* only maps and array have children */
-  ASSERT(state->node->parent != NULL);
-  state->node = state->node->parent;
-}
 #endif
+const int fuckyoustdc = 1;
