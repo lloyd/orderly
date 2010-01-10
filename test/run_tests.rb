@@ -11,6 +11,8 @@ system(File.join(mypath, "run_negative_cases.rb"))
 rv += $?.to_i
 system(File.join(mypath, "run_positive_tests.rb"))
 rv += $?.to_i
+system(File.join(mypath, "run_validator.rb"))
+rv += $?.to_i
 
 puts "TESTS FAILED (#{rv})!" if rv > 0
 exit rv
