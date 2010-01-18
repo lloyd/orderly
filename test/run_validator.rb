@@ -26,7 +26,7 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     what, textfile, program, exitCode = *testType
     gotFile = textfile + ".got"
     got = ""
-
+    puts "#{what} for #{textfile}" ;
     ENV['ORDERLY_SCHEMA'] = IO.readlines(f,'').to_s
     IO.popen(program, "w+") { |lb|
       File.open(textfile, "r").each {|l| lb.write(l)}

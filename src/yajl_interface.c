@@ -34,6 +34,7 @@
 #include "api/ajv_parse.h"
 #include "api/reader.h"
 #include "api/node.h"
+#include "api/json.h"
 #include <assert.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -57,6 +58,9 @@ static int ajv_end_array(void * ctx);
 #define AJV_STATE(x)                    \
   struct ajv_state_t *state = (struct ajv_state_t *) x;
 
+/* XXX: takes args, do something here */
+#define VALIDATE_FAILED(x,y,z) { fprintf(stderr,"VALIDATE FAILED: %s\n",x);\
+                                 return 0;}
 
 static const yajl_callbacks ajv_callbacks = {
   NULL, /* yajl_null */
@@ -106,9 +110,9 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
     if (orderlyAllocFuncBufferPtr == NULL) {
             orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
             orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
-        }
-    if (allocFuncs == NULL) allocFuncs = orderlyAllocFuncBufferPtr;
     }
+    if (allocFuncs == NULL) allocFuncs = orderlyAllocFuncBufferPtr;
+  }
 
   struct ajv_state_t *ajv_state = 
     (struct ajv_state_t *)
@@ -131,34 +135,97 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
 static int ajv_start_map (void * ctx) {
   AJV_STATE(ctx);
 
-  assert(0);
-  push_state(state);
-  return 0;
+  if (state->node) {
+    push_state(state);
+  }  else {
+    state->depth++;
+  }
+
+  if (state->cb && state->cb->yajl_start_map) {
+    return state->cb->yajl_start_map(state->cbctx);
+  } else {
+    return 1;
+  }
+
 }
 
 static int ajv_map_key(void * ctx, const unsigned char * key, 
                        unsigned int stringLen) {
   AJV_STATE(ctx);
   ajv_node *cur;
-  const char *this_is_utf8_dont_do_math = (const char *)key;
-  assert(orderly_node_object == state->node->parent->node->t);
+  if (state->node) {
+    const char *this_is_utf8_dont_do_math = (const char *)key;
+    assert(orderly_node_object == state->node->parent->node->t);
 
-  for (cur = state->node->parent->child; cur; cur = cur->sibling) {
-    assert(cur->node->name);
-    if (!strncmp(cur->node->name,this_is_utf8_dont_do_math,stringLen)) {
-      cur->seen = 1;
-      /* XXX: can we have multiple schemas for a key ?! */
+    for (cur = state->node->parent->child; cur; cur = cur->sibling) {
+      assert(cur->node->name);
+      if (!strncmp(cur->node->name,this_is_utf8_dont_do_math,stringLen)) {
+        state->node = cur; 
+        /* point at the schema for this key, as the next callback will needs it */
+        break;
+      }
     }
+  
+    /* we found a key which we don't have an associated schema for */
+    if ( !cur ) {
+      assert(state->depth == 0);
+      state->valid_node = state->node;
+      state->node = NULL;
+    }
+  } else {
+    /* NOP, not at toplevel by definition */
   }
-  return state->cb->yajl_map_key(state->cbctx, key, stringLen);
+
+  if (state->cb && state->cb->yajl_map_key) {
+    return state->cb->yajl_map_key(state->cbctx, key, stringLen);
+  } else {
+    return 1;
+  }
 }
 
+static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value) {
+  assert("unimplemented" == 0);
+}
 
 static int ajv_end_map(void * ctx) {
   AJV_STATE(ctx);
+  ajv_node *cur;
+  if (state->node) {
 
-  pop_state(state);
-  return 0;
+    for (cur = state->node->parent->child; cur; cur = cur->sibling) {
+      if (cur->required || !(cur->node->optional)) {
+        if (!cur->seen) {
+          if (cur->node->default_value) {
+            int ret;
+            ret = synthesize_callbacks(state, cur->node->default_value);
+            if (ret == 0) { /*parse was cancelled */
+              return 0;
+            }
+          } else {
+            fprintf(stderr,"missing map element %s\n",cur->node->name);
+            VALIDATE_FAILED("missing required map element",
+                          "didn't see", "This guy");
+          }
+        }
+      }
+    }
+    pop_state(state);
+
+  } else {
+    /* we're in a schemaless map, restore the schema pointer */
+    state->depth--;
+    if (state->depth == 0) {
+      state->node = state->valid_node;
+    }
+  }
+
+  
+  if (state->cb && state->cb->yajl_end_map) {
+    return state->cb->yajl_end_map(state->cbctx);
+  } else {
+    return 1;
+  }
+
 }
         
 
@@ -176,48 +243,87 @@ int ajv_null(void * ctx) {
 static int ajv_number(void * ctx, const char * numberVal,
                  unsigned int numberLen) {
   AJV_STATE(ctx);
-  state = state;
+  if (!state->node) {
+    if (state->depth == 0) {
+      state->node = state->valid_node;
+    }
+  } else {
+    orderly_node *on = state->node->node;
+  
+    if (on->t != orderly_node_number) {
+      VALIDATE_FAILED("wrong_type",orderly_node_number,on->t);
+    }
+  }
+
   return 0;
   
 }
 
-/* XXX: takes args, do something here */
-#define VALIDATE_FAILED(x,y,z) { return 0;}
+int ick_strcmp(const char *a, const char *b, unsigned int blen) {
+  while (*a) {
+    if (blen == 0) { break; }
+    if (*a != *b) { return 1; }
+    a++; b++; blen--;
+  }
+  if (*a != '\0') { return 1; }
+  return 0;
+}
 
 /** strings are returned as pointers into the JSON text when,
  * possible, as a result, they are _not_ null padded */
 static int ajv_string(void * ctx, const unsigned char * stringVal,
                 unsigned int stringLen) {
   AJV_STATE(ctx);
-  orderly_node *on = state->node->node;
-  if (on->t != orderly_node_string) {
-    VALIDATE_FAILED(wrong_type,orderly_node_string,on->t);
-  }
-  if (ORDERLY_RANGE_SPECIFIED(on->range)) {
-    if (ORDERLY_RANGE_HAS_LHS(on->range)) {
-      if (on->range.lhs.i > stringLen) {
+
+  if (!state->node)  {
+    if (state->depth == 0) {
+      state->node = state->valid_node;
+    }
+  } else {
+    orderly_node *on = state->node->node;
+
+    if (on->t != orderly_node_string) {
+      VALIDATE_FAILED("wrong_type",orderly_node_string,on->t);
+    }
+    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
+      if (ORDERLY_RANGE_HAS_LHS(on->range)) {
+        if (on->range.lhs.i > stringLen) {
   
-      VALIDATE_FAILED(out_of_range,on->range.lhs.i,stringLen);
+          VALIDATE_FAILED("out_of_range",on->range.lhs.i,stringLen);
+        }
+      }
+      if (ORDERLY_RANGE_HAS_RHS(on->range)) {
+        if (on->range.rhs.i < stringLen) {
+
+          VALIDATE_FAILED("out_of_range",on->range.rhs.i,stringLen);
+        }
       }
     }
-    if (ORDERLY_RANGE_HAS_RHS(on->range)) {
-      if (on->range.rhs.i < stringLen) {
 
-        VALIDATE_FAILED(out_of_range,on->range.rhs.i,stringLen);
+    if (on->values) {
+      orderly_json *cur;
+      int found = 0;
+      assert(on->values->t == orderly_json_array); /* docs say so */
+      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+        assert(cur->t == orderly_json_string);
+        if (!ick_strcmp(cur->v.s, stringVal, stringLen)) {
+          found = 1;
+        }
+      }
+      if (found == 0) {
+        VALIDATE_FAILED("invalid_value",ook,ook);
       }
     }
+
+    if (on->regex) {
+      /* XXX: validate regex */
+    }
+  
+    state->node->seen = 1;
   }
 
-  if (on->values) {
-    assert(on->values->t == orderly_json_array); /* docs say so */
-    /* XXX  validate this is a value in the array */
-  }
-
-  if (on->regex) {
-    /* XXX: validate regex */
-  }
   if (state->cb && state->cb->yajl_string) {
-    return state->cb->yajl_string(ctx,stringVal,stringLen);
+    return state->cb->yajl_string(state->cbctx,stringVal,stringLen);
   } else {
     return 1;
   }
@@ -225,17 +331,63 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
 }
 
 
-
 static int ajv_start_array(void * ctx) {
   AJV_STATE(ctx);
+  if (!state->node)  {
 
-  push_state(state);
-  return state->cb->yajl_start_array(ctx);
+    state->depth++;
+
+  } else {
+    
+    push_state(state);
+
+  }
+
+  if (state->cb && state->cb->yajl_start_array) {
+    return state->cb->yajl_start_array(state->cbctx);
+  } else {
+    return 1;
+  }
 }
 
 
 static int ajv_end_array(void * ctx) {
   AJV_STATE(ctx);
-  push_state(state);
-  return state->cb->yajl_end_array(ctx);
+
+  if (!state->node) {
+
+    state->depth--;
+    if (state->depth == 0) {
+      state->node = state->valid_node;
+    }
+  /* with tuple typed nodes, we need to check that we've seen things */
+  } else {
+
+    if (state->node->parent->node->tuple_typed) {
+      ajv_node *cur;
+      for (cur = state->node->parent->child; cur; cur = cur->sibling) {
+        if (!cur->seen) {
+          if (cur->node->default_value) {
+            int ret;
+            ret = synthesize_callbacks(state, cur->node->default_value);
+            if (ret == 0) { /*parse was cancelled */
+              return 0;
+            }
+          } else { 
+            VALIDATE_FAILED("missing tuple elements", "didn't see", "This guy");
+          }
+        }
+      }
+    }
+
+    pop_state(state);
+  
+  }
+
+  
+  if (state->cb && state->cb->yajl_end_array) {
+    return state->cb->yajl_end_array(state->cbctx);
+  } else {
+    return 1;
+  }
 }
