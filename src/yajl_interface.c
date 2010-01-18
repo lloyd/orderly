@@ -166,8 +166,13 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
       }
     }
   
-    /* we found a key which we don't have an associated schema for */
     if ( !cur ) {
+      /* we found a key which we don't have an associated schema for
+       * if the object forbids this, throw an error */
+      if ( ! state->node->parent->node->additional_properties )  {
+        VALIDATE_FAILED("found unknown key in map", key,stringLen);
+      }
+      /* otherwise, put us into schemaless mode */
       assert(state->depth == 0);
       state->valid_node = state->node;
       state->node = NULL;
@@ -316,7 +321,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     }
 
     if (on->regex) {
-      /* XXX: validate regex */
+      /* TODO: validate regex */
     }
   
     state->node->seen = 1;
