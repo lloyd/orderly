@@ -40,7 +40,7 @@ typedef struct ajv_node_t {
   /* all children point to their parents */
   struct ajv_node_t * parent;
   /* the orderly node we wrap */
-  orderly_node *node;
+  const orderly_node *node;
   /* have we seen data matching this node?
    * (only valid on nodes whose parent is a map/object, or tuple array)
    */
@@ -72,12 +72,12 @@ typedef struct ajv_state_t {
 
 
 ajv_node * 
-ajv_alloc_node_recursive(orderly_alloc_funcs * alloc, 
-                         orderly_node * n,
+ajv_alloc_node_recursive(const orderly_alloc_funcs * alloc, 
+                         const orderly_node * n,
                          ajv_node *parent );
 
 ajv_node * 
-ajv_alloc_node(orderly_alloc_funcs * alloc);
+ajv_alloc_node(const orderly_alloc_funcs * alloc);
 
 void 
 ajv_free_node (orderly_alloc_funcs * alloc, ajv_node ** n);

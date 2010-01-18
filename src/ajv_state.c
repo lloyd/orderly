@@ -1,15 +1,15 @@
 #include "ajv_state.h"
 #include <string.h>
 
-ajv_node * ajv_alloc_node( orderly_alloc_funcs * alloc ) {
+ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc ) {
   ajv_node * n = (ajv_node *)
     OR_MALLOC(alloc, sizeof(ajv_node));
   memset((void *) n, 0, sizeof(ajv_node));
   return n;
 }
 
-ajv_node * ajv_alloc_node_recursive( orderly_alloc_funcs * alloc, 
-                                     orderly_node *n, ajv_node *parent) {
+ajv_node * ajv_alloc_node_recursive( const orderly_alloc_funcs * alloc, 
+                                     const orderly_node *n, ajv_node *parent) {
   ajv_node *an = ajv_alloc_node(alloc);
 
   if (n->sibling) {
