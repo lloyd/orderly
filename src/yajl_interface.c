@@ -61,15 +61,51 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
 #define AJV_STATE(x)                    \
   struct ajv_state_t *state = (struct ajv_state_t *) x;
 
-/* XXX: takes args, do something here */
-#define VALIDATE_FAILED(x,y,z) { fprintf(stderr,"VALIDATE FAILED: %s\n",x);\
-                                 return 0;}
+
+#define FAIL_OUT_OF_RANGE(state, on) {\
+  fprintf(stderr,"VALIDATE FAILED, out of range");\
+  return 0;}
+
+#define FAIL_NOT_IN_LIST(state, on) {\
+  fprintf(stderr,"VALIDATE FAILED, out of range");\
+  return 0;}
+  
+#define FAIL_UNKNOWN_KEY(state,on,key) {        \
+  fprintf(stderr,"VALIDATE FAILED, unknown key in object: '%s'\n",key); \
+  return 0;\
+}
+
+#define FAIL_MISSING_ELEMENT(state,ajv) {        \
+  if (ajv->node->name) {  \
+    fprintf(stderr,"VALIDATE FAILED, missing element: '%s'\n",ajv->node->name); \
+  } else { \
+    fprintf(stderr,"VALIDATE FAILED, missing tuple element\n"); \
+  }\
+  return 0;}
+
+#define FAIL_TYPE_MISMATCH(state,ajv,type) {  \
+  if (ajv->node->name) {  \
+  fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
+    ajv->node->name, \
+    orderly_node_type_to_string(type),\
+    orderly_node_type_to_string(ajv->node->t));\
+  } else {\
+   fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
+    ajv->node->name,                                             \
+    orderly_node_type_to_string(type),\
+    orderly_node_type_to_string(ajv->node->t));\
+  }}\
+    return 0;
+
+
+
+
 
 static const yajl_callbacks ajv_callbacks = {
-  ajv_null, /* yajl_null */
-  ajv_boolean, /* XXX ? boolean */
-  ajv_integer, /* integer */
-  ajv_double, /* double */
+  ajv_null,
+  ajv_boolean, 
+  ajv_integer, 
+  ajv_double, 
   NULL,
   ajv_string,
   ajv_start_map,
@@ -177,8 +213,8 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
     if ( !cur ) {
       /* we found a key which we don't have an associated schema for
        * if the object forbids this, throw an error */
-      if ( ! state->node->parent->node->additional_properties )  {
-        VALIDATE_FAILED("found unknown key in map", key,stringLen);
+      if ( state->node->parent->node->additional_properties )  {
+        FAIL_UNKNOWN_KEY(state, state->node->parent, key);
       }
       /* otherwise, put us into schemaless mode */
       assert(state->depth == 0);
@@ -338,8 +374,7 @@ static int ajv_end_map(void * ctx) {
               return 0;
             }
           } else {
-            VALIDATE_FAILED("missing required map element",
-                          "didn't see", "This guy");
+            FAIL_MISSING_ELEMENT(state,cur);
           }
         }
       }
@@ -374,14 +409,24 @@ static int ajv_integer(void * ctx, long integerValue) {
     const orderly_node *on = state->node->node;
   
     if (on->t != orderly_node_integer) {
-      VALIDATE_FAILED("wrong_type",orderly_node_number,on->t);
+      FAIL_TYPE_MISMATCH(state, state->node, orderly_node_integer);
     }
-    /* TODO validate range */
-    state->node->seen = 1;
+    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
+      if (ORDERLY_RANGE_HAS_LHS(on->range)) {
+        if (on->range.lhs.i > integerValue) { /* XXX: >= or >  ? */ 
+          FAIL_OUT_OF_RANGE(state,state->node);
+        }
+      }
+      if (ORDERLY_RANGE_HAS_RHS(on->range)) {
+        if (on->range.rhs.i < integerValue) {
+          FAIL_OUT_OF_RANGE(state,state->node);
+        }
+      }
+    }
   }
 
-
-
+  state->node->seen = 1;
+    
   if (state->cb && state->cb->yajl_integer) {
     return state->cb->yajl_integer(state->cbctx,integerValue);
   } else {
@@ -437,10 +482,36 @@ static int ajv_double(void * ctx, double doubleval) {
     const orderly_node *on = state->node->node;
   
     if (on->t != orderly_node_number) {
-      VALIDATE_FAILED("wrong_type",orderly_node_number,on->t);
+      FAIL_TYPE_MISMATCH(state,state->node, orderly_node_number);
     }
-    /* TODO validate range */
+    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
+      if (ORDERLY_RANGE_HAS_LHS(on->range)) {
+        if (on->range.lhs.i > doubleval) { /* XXX: >= or >  ? */ 
+          FAIL_OUT_OF_RANGE(state,state->node);
+        }
+      }
+      if (ORDERLY_RANGE_HAS_RHS(on->range)) {
+        if (on->range.rhs.i < doubleval) {
+          FAIL_OUT_OF_RANGE(state,state->node);
+        }
+      }
+    }
     state->node->seen = 1;
+    
+    if (on->values) {
+      orderly_json *cur;
+      int found = 0;
+      assert(on->values->t == orderly_json_array); /* docs say so */
+      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+        assert(cur->t == orderly_json_number);
+        if (doubleval == cur->v.n) {
+          found = 1;
+        }
+      }
+      if (found == 0) {
+        FAIL_NOT_IN_LIST(state,state->node);
+      }
+    }
   }
 
   if (state->cb && state->cb->yajl_double) {
@@ -475,19 +546,17 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     const orderly_node *on = state->node->node;
 
     if (on->t != orderly_node_string) {
-      VALIDATE_FAILED("wrong_type",orderly_node_string,on->t);
+      FAIL_TYPE_MISMATCH(state,state->node,orderly_node_string);
     }
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
         if (on->range.lhs.i > stringLen) {
-  
-          VALIDATE_FAILED("out_of_range",on->range.lhs.i,stringLen);
+          FAIL_OUT_OF_RANGE(state,on);
         }
       }
       if (ORDERLY_RANGE_HAS_RHS(on->range)) {
         if (on->range.rhs.i < stringLen) {
-
-          VALIDATE_FAILED("out_of_range",on->range.rhs.i,stringLen);
+          FAIL_OUT_OF_RANGE(state,on);
         }
       }
     }
@@ -503,7 +572,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
         }
       }
       if (found == 0) {
-        VALIDATE_FAILED("invalid_value",ook,ook);
+        FAIL_NOT_IN_LIST(state,state->node);
       }
     }
 
@@ -566,7 +635,7 @@ static int ajv_end_array(void * ctx) {
               return 0;
             }
           } else { 
-            VALIDATE_FAILED("missing tuple elements", "didn't see", "This guy");
+            FAIL_MISSING_ELEMENT(state,cur);
           }
         }
       }
