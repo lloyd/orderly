@@ -7,9 +7,10 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc ) {
   memset((void *) n, 0, sizeof(ajv_node));
   return n;
 }
-
+  
 ajv_node * ajv_alloc_node_recursive( const orderly_alloc_funcs * alloc, 
-                                     const orderly_node *n, ajv_node *parent) {
+                                     const orderly_node *n, 
+                                     ajv_node *parent) {
   ajv_node *an = ajv_alloc_node(alloc);
 
   if (n->sibling) {

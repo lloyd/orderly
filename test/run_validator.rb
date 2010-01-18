@@ -35,7 +35,7 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     }
     if ($?.exitstatus != exitCode) 
       puts "FAIL";
-      puts "got wrong exit code #{exitCode}"  
+      puts "got wrong exit code #{$?.exitstatus}, expected #{exitCode}"
     else
       puts "ok"
       passed += 1

@@ -56,18 +56,76 @@ static int ajv_start_array(void * ctx);
 static int ajv_end_array(void * ctx);
 static int ajv_null(void * ctx);
 static int ajv_boolean(void * ctx, int booleanValue);
+static const ajv_node * orderly_subsumed_by (const orderly_node_type a, 
+                                             const ajv_node *b);
+
+
+
+
+/* is type a subsumed by type b? (everything is subsumed by any) */
+static const ajv_node * orderly_subsumed_by (const orderly_node_type a, 
+                                             const ajv_node *b) {
+  const ajv_node *cur;
+  switch (b->node->t) {
+  case orderly_node_union:   
+    for (cur = b->child; cur; cur = cur->sibling) {
+      const ajv_node *ret = orderly_subsumed_by(a,cur);
+      if (ret) return ret;
+    }
+    return NULL;
+
+  case orderly_node_empty:   return a == b->node->t ? b : NULL; 
+  case orderly_node_null:    return a == b->node->t ? b : NULL; 
+  case orderly_node_string:  return a == b->node->t ? b : NULL; 
+  case orderly_node_integer: return a == b->node->t ? b : NULL; 
+  case orderly_node_boolean: return a == b->node->t ? b : NULL; 
+  case orderly_node_number:  
+    return a == b->node->t || a == orderly_node_integer ? b : NULL;
+  case orderly_node_object:  return a == b->node->t ? b : NULL; 
+  case orderly_node_array:   return a == b->node->t ? b : NULL;
+  case orderly_node_any:     return b;
+  }  
+  return NULL;
+}
+
+
+
 int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
 #define AJV_STATE(x)                    \
   struct ajv_state_t *state = (struct ajv_state_t *) x;
 
 
+#define FAIL_TYPE_MISMATCH(state,ajv,type) do {  \
+  if (ajv->node->name) {  \
+  fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
+    ajv->node->name, \
+    orderly_node_type_to_string(type),\
+    orderly_node_type_to_string(ajv->node->t));\
+  } else {\
+   fprintf(stderr,"VALIDATE FAILED, unammed is type %s, expecting %s\n", \
+    orderly_node_type_to_string(type),\
+    orderly_node_type_to_string(ajv->node->t));\
+  }\
+  return 0; } while (0);
+
+
+#define FAIL_TRAILING_INPUT(state) {                            \
+  fprintf(stderr,"VALIDATE FAILED, tailing garbage detected ");\
+  return 0;}
+
+#define DO_TYPECHECK(state, type, ajvnode) \
+  if (state->finished) { FAIL_TRAILING_INPUT(state) }                   \
+  const ajv_node * typecheck = ajvnode;                                       \
+  typecheck = orderly_subsumed_by(type, typecheck);                   \
+  if (! typecheck ) FAIL_TYPE_MISMATCH(state, state->node, type);
+
 #define FAIL_OUT_OF_RANGE(state, on) {\
   fprintf(stderr,"VALIDATE FAILED, out of range");\
   return 0;}
 
 #define FAIL_NOT_IN_LIST(state, on) {\
-  fprintf(stderr,"VALIDATE FAILED, out of range");\
+  fprintf(stderr,"VALIDATE FAILED, Value outside of valid list ");\
   return 0;}
   
 #define FAIL_UNKNOWN_KEY(state,on,key) {        \
@@ -82,21 +140,6 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     fprintf(stderr,"VALIDATE FAILED, missing tuple element\n"); \
   }\
   return 0;}
-
-#define FAIL_TYPE_MISMATCH(state,ajv,type) {  \
-  if (ajv->node->name) {  \
-  fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
-    ajv->node->name, \
-    orderly_node_type_to_string(type),\
-    orderly_node_type_to_string(ajv->node->t));\
-  } else {\
-   fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
-    ajv->node->name,                                             \
-    orderly_node_type_to_string(type),\
-    orderly_node_type_to_string(ajv->node->t));\
-  }}\
-    return 0;
-
 
 
 
@@ -124,9 +167,13 @@ static void push_state(ajv_state state) {
 }
 
 static void pop_state(ajv_state state) {
-  /* only maps and array have children */
-  assert(state->node->parent != NULL);
+  /* silly corner case : we're popping a toplevel 'any' objects */
+  if (state->node->parent == NULL) { 
+    state->finished = 1;
+    return;
+  }
   state->node = state->node->parent;
+  return;
 }
 
 YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
@@ -165,6 +212,9 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
   ajv_state->node = 
     ajv_alloc_node_recursive((const orderly_alloc_funcs *)AF, n, NULL);
 
+  ajv_state->any.parent = ajv_state->any.child = ajv_state->any.sibling = NULL;
+  ajv_state->any.node = orderly_alloc_node((orderly_alloc_funcs *)AF, 
+                                           orderly_node_any);
   ajv_state->cb = callbacks;
   ajv_state->cbctx = ctx;
   return yajl_alloc(&ajv_callbacks,
@@ -178,11 +228,17 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
 
 static int ajv_start_map (void * ctx) {
   AJV_STATE(ctx);
+  const orderly_node *on;
+  DO_TYPECHECK(state, orderly_node_object, state->node);
 
-  if (state->node) {
-    push_state(state);
-  }  else {
+  on = state->node->node;
+
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
     state->depth++;
+  }  else {
+    push_state(state);
   }
 
   if (state->cb && state->cb->yajl_start_map) {
@@ -197,7 +253,9 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
                        unsigned int stringLen) {
   AJV_STATE(ctx);
   ajv_node *cur;
-  if (state->node) {
+  if (state->node->node->t == orderly_node_any) {
+
+  } else {
     const char *this_is_utf8_dont_do_math = (const char *)key;
     assert(orderly_node_object == state->node->parent->node->t);
 
@@ -217,12 +275,11 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
         FAIL_UNKNOWN_KEY(state, state->node->parent, key);
       }
       /* otherwise, put us into schemaless mode */
+      
       assert(state->depth == 0);
-      state->valid_node = state->node;
-      state->node = NULL;
+      state->any.parent = state->node;
+      state->node = &(state->any);
     }
-  } else {
-    /* NOP, not at toplevel by definition */
   }
 
   if (state->cb && state->cb->yajl_map_key) {
@@ -237,22 +294,37 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
  */
 static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value) {
   int ret = 1; 
+
   /* No callbacks, no work */
   if (!state->cb) {
     return 1;
   }
     
   switch (value->t) {
-    /* TODO FIGURE THESE out */
-  case orderly_json_none:
+
+    /*
+     * NULL
+     */
   case orderly_json_null:
+    if (state->cb->yajl_null) {
+      ret = state->cb->yajl_null(state->cbctx);
+    }
+    break;
+
+    /*
+     * boolean
+     */
   case orderly_json_boolean:
-    /* TODO: */
-    assert(0==1);
+    if (state->cb->yajl_boolean) {
+      ret = state->cb->yajl_boolean(state->cbctx,value->v.b);
+    }
     break;
     
+    /*
+     * string
+     */
   case orderly_json_string:
-    /* call the callback if need be */
+
     if (state->cb->yajl_string) {
       ret = state->cb->yajl_string(state->cbctx,
                                    (unsigned char *)value->v.s,
@@ -260,6 +332,9 @@ static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value)
     }
     break;
 
+    /*
+     * object / map
+     */
   case orderly_json_object:
     /* call the start callback */
     if (state->cb->yajl_start_map) {
@@ -268,7 +343,7 @@ static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value)
         return 0;
       }
     }
-    /* recurse */
+    /* recurse - XXX: stack depth limit */
     {
       orderly_json *kiditr;
       for (kiditr = value->v.children.first; kiditr; kiditr = kiditr->next) {
@@ -287,69 +362,60 @@ static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value)
     }
     break;
 
+
+    /*
+     * array
+     */
   case orderly_json_array:
     /* call start callback */
     if (state->cb->yajl_start_array) {
       ret = state->cb->yajl_start_array(state->cbctx);
-      if (ret == 0) {
-        return 0;
-      }
+      if (ret == 0) break;
     }
     /* recurse */
     {
       orderly_json *kiditr;
       for (kiditr = value->v.children.first; kiditr; kiditr = kiditr->next) {
         ret = synthesize_callbacks(state, kiditr);
-        if (ret == 0) {
-          return 0;
-        }
+        if (ret == 0) break;
       }
     }
     /* call end callback */
     if (state->cb->yajl_end_array) {
       ret = state->cb->yajl_end_array(state->cbctx);
-      if (ret == 0) {
-        return 0;
-      }
     }
 
     break;
 
-
+    /* 
+     * integer
+     */
   case orderly_json_integer:
-    
     if (state->cb->yajl_number) {
       assert("unimplemented" == 0);
-
     } else if (state->cb->yajl_integer) {
-
       ret = state->cb->yajl_integer(state->cbctx, value->v.i);
-
-      if (ret == 0) {
-        return 0;
-      }
-
     }
 
     break;
 
+    /* 
+     * "number" -- float
+     */
   case orderly_json_number:
-
     if (state->cb->yajl_number) {
       assert("unimplemented" == 0);
-
     } else if (state->cb->yajl_double) {
-
       ret = state->cb->yajl_double(state->cbctx, value->v.n);
-
-      if (ret == 0) {
-        return 0;
-      }
-
     }
 
     break;
 
+
+
+    /* XXX: orderly_json_none appears to be for internal accounting
+       only, should never find a default of this type */
+  case orderly_json_none:
   default:
     assert("unreachable"==0);
   }
@@ -362,7 +428,10 @@ static int synthesize_callbacks (struct ajv_state_t *state, orderly_json *value)
 static int ajv_end_map(void * ctx) {
   AJV_STATE(ctx);
   ajv_node *cur;
-  if (state->node) {
+  if (state->node->node->t == orderly_node_any) {
+    state->depth--;
+    if (state->depth == 0) { pop_state(state); }
+  } else {
 
     for (cur = state->node->parent->child; cur; cur = cur->sibling) {
       if (cur->required || !(cur->node->optional)) {
@@ -380,16 +449,8 @@ static int ajv_end_map(void * ctx) {
       }
     }
     pop_state(state);
-
-  } else {
-    /* we're in a schemaless map, restore the schema pointer */
-    state->depth--;
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
   }
 
-  
   if (state->cb && state->cb->yajl_end_map) {
     return state->cb->yajl_end_map(state->cbctx);
   } else {
@@ -399,21 +460,20 @@ static int ajv_end_map(void * ctx) {
 }
         
 
+
 static int ajv_integer(void * ctx, long integerValue) {
   AJV_STATE(ctx);
-  if (!state->node) {
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state,orderly_node_integer, state->node);
+
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
+    if (state->depth == 0) pop_state(ctx);
   } else {
-    const orderly_node *on = state->node->node;
-  
-    if (on->t != orderly_node_integer) {
-      FAIL_TYPE_MISMATCH(state, state->node, orderly_node_integer);
-    }
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
-        if (on->range.lhs.i > integerValue) { /* XXX: >= or >  ? */ 
+        if (on->range.lhs.i > integerValue) {
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
@@ -423,10 +483,23 @@ static int ajv_integer(void * ctx, long integerValue) {
         }
       }
     }
+
+    if (on->values) {
+      orderly_json *cur;
+      int found = 0;
+      assert(on->values->t == orderly_json_array); /* docs say so */
+      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+        assert(cur->t == orderly_json_integer);
+        if (integerValue == cur->v.i) {
+          found = 1;
+        }
+      }
+      if (found == 0) {
+        FAIL_NOT_IN_LIST(state,state->node);
+      }
+    }
   }
 
-  state->node->seen = 1;
-    
   if (state->cb && state->cb->yajl_integer) {
     return state->cb->yajl_integer(state->cbctx,integerValue);
   } else {
@@ -437,31 +510,32 @@ static int ajv_integer(void * ctx, long integerValue) {
 
 static int ajv_null(void * ctx) {
   AJV_STATE(ctx);
-  if (!state->node) {
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
-  } else {
-    state->node->seen = 1;
-  }
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state,orderly_node_null, state->node);
+
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
+    if (state->depth == 0) pop_state(ctx);
+  }   
 
   if (state->cb && state->cb->yajl_null) {
     return state->cb->yajl_null(state->cbctx);
   } else {
     return 1;
   }
-
 }
 
 
 static int ajv_boolean(void * ctx, int booleanValue) {
   AJV_STATE(ctx);
-  if (!state->node) {
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
-  } else {
-    state->node->seen = 1;
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state,orderly_node_boolean, state->node);
+
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
+    if (state->depth == 0) pop_state(ctx);
   }
 
   if (state->cb && state->cb->yajl_boolean) {
@@ -474,10 +548,13 @@ static int ajv_boolean(void * ctx, int booleanValue) {
 
 static int ajv_double(void * ctx, double doubleval) {
   AJV_STATE(ctx);
-  if (!state->node) {
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state, orderly_node_number, state->node);
+
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
+    if (state->depth == 0) pop_state(ctx);
   } else {
     const orderly_node *on = state->node->node;
   
@@ -486,7 +563,9 @@ static int ajv_double(void * ctx, double doubleval) {
     }
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
-        if (on->range.lhs.i > doubleval) { /* XXX: >= or >  ? */ 
+        /* Strictly greater than, orderly spec is vague,
+         * json-schema.org is source */
+        if (on->range.lhs.i > doubleval) {
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
@@ -537,13 +616,14 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen) {
 static int ajv_string(void * ctx, const unsigned char * stringVal,
                 unsigned int stringLen) {
   AJV_STATE(ctx);
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state,orderly_node_string, state->node);
 
-  if (!state->node)  {
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
+    if (state->depth == 0) pop_state(ctx);
   } else {
-    const orderly_node *on = state->node->node;
 
     if (on->t != orderly_node_string) {
       FAIL_TYPE_MISMATCH(state,state->node,orderly_node_string);
@@ -580,7 +660,6 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
       /* TODO: validate regex */
     }
   
-    state->node->seen = 1;
   }
 
   if (state->cb && state->cb->yajl_string) {
@@ -594,14 +673,15 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
 
 static int ajv_start_array(void * ctx) {
   AJV_STATE(ctx);
-  if (!state->node)  {
+  const orderly_node *on = state->node->node;
+  DO_TYPECHECK(state,orderly_node_array, state->node);
 
+  state->node->seen = 1;
+
+  if (on->t == orderly_node_any) {
     state->depth++;
-
   } else {
-    
     push_state(state);
-
   }
 
   if (state->cb && state->cb->yajl_start_array) {
@@ -614,13 +694,13 @@ static int ajv_start_array(void * ctx) {
 
 static int ajv_end_array(void * ctx) {
   AJV_STATE(ctx);
+  const orderly_node *on = state->node->node;
 
-  if (!state->node) {
+  state->node->seen = 1;
 
+  if (on->t == orderly_node_any) {
     state->depth--;
-    if (state->depth == 0) {
-      state->node = state->valid_node;
-    }
+    if (state->depth == 0) pop_state(ctx);
   /* with tuple typed nodes, we need to check that we've seen things */
   } else {
 

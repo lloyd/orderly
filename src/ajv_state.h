@@ -51,18 +51,23 @@ typedef struct ajv_node_t {
 } ajv_node;
 
 typedef struct ajv_state_t {
-  /* pointer into the node tree, if it is null, this means
-   * we're currently in the midst of json that the schema doesn't mention.
-   * In that case, and only that case, valid_node contains a pointer
-   * the last object we have a schema for.
+  /* pointer into the node tree. if it is of type any, consult depth
    **/
   ajv_node                *node;
-  ajv_node                *valid_node;
+  /* populated with a orderly_node of type any, used for representing 
+   * unknown map keys
+   */
+  ajv_node                any;
   /*
    * How deep into the schemaless parse are we?
    * array and object start increment, on end decrement
    */
   unsigned int            depth;
+  
+  /* 
+   * Have we matched the entire schema ? 
+   */
+  unsigned int            finished;
 
   const unsigned char     *last_error;
   const yajl_callbacks    *cb;
