@@ -35,6 +35,7 @@
 #include "api/reader.h"
 #include "api/node.h"
 #include "api/json.h"
+#include <yajl/yajl_parse.h>
 #include <assert.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -96,52 +97,38 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
   struct ajv_state_t *state = (struct ajv_state_t *) x;
 
 
-#define FAIL_TYPE_MISMATCH(state,ajv,type) do {  \
-  if (ajv->node->name) {  \
-  fprintf(stderr,"VALIDATE FAILED, element: '%s' is type %s, expecting %s\n", \
-    ajv->node->name, \
-    orderly_node_type_to_string(type),\
-    orderly_node_type_to_string(ajv->node->t));\
-  } else {\
-   fprintf(stderr,"VALIDATE FAILED, unammed is type %s, expecting %s\n", \
-    orderly_node_type_to_string(type),\
-    orderly_node_type_to_string(ajv->node->t));\
-  }\
-  return 0; } while (0);
+#define FAIL_TYPE_MISMATCH(s, node, type) do {                  \
+    ajv_set_error(s,ajv_e_type_mismatch,                        \
+                  node, orderly_node_type_to_string(type));     \
+    return 0; } while (0);                                      \
 
 
-#define FAIL_TRAILING_INPUT(state) {                            \
-  fprintf(stderr,"VALIDATE FAILED, tailing garbage detected ");\
-  return 0;}
+#define FAIL_TRAILING_INPUT(s) do {                             \
+    ajv_set_error(s, ajv_e_trailing_input,                      \
+                  NULL,NULL);                                   \
+    return 0; } while (0);
 
-#define DO_TYPECHECK(state, type, ajvnode) \
-  if (state->finished) { FAIL_TRAILING_INPUT(state) }                   \
-  const ajv_node * typecheck = ajvnode;                                       \
-  typecheck = orderly_subsumed_by(type, typecheck);                   \
-  if (! typecheck ) FAIL_TYPE_MISMATCH(state, state->node, type);
+#define FAIL_NOT_IN_LIST(s,n,k) do {                              \
+    ajv_set_error(s, ajv_e_illegal_value, n, k);                  \
+      return 0;} while (0);
 
-#define FAIL_OUT_OF_RANGE(state, on) {\
-  fprintf(stderr,"VALIDATE FAILED, out of range");\
-  return 0;}
+#define FAIL_OUT_OF_RANGE(s,n) do {        \
+    ajv_set_error(s, ajv_e_out_of_range, n, NULL);  \
+    return 0;} while (0);
 
-#define FAIL_NOT_IN_LIST(state, on) {\
-  fprintf(stderr,"VALIDATE FAILED, Value outside of valid list ");\
-  return 0;}
+#define FAIL_UNEXPECTED_KEY(s,n,k) do {                       \
+    ajv_set_error(s,ajv_e_unexpected_key,n,(const char *)k);  \
+    return 0;} while (0);
+
+#define FAIL_MISSING_ELEMENT(s,n,k) do {             \
+    ajv_set_error(s,ajv_e_incomplete_container,n,k); \
+    return 0;} while (0);
   
-#define FAIL_UNKNOWN_KEY(state,on,key) {        \
-  fprintf(stderr,"VALIDATE FAILED, unknown key in object: '%s'\n",key); \
-  return 0;\
-}
-
-#define FAIL_MISSING_ELEMENT(state,ajv) {        \
-  if (ajv->node->name) {  \
-    fprintf(stderr,"VALIDATE FAILED, missing element: '%s'\n",ajv->node->name); \
-  } else { \
-    fprintf(stderr,"VALIDATE FAILED, missing tuple element\n"); \
-  }\
-  return 0;}
-
-
+#define DO_TYPECHECK(s, t, n) do {                                      \
+    if (s->finished) { FAIL_TRAILING_INPUT(s) };                        \
+    const ajv_node * typecheck = n;                                     \
+    typecheck = orderly_subsumed_by(t, typecheck);                      \
+    if (! typecheck ) FAIL_TYPE_MISMATCH(s, s->node, t); } while (0);
 
 
 static const yajl_callbacks ajv_callbacks = {
@@ -169,7 +156,6 @@ static void push_state(ajv_state state) {
 static void pop_state(ajv_state state) {
   /* silly corner case : we're popping a toplevel 'any' objects */
   if (state->node->parent == NULL) { 
-    state->finished = 1;
     return;
   }
   state->node = state->node->parent;
@@ -181,8 +167,8 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
                                const yajl_alloc_funcs * allocFuncs,
                                void * ctx,
                                const char *schema) {
-  const orderly_alloc_funcs *AF = (const orderly_alloc_funcs *) allocFuncs;
-
+  const orderly_alloc_funcs * AF = (const orderly_alloc_funcs *) allocFuncs;
+  
   orderly_reader r = orderly_reader_new(NULL);
   const orderly_node *n;
   n = orderly_read(r, ORDERLY_UNKNOWN, schema, strlen(schema));
@@ -190,6 +176,7 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
     fprintf(stderr, "Schema is invalid: %s\n%s\n", orderly_get_error(r),
             orderly_get_error_context(r, schema, strlen(schema)));
   }
+
 
   {
     static orderly_alloc_funcs orderlyAllocFuncBuffer;
@@ -199,24 +186,25 @@ YAJL_API yajl_handle ajv_alloc(const yajl_callbacks * callbacks,
             orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
             orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
     }
-    if (AF == NULL) {
-      AF = 
-        (const orderly_alloc_funcs *)orderlyAllocFuncBufferPtr;
-    }
-  }
+    AF = orderlyAllocFuncBufferPtr;
 
+    }
+
+  
   struct ajv_state_t *ajv_state = 
     (struct ajv_state_t *)
     OR_MALLOC(AF, sizeof(struct ajv_state_t));
-
+  memset((void *) ajv_state, 0, sizeof(struct ajv_state_t));
+  ajv_state->AF = AF;
   ajv_state->node = 
-    ajv_alloc_node_recursive((const orderly_alloc_funcs *)AF, n, NULL);
+    ajv_alloc_tree((const orderly_alloc_funcs *)AF, n, NULL);
 
   ajv_state->any.parent = ajv_state->any.child = ajv_state->any.sibling = NULL;
   ajv_state->any.node = orderly_alloc_node((orderly_alloc_funcs *)AF, 
                                            orderly_node_any);
   ajv_state->cb = callbacks;
   ajv_state->cbctx = ctx;
+
   return yajl_alloc(&ajv_callbacks,
                     config,
                     allocFuncs,
@@ -272,7 +260,7 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
       /* we found a key which we don't have an associated schema for
        * if the object forbids this, throw an error */
       if ( state->node->parent->node->additional_properties )  {
-        FAIL_UNKNOWN_KEY(state, state->node->parent, key);
+        FAIL_UNEXPECTED_KEY(state, state->node->parent, key);
       }
       /* otherwise, put us into schemaless mode */
       
@@ -432,22 +420,23 @@ static int ajv_end_map(void * ctx) {
     state->depth--;
     if (state->depth == 0) { pop_state(state); }
   } else {
-
+    /* this initialization assume pop_state hasn't happened yet */
     for (cur = state->node->parent->child; cur; cur = cur->sibling) {
       if (cur->required || !(cur->node->optional)) {
         if (!cur->seen) {
           if (cur->node->default_value) {
             int ret;
             ret = synthesize_callbacks(state, cur->node->default_value);
-            if (ret == 0) { /*parse was cancelled */
+            if (ret == 0) {
               return 0;
             }
           } else {
-            FAIL_MISSING_ELEMENT(state,cur);
+            FAIL_MISSING_ELEMENT(state,cur,NULL);
           }
         }
       }
     }
+    /* i.e. careful with this */
     pop_state(state);
   }
 
@@ -495,7 +484,7 @@ static int ajv_integer(void * ctx, long integerValue) {
         }
       }
       if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node);
+        FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse int ? */
       }
     }
   }
@@ -588,7 +577,7 @@ static int ajv_double(void * ctx, double doubleval) {
         }
       }
       if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node);
+        FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse number? */
       }
     }
   }
@@ -631,12 +620,12 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
         if (on->range.lhs.i > stringLen) {
-          FAIL_OUT_OF_RANGE(state,on);
+          FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
       if (ORDERLY_RANGE_HAS_RHS(on->range)) {
         if (on->range.rhs.i < stringLen) {
-          FAIL_OUT_OF_RANGE(state,on);
+          FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
     }
@@ -652,7 +641,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
         }
       }
       if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node);
+        FAIL_NOT_IN_LIST(state,state->node, NULL);
       }
     }
 
@@ -715,7 +704,7 @@ static int ajv_end_array(void * ctx) {
               return 0;
             }
           } else { 
-            FAIL_MISSING_ELEMENT(state,cur);
+            FAIL_MISSING_ELEMENT(state,cur,NULL);
           }
         }
       }

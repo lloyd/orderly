@@ -1,3 +1,5 @@
+#ifndef __AJV_STATE_H__
+#define __AJV_STATE_H__
 /*
  * Copyright 2009, 2010, LLoyd Hilaiel.
  * 
@@ -41,7 +43,7 @@ typedef struct ajv_node_t {
   struct ajv_node_t * parent;
   /* the orderly node we wrap */
   const orderly_node *node;
-  /* have we seen data matching this node?
+  /* have we seen data matching this node during this parse?
    * (only valid on nodes whose parent is a map/object, or tuple array)
    */
   int    seen;
@@ -49,6 +51,29 @@ typedef struct ajv_node_t {
    */
   int    required;
 } ajv_node;
+
+
+typedef enum {
+  ajv_e_no_error,  /* no error */
+  ajv_e_type_mismatch,
+  ajv_e_trailing_input,
+  ajv_e_out_of_range,
+  
+  ajv_e_incomplete_container, /* incopmlete tuple-array or missing map key */
+  ajv_e_illegal_value, /* value found din't match enumerated list */
+  ajv_e_unexpected_key /* only valid if additional_properties == 0 XXX ?*/
+} ajv_error;
+
+
+/*
+ * Enough information to describe an error
+ */
+
+struct ajv_error_t  {
+  ajv_error code;
+  const ajv_node *node; 
+  char *extra_info; /* TODO union */
+};
 
 typedef struct ajv_state_t {
   /* pointer into the node tree. if it is of type any, consult depth
@@ -63,32 +88,38 @@ typedef struct ajv_state_t {
    * array and object start increment, on end decrement
    */
   unsigned int            depth;
-  
+
   /* 
    * Have we matched the entire schema ? 
    */
+
   unsigned int            finished;
 
-  const unsigned char     *last_error;
+  const orderly_alloc_funcs     *AF;
+  struct ajv_error_t       error;
   const yajl_callbacks    *cb;
   void                    *cbctx;
 
 } * ajv_state;
 
 
-ajv_node * 
-ajv_alloc_node_recursive(const orderly_alloc_funcs * alloc, 
-                         const orderly_node * n,
-                         ajv_node *parent );
+ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
+                          const orderly_node *n, ajv_node *parent);
 
-ajv_node * 
-ajv_alloc_node(const orderly_alloc_funcs * alloc);
+ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc, 
+                           const orderly_node *on,    ajv_node *parent ) ;
 
-void 
-ajv_free_node (orderly_alloc_funcs * alloc, ajv_node ** n);
+void ajv_free_node (orderly_alloc_funcs * alloc, ajv_node ** n);
 
-void 
-ajv_reset_node( ajv_node * n);
+void ajv_reset_node( ajv_node * n);
 
 
+void ajv_set_error ( ajv_state s, ajv_error e,
+                     const ajv_node * node, const char *info );
 
+void ajv_clear_error (ajv_state  s);
+
+const char * ajv_error_to_string (ajv_error e);
+
+
+#endif
