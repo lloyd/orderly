@@ -122,7 +122,7 @@ main(int argc, char ** argv)
             stat != yajl_status_insufficient_data)
         {
             if (!quiet) {
-                unsigned char * str = yajl_get_error(hand, 1, fileData, rd);
+                unsigned char * str = ajv_get_error(hand, 1, fileData, rd);
                 fprintf(stderr, "%s", (const char *) str);
                 yajl_free_error(hand, str);
             }
