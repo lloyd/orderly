@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2009, Lloyd Hilaiel.
+ * Copyright 2007-2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -40,6 +40,12 @@
 #define __ORDERLY_ALLOC_H__
 
 #include "api/common.h"
+
+#define BUF_STRDUP(dst, a, ob, ol)               \
+{   (dst) = OR_MALLOC((a), (ol) + 1);            \
+    memcpy((void *)(dst), (void *) (ob), (ol));  \
+    ((char *) (dst))[(ol)] = 0;  }
+
 
 #define OR_MALLOC(afs, sz) (afs)->malloc((afs)->ctx, (sz))
 #define OR_FREE(afs, ptr) (afs)->free((afs)->ctx, (ptr))

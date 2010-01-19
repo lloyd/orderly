@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -39,11 +39,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-#define BUF_STRDUP(dst, a, ob, ol)               \
-{   (dst) = OR_MALLOC((a), (ol) + 1);       \
-    memcpy((void *)(dst), (void *) (ob), (ol));  \
-    ((char *) (dst))[(ol)] = 0;  }
 
 void
 orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node)
