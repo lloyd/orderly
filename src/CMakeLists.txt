@@ -71,7 +71,7 @@ SET(LIBRARY_OUTPUT_PATH ${libDir})
 ADD_LIBRARY(orderly_s STATIC ${SRCS} ${HDRS} ${PUB_HDRS})
 
 ADD_LIBRARY(orderly SHARED ${SRCS} ${HDRS} ${PUB_HDRS})
-TARGET_LINK_LIBRARIES(orderly yajl)
+TARGET_LINK_LIBRARIES(orderly yajl pcre)
 
 #### setup shared library version number
 SET_TARGET_PROPERTIES(orderly PROPERTIES

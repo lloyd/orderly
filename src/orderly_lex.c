@@ -455,3 +455,11 @@ orderly_lex_previous_offset(orderly_lexer lexer)
 {
     return lexer->previousOffset;
 }
+
+void
+orderly_lex_increment_offset(orderly_lexer lexer, unsigned int offset)
+{
+#include <stdio.h>
+  fprintf(stderr,"%d %d\n",lexer->previousOffset, offset);
+    lexer->previousOffset += offset;
+}

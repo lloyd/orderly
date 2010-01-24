@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -107,6 +107,11 @@ orderly_lex_error orderly_lex_get_error(orderly_lexer lexer);
  *  parsed.  This is a convenience for error reporting so higher level
  *  code can drink more beer, and do less bookkeeping.  */
 unsigned int orderly_lex_previous_offset(orderly_lexer lexer);
+
+/** hack for parsing regexes, since we do lexing and parsing
+ *  in a single step due to pcre
+ */
+void orderly_lex_increment_offset(orderly_lexer lexer, unsigned int inc);
 
 /** check if a string is an orderly property keyword, returns
  *  orderly_tok_property_name if not */

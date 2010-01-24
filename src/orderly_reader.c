@@ -279,7 +279,8 @@ orderly_get_error(orderly_reader r)
                     err = "'pattern' property requires a string value";
                     break;
             }
-        } else {
+        } else { /** regex error */
+          err = r->error_message;
         }
     }
     

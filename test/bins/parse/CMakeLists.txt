@@ -1,4 +1,4 @@
-# Copyright 2007-2009, Lloyd Hilaiel.
+# Copyright 2007-2010, Lloyd Hilaiel.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -35,4 +35,4 @@ LINK_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR}/../${ORDERLY_DIST_NAME}/lib)
 
 ADD_EXECUTABLE(parse_test ${SRCS})
 
-TARGET_LINK_LIBRARIES(parse_test orderly_s yajl)
+TARGET_LINK_LIBRARIES(parse_test orderly_s yajl pcre)

@@ -187,16 +187,14 @@ orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
         assert(outLen >= 2);
         BUF_STRDUP(n->regex, alloc, outBuf + 1, outLen - 2);        
         regex = pcre_compile2(n->regex,
-                              PCRE_JAVASCRIPT_COMPAT,
+                              PCRE_JAVASCRIPT_COMPAT|PCRE_UTF8,
                               &error_code,
                               &errmsg,
                               &erroffset,
                               NULL);
-        if (regex) {
-          pcre_free(regex);
-        }
-        if (error_code != 0) {
-          
+        if (regex == NULL) {
+          orderly_lex_increment_offset(lxr, erroffset); 
+          *error_message = errmsg;
           return orderly_parse_s_regex_error + error_code;
         }
 

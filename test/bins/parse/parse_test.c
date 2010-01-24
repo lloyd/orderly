@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -108,7 +108,7 @@ static void dumpNode(orderly_alloc_funcs * oaf, orderly_node * n, unsigned int i
     orderly_buf_free(b);
 }
 
-static const char * statusToStr(orderly_parse_status s)
+static const char * statusToStr(orderly_parse_status s, const char *error)
 {
     switch (s) {
         case orderly_parse_s_ok: return "ok";
@@ -128,6 +128,7 @@ static const char * statusToStr(orderly_parse_status s)
         case orderly_parse_s_right_bracket_expected: return "right_bracket_expected";
         case orderly_parse_s_invalid_json: return "invalid_json";
         case orderly_parse_s_backtick_expected: return "backtick_expected";
+        case orderly_parse_s_regex_error: return error;
     }
     return "unknown";
 }
@@ -148,6 +149,7 @@ main(int argc, char ** argv)
         orderly_node * n;
         orderlyTestMemoryContext memStats;
         orderly_parse_status s;
+        const char *error;
         orderly_alloc_funcs oaf = {
             orderlyTestMalloc,
             orderlyTestRealloc,
@@ -156,8 +158,8 @@ main(int argc, char ** argv)
         };
         memset((void *) &memStats, 0, sizeof(memStats));
         
-        s = orderly_parse(&oaf, inbuf, tot, &n, NULL);
-        printf("parse complete (%s):\n", statusToStr(s));
+        s = orderly_parse(&oaf, inbuf, tot, &error, &n, NULL);
+        printf("parse complete (%s):\n", statusToStr(s, error));
         dumpNode(&oaf, n, 0); /* here's where we'll map over and output the returned tree */ 
         /* TODO: ugly alloc routine crap here, perhaps we should give the
          *       ultimate client a parse handle and make the ownership of
