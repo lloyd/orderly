@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -66,14 +66,19 @@ typedef enum {
     /** error codes of 1000 or greater represent lexographic errors */
     orderly_parse_s_lex_error = 1000,
     /** error codes of 10000 or greater represent jsonschema parsing errors */
-    orderly_parse_s_jsonschema_error = 10000
+    orderly_parse_s_jsonschema_error = 10000,
+    /** error codes of 20000 or greater represent regex parsing errors */
+    orderly_parse_s_regex_error = 20000
+
 } orderly_parse_status;
 
 orderly_parse_status
 orderly_parse(orderly_alloc_funcs * alloc,
               const unsigned char * schemaText,
               const unsigned int schemaTextLen,
+              const char **error_message,
               orderly_node ** n,
               unsigned int * final_offset);
+
 
 #endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -52,6 +52,8 @@ struct orderly_reader_t
     /* when the client wants a nice error string, we'll stuff it in the
      * buf */
     orderly_buf errBuf;
+  /* used to store error messages from orderly_parse */
+    const char *error_message;
 };
 
 orderly_reader
@@ -108,18 +110,26 @@ orderly_read(orderly_reader r, orderly_format fmt,
     if (fmt == ORDERLY_JSONSCHEMA) {
         r->finalOffset = 0;
         r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
-                                       len, &(r->node), &(r->finalOffset));
+                                       len, 
+                                       &(r->error_message),
+                                       &(r->node), &(r->finalOffset));
         if (r->status) r->status += orderly_parse_s_jsonschema_error;
     } else if (fmt == ORDERLY_TEXTUAL) {
         r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
-                                  len, &(r->node), &(r->finalOffset));
+                                  len, 
+                                  &(r->error_message),
+                                  &(r->node), &(r->finalOffset));
     } else {
         /** XXX: we'll try orderly first, then jsonschema */ 
         r->status = orderly_parse(&(r->alloc), (const unsigned char *) schema,
-                                  len, &(r->node), &(r->finalOffset));
+                                  len,
+                                  &(r->error_message),
+                                  &(r->node), &(r->finalOffset));
         if (r->status != orderly_parse_s_ok) {
             r->status = orderly_json_parse(&(r->alloc), (const unsigned char *) schema,
-                                           len, &(r->node), &(r->finalOffset));
+                                           len, 
+                                           &(r->error_message),
+                                           &(r->node), &(r->finalOffset));
             if (r->status) r->status += orderly_parse_s_jsonschema_error;
         }
     }
@@ -174,6 +184,7 @@ orderly_get_error(orderly_reader r)
                     break;
                 case orderly_parse_s_lex_error:
                 case orderly_parse_s_jsonschema_error:
+                case orderly_parse_s_regex_error:
                     /* outer if should keep this code from ever executing */
                     err = "internal error";
                     break;
@@ -211,7 +222,7 @@ orderly_get_error(orderly_reader r)
                     err = "missing integer after exponent marker ('e' or 'E')";
                     break;
             }
-        } else {
+        } else if ( (r->status < orderly_parse_s_regex_error) ) {
             switch ((orderly_json_parse_status) r->status - orderly_parse_s_jsonschema_error) {
                 case orderly_json_parse_s_ok:
                     err = "no error, it's all good.";
@@ -264,7 +275,11 @@ orderly_get_error(orderly_reader r)
                 case orderly_json_parse_s_pattern_requires_string:
                     err = "'pattern' property requires a string value";
                     break;
+                case orderly_json_parse_s_regex_error:
+                    err = "'pattern' property requires a string value";
+                    break;
             }
+        } else {
         }
     }
     

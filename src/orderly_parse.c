@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,10 +42,7 @@
 #include <errno.h>
 #include <math.h>
 
-#define BUF_STRDUP(dst, a, ob, ol)               \
-    (dst) = OR_MALLOC((a), (ol) + 1);            \
-    memcpy((void *)(dst), (void *) (ob), (ol));  \
-    ((char *) (dst))[(ol)] = 0;
+#include <pcre.h>
 
 #define CHECK_LEX_ERROR(tok, lxr)                \
     if ((tok) == orderly_tok_error) {            \
@@ -58,6 +55,7 @@ static orderly_parse_status
 orderly_parse_definition_suffix(orderly_alloc_funcs * alloc,
                                 const unsigned char * schemaText,
                                 const unsigned int schemaTextLen,
+                                const char **error_message,
                                 orderly_lexer lxr,
                                 unsigned int * offset,
                                 orderly_node * n)
@@ -169,23 +167,42 @@ static orderly_parse_status
 orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
                             const unsigned char * schemaText,
                             const unsigned int schemaTextLen,
+                            const char **error_message,
                             orderly_lexer lxr,
                             unsigned int * offset,
                             orderly_node * n)
 {
-    if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset) == orderly_tok_regex) 
+  if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset) == orderly_tok_regex) 
     {
         const unsigned char * outBuf = NULL;
         unsigned int outLen = 0;
+        pcre *regex;
+        const char *errmsg;
+        int erroffset;
+        int error_code;
         (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
                                &outBuf, &outLen);
         /* chomp off leading and trailing slashes. the lexer MUST return
          * a string of at least length two */
         assert(outLen >= 2);
         BUF_STRDUP(n->regex, alloc, outBuf + 1, outLen - 2);        
+        regex = pcre_compile2(n->regex,
+                              PCRE_JAVASCRIPT_COMPAT,
+                              &error_code,
+                              &errmsg,
+                              &erroffset,
+                              NULL);
+        if (regex) {
+          pcre_free(regex);
+        }
+        if (error_code != 0) {
+          
+          return orderly_parse_s_regex_error + error_code;
+        }
+
     }
 
-    return orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, lxr, offset, n);
+  return orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, error_message, lxr, offset, n);
 }
 
 
@@ -271,6 +288,7 @@ static orderly_parse_status
 orderly_parse_range(orderly_alloc_funcs * alloc,
                     const unsigned char * schemaText,
                     const unsigned int schemaTextLen,
+                    const char **error_message,
                     orderly_lexer lxr,
                     unsigned int * offset,
                     orderly_node * n)
@@ -342,6 +360,7 @@ static orderly_parse_status
 orderly_parse_property_name(orderly_alloc_funcs * alloc,
                             const unsigned char * schemaText,
                             const unsigned int schemaTextLen,
+                            const char **error_message,
                             orderly_lexer lxr,
                             unsigned int * offset,
                             orderly_node * n)
@@ -374,6 +393,7 @@ static orderly_parse_status
 orderly_parse_optional_range(orderly_alloc_funcs * alloc,
                             const unsigned char * schemaText,
                             const unsigned int schemaTextLen,
+                            const char **error_message,
                             orderly_lexer lxr,
                             unsigned int * offset,
                             orderly_node * n)
@@ -381,7 +401,7 @@ orderly_parse_optional_range(orderly_alloc_funcs * alloc,
     orderly_parse_status s = orderly_parse_s_ok;
     if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset) == orderly_tok_left_curly)
     {
-        s = orderly_parse_range(alloc, schemaText, schemaTextLen, lxr, offset, n);
+      s = orderly_parse_range(alloc, schemaText, schemaTextLen, error_message, lxr, offset, n);
     }
     return s;
 }
@@ -390,11 +410,12 @@ static orderly_parse_status
 orderly_parse_optional_additional(orderly_alloc_funcs * alloc,
                                   const unsigned char * schemaText,
                                   const unsigned int schemaTextLen,
+                                  const char **error_message,
                                   orderly_lexer lxr,
                                   unsigned int * offset,
                                   orderly_node * n)
 {
-    if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset)
+  if (orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset)
         == orderly_tok_additional_marker)
     {
         (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
@@ -409,6 +430,7 @@ static orderly_parse_status
 orderly_parse_entry(orderly_alloc_funcs * alloc,
                     const unsigned char * schemaText,
                     const unsigned int schemaTextLen,
+                    const char **error_message,
                     orderly_lexer lxr,
                     unsigned int * offset,
                     orderly_node ** n,
@@ -419,6 +441,7 @@ static orderly_parse_status
 orderly_parse_entries(orderly_alloc_funcs * alloc,
                             const unsigned char * schemaText,
                             const unsigned int schemaTextLen,
+                            const char **error_message,
                             orderly_lexer lxr,
                             unsigned int * offset,
                             orderly_node ** n,
@@ -445,15 +468,16 @@ orderly_parse_entries(orderly_alloc_funcs * alloc,
         t == orderly_tok_kw_union)
     {
         /* looks like we got a named entry! */
-        s = orderly_parse_entry(alloc, schemaText, schemaTextLen, lxr, offset, n, named);
+      s = orderly_parse_entry(alloc, schemaText, schemaTextLen, error_message, lxr, offset, n, named);
         if (s == orderly_parse_s_ok) {
             /* optionally consume a semicolon */
-            if (orderly_tok_semicolon == orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset))
+          if (orderly_tok_semicolon == orderly_lex_peek(lxr, schemaText, schemaTextLen, *offset))
             {
                 (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset, NULL, NULL);
                 /* if a semicolon is present, we'll try to lex another named entry, recursively */ 
                 s = orderly_parse_entries(alloc, schemaText, schemaTextLen,
-                                          lxr, offset, &((*n)->sibling), named);
+                                          error_message, lxr, offset, 
+                                          &((*n)->sibling), named);
                 if (orderly_parse_s_ok != s)
                 {
                     orderly_free_node(alloc, n);            
@@ -470,11 +494,12 @@ static orderly_parse_status
 orderly_parse_unnamed_entry(orderly_alloc_funcs * alloc,
                           const unsigned char * schemaText,
                           const unsigned int schemaTextLen,
+                          const char **error_message,
                           orderly_lexer lxr,
                           unsigned int * offset,
                           orderly_node ** n)
 {
-    return orderly_parse_entry(alloc, schemaText, schemaTextLen, lxr,
+  return orderly_parse_entry(alloc, schemaText, schemaTextLen, error_message, lxr,
                                offset, n, 0);
 }
 
@@ -483,6 +508,7 @@ static orderly_parse_status
 orderly_parse_entry(orderly_alloc_funcs * alloc,
                     const unsigned char * schemaText,
                     const unsigned int schemaTextLen,
+                    const char **error_message,
                     orderly_lexer lxr,
                     unsigned int * offset,
                     orderly_node ** n,
@@ -503,12 +529,12 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
     if (t == orderly_tok_kw_string)
     {
         *n = orderly_alloc_node(alloc, orderly_node_string);
-        if ((s = orderly_parse_optional_range(alloc, schemaText, schemaTextLen,
+        if ((s = orderly_parse_optional_range(alloc, schemaText, schemaTextLen, error_message,
                                              lxr, offset, *n)) || 
-            (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+            (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen, error_message,
                                                        lxr, offset, *n))) || 
             (s = orderly_parse_string_suffix(alloc, schemaText, schemaTextLen,
-                                             lxr, offset, *n)))
+                                             error_message, lxr, offset, *n)))
         {
             orderly_free_node(alloc, n);
         }
@@ -520,10 +546,10 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         else if (t == orderly_tok_kw_boolean) *n = orderly_alloc_node(alloc, orderly_node_boolean);
         else if (t == orderly_tok_kw_any) *n = orderly_alloc_node(alloc, orderly_node_any);
 
-        if ((named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+        if ((named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen, error_message,
                                                        lxr, offset, *n))) || 
             (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
-                                                 lxr, offset, *n)))
+                                                 error_message, lxr, offset, *n)))
         {
             orderly_free_node(alloc, n);
         }
@@ -534,11 +560,11 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         else if (t == orderly_tok_kw_number) *n = orderly_alloc_node(alloc, orderly_node_number);
 
         if ((s = orderly_parse_optional_range(alloc, schemaText, schemaTextLen,
-                                             lxr, offset, *n)) ||
+                                              error_message,lxr, offset, *n)) ||
             (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
-                                                       lxr, offset, *n))) || 
+                                                       error_message, lxr, offset, *n))) || 
             (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
-                                                 lxr, offset, *n)))
+                                                 error_message, lxr, offset, *n)))
         {
             orderly_free_node(alloc, n);
         }
@@ -556,7 +582,8 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
 
         /* now parse named entries (a.k.a. kiddies) */
         s = orderly_parse_entries(alloc, schemaText, schemaTextLen,
-                                  lxr, offset, &((*n)->child), 1);
+                                  error_message, lxr, offset,
+                                  &((*n)->child), 1);
         if (orderly_parse_s_ok != s)
         {
             orderly_free_node(alloc, n);            
@@ -571,13 +598,13 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
                 s = orderly_parse_s_right_curly_expected;
             } else if ((s = orderly_parse_optional_additional(
                             alloc, schemaText, schemaTextLen,
-                            lxr, offset, *n)) || 
+                            error_message, lxr, offset, *n)) || 
                        (named && (s = orderly_parse_property_name(
                                       alloc, schemaText, schemaTextLen,
-                                      lxr, offset, *n))) || 
+                                      error_message, lxr, offset, *n))) || 
                        (s = orderly_parse_definition_suffix(
                            alloc, schemaText, schemaTextLen,
-                           lxr, offset, *n)))
+                           error_message, lxr, offset, *n)))
             {
                 orderly_free_node(alloc, n);                            
             }
@@ -594,7 +621,7 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
             (*n)->tuple_typed = 1;
 
             /* now parse unnamed entries (a.k.a. kiddies) */
-            s = orderly_parse_entries(alloc, schemaText, schemaTextLen,
+            s = orderly_parse_entries(alloc, schemaText, schemaTextLen,error_message,
                                       lxr, offset, &((*n)->child), 0);
             if (orderly_parse_s_ok != s)
             {
@@ -610,13 +637,13 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
                     s = orderly_parse_s_right_curly_expected;
                 } else if ((s = orderly_parse_optional_additional(
                                 alloc, schemaText, schemaTextLen,
-                                lxr, offset, *n)) || 
+                                error_message, lxr, offset, *n)) || 
                            (s = orderly_parse_optional_range(
                                alloc, schemaText, schemaTextLen,
-                               lxr, offset, *n)) ||
-                           (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+                               error_message, lxr, offset, *n)) ||
+                           (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen, error_message,
                                                                       lxr, offset, *n))) || 
-                           (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
+                           (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, error_message,
                                                                 lxr, offset, *n)))
                 {
                     orderly_free_node(alloc, n);                            
@@ -625,7 +652,7 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         } else if (t == orderly_tok_left_bracket) {
             /* now parse a single unnamed entry */
             s = orderly_parse_unnamed_entry(alloc, schemaText, schemaTextLen,
-                                            lxr, offset, &((*n)->child));
+                                            error_message, lxr, offset, &((*n)->child));
             if (orderly_parse_s_ok != s)
             {
                 orderly_free_node(alloc, n);            
@@ -646,10 +673,10 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
                     s = orderly_parse_s_right_bracket_expected;
                 } else if ((s = orderly_parse_optional_range(
                                alloc, schemaText, schemaTextLen,
-                               lxr, offset, *n)) ||
-                           (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+                               error_message, lxr, offset, *n)) ||
+                           (named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen, error_message,
                                                                       lxr, offset, *n))) || 
-                           (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
+                           (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, error_message,
                                                                 lxr, offset, *n)))
                 {
                     orderly_free_node(alloc, n);                            
@@ -673,7 +700,7 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
         }
 
         /* now parse unnamed entries (a.k.a. kiddies) */
-        s = orderly_parse_entries(alloc, schemaText, schemaTextLen,
+        s = orderly_parse_entries(alloc, schemaText, schemaTextLen, error_message,
                                   lxr, offset, &((*n)->child), 0);
         if (orderly_parse_s_ok != s)
         {
@@ -687,9 +714,9 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
             if (t != orderly_tok_right_curly) {
                 orderly_free_node(alloc, n);            
                 s = orderly_parse_s_right_curly_expected;
-            } else if ((named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen,
+            } else if ((named && (s = orderly_parse_property_name(alloc, schemaText, schemaTextLen, error_message,
                                                                   lxr, offset, *n))) || 
-                       (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen,
+                       (s = orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, error_message,
                                                             lxr, offset, *n)))
             {
                 orderly_free_node(alloc, n);                            
@@ -709,6 +736,7 @@ orderly_parse_status
 orderly_parse(orderly_alloc_funcs * alloc,
               const unsigned char * schemaText,
               const unsigned int schemaTextLen,
+              const char **error_message,
               orderly_node ** n,
               unsigned int * final_offset)
 {
@@ -734,7 +762,7 @@ orderly_parse(orderly_alloc_funcs * alloc,
     *n = NULL;
     
     lxr = orderly_lex_alloc(alloc);
-    s = orderly_parse_unnamed_entry(alloc, schemaText, schemaTextLen, lxr,
+    s = orderly_parse_unnamed_entry(alloc, schemaText, schemaTextLen, error_message, lxr,
                                     &offset, n);
 
     /* if we've parsed ok so far, let's ensure we consumed the entire schema. */

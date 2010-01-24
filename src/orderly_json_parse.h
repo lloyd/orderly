@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -55,13 +55,16 @@ typedef enum {
     orderly_json_parse_s_addprop_requires_boolean,
     orderly_json_parse_s_pattern_requires_string,
     orderly_json_parse_s_duplicate_requires,
-    orderly_json_parse_s_requires_value_error
+    orderly_json_parse_s_requires_value_error,
+    /** error codes > 10000 represent regex errors */
+    orderly_json_parse_s_regex_error = 10000,
 } orderly_json_parse_status;
 
 orderly_json_parse_status
 orderly_json_parse(orderly_alloc_funcs * alloc,
                    const unsigned char * schemaText,
                    const unsigned int schemaTextLen,
+                   const char **error_message,
                    orderly_node ** n,
                    unsigned int * final_offset);
 

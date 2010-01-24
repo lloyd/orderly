@@ -9,10 +9,18 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc,
 {
   ajv_node *n = (ajv_node *)OR_MALLOC(alloc, sizeof(ajv_node));
   memset((void *) n, 0, sizeof(ajv_node));
-
+  const char *regerror = NULL;
+  int erroffset;
   n->parent = parent;
   n->node   = on;
-
+  if (on->regex) {
+    n->regcomp = pcre_compile(on->regex,
+                              0,
+                              &regerror,
+                              &erroffset,
+                              NULL);
+  }
+    
   return n;
 }
   

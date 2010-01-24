@@ -34,6 +34,8 @@
 #include <yajl/yajl_parse.h>
 #include "orderly_alloc.h"
 #include "api/node.h"
+#include <pcre.h>
+
 
 typedef struct ajv_node_t {
   /* these pointers mirror the structure of the nodes they contain */
@@ -43,6 +45,8 @@ typedef struct ajv_node_t {
   struct ajv_node_t * parent;
   /* the orderly node we wrap */
   const orderly_node *node;
+  /* a compiled regex */
+  pcre *regcomp;
   /* have we seen data matching this node during this parse?
    * (only valid on nodes whose parent is a map/object, or tuple array)
    */

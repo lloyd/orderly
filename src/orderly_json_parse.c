@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,19 +31,14 @@
  */
 
 #include "orderly_json_parse.h"
+#include "orderly_parse.h"
 #include "orderly_ptrstack.h"
 #include "orderly_alloc.h"
 #include "orderly_json.h"
 
 #include <yajl/yajl_parse.h>
 #include <string.h>
-
-
-#define BUF_STRDUP(dst, a, ob, ol)               \
-    (dst) = OR_MALLOC((a), (ol) + 1);            \
-    memcpy((void *)(dst), (void *) (ob), (ol));  \
-    ((char *) (dst))[(ol)] = 0;
-
+#include <pcre.h>
 
 static orderly_json_parse_status
 parse_json_schema(orderly_alloc_funcs * alloc,
@@ -233,7 +228,24 @@ parse_json_schema(orderly_alloc_funcs * alloc,
             }
             else if (!strcmp(k->k, "pattern")) {
                 if (k->t == orderly_json_string) {
+                    pcre *regex;
+                    const char *regerror;
+                    int erroffset;
+                    int error_code = 0;
                     BUF_STRDUP((*n)->regex, alloc, k->v.s, strlen(k->v.s));
+                    regex = pcre_compile2((*n)->regex,
+                                         PCRE_JAVASCRIPT_COMPAT,
+                                          &error_code,
+                                          &regerror,
+                                          &erroffset,
+                                          NULL);
+                    if (regex) {
+                      pcre_free(regex);
+                    }
+                    if (error_code != 0) {
+                      s = orderly_parse_s_regex_error + error_code;
+                      goto toErrIsHuman;
+                    }
                 } else {
                     s = orderly_json_parse_s_pattern_requires_string;
                     goto toErrIsHuman;
@@ -301,6 +313,7 @@ orderly_json_parse_status
 orderly_json_parse(orderly_alloc_funcs * alloc,
                    const unsigned char * schemaText,
                    const unsigned int schemaTextLen,
+                   const char **error_message,
                    orderly_node ** n,
                    unsigned int * final_offset)
 {
