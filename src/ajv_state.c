@@ -90,6 +90,8 @@ const char * ajv_error_to_string (ajv_error e) {
     outbuf = "incomplete structure"; break;
   case ajv_e_illegal_value:  
     outbuf = "value not permitted"; break;
+  case ajv_e_regex_failed:  
+    outbuf = "string did not match regular expression"; break;
   case ajv_e_unexpected_key: 
     outbuf = "key not permitted"; break;
   default:                   

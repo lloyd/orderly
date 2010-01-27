@@ -62,7 +62,7 @@ typedef enum {
   ajv_e_type_mismatch,
   ajv_e_trailing_input,
   ajv_e_out_of_range,
-  
+  ajv_e_regex_failed, /* didn't match regex */
   ajv_e_incomplete_container, /* incopmlete tuple-array or missing map key */
   ajv_e_illegal_value, /* value found din't match enumerated list */
   ajv_e_unexpected_key /* only valid if additional_properties == 0 XXX ?*/

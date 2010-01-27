@@ -102,6 +102,11 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
                   node, orderly_node_type_to_string(type));     \
     return 0; } while (0);                                      \
 
+#define FAIL_REGEX_NOMATCH(s, node,regex) do {                   \
+    ajv_set_error(s,ajv_e_regex_failed,                          \
+                  node, regex);                                  \
+    return 0; } while (0);                                       \
+
 
 #define FAIL_TRAILING_INPUT(s) do {                             \
     ajv_set_error(s, ajv_e_trailing_input,                      \
@@ -645,82 +650,88 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
       }
     }
 
-    if (on->regex) {
-      /* TODO: validate regex */
+    if (state->node->regcomp) {
+      int pcrecode;
+      pcrecode = pcre_exec(state->node->regcomp,NULL,
+                           stringVal,stringLen,0,0,NULL,0);
+      if (pcrecode < 0) {
+        if (pcrecode == PCRE_ERROR_NOMATCH) {
+          FAIL_REGEX_NOMATCH(state,state->node,on->regex);
+        }
+      }
     }
-  
-  }
 
+  }
   if (state->cb && state->cb->yajl_string) {
     return state->cb->yajl_string(state->cbctx,stringVal,stringLen);
   } else {
     return 1;
   }
-  
+
 }
 
 
-static int ajv_start_array(void * ctx) {
-  AJV_STATE(ctx);
-  const orderly_node *on = state->node->node;
-  DO_TYPECHECK(state,orderly_node_array, state->node);
+ static int ajv_start_array(void * ctx) {
+   AJV_STATE(ctx);
+   const orderly_node *on = state->node->node;
+   DO_TYPECHECK(state,orderly_node_array, state->node);
 
-  state->node->seen = 1;
+   state->node->seen = 1;
 
-  if (on->t == orderly_node_any) {
-    state->depth++;
-  } else {
-    push_state(state);
-  }
+   if (on->t == orderly_node_any) {
+     state->depth++;
+   } else {
+     push_state(state);
+   }
 
-  if (state->cb && state->cb->yajl_start_array) {
-    return state->cb->yajl_start_array(state->cbctx);
-  } else {
-    return 1;
-  }
-}
+   if (state->cb && state->cb->yajl_start_array) {
+     return state->cb->yajl_start_array(state->cbctx);
+   } else {
+     return 1;
+   }
+ }
 
 
-static int ajv_end_array(void * ctx) {
-  AJV_STATE(ctx);
-  const orderly_node *on = state->node->node;
+ static int ajv_end_array(void * ctx) {
+   AJV_STATE(ctx);
+   const orderly_node *on = state->node->node;
 
-  state->node->seen = 1;
+   state->node->seen = 1;
 
-  if (on->t == orderly_node_any) {
-    state->depth--;
-    if (state->depth == 0) pop_state(ctx);
-  /* with tuple typed nodes, we need to check that we've seen things */
-  } else {
+   if (on->t == orderly_node_any) {
+     state->depth--;
+     if (state->depth == 0) pop_state(ctx);
+   /* with tuple typed nodes, we need to check that we've seen things */
+   } else {
 
-    if (state->node->parent->node->tuple_typed) {
-      ajv_node *cur;
-      for (cur = state->node->parent->child; cur; cur = cur->sibling) {
-        if (!cur->seen) {
-          if (cur->node->default_value) {
-            int ret;
-            ret = synthesize_callbacks(state, cur->node->default_value);
-            if (ret == 0) { /*parse was cancelled */
-              return 0;
-            }
-          } else { 
-            FAIL_MISSING_ELEMENT(state,cur,NULL);
-          }
-        }
-      }
-    }
+     if (state->node->parent->node->tuple_typed) {
+       ajv_node *cur;
+       for (cur = state->node->parent->child; cur; cur = cur->sibling) {
+         if (!cur->seen) {
+           if (cur->node->default_value) {
+             int ret;
+             ret = synthesize_callbacks(state, cur->node->default_value);
+             if (ret == 0) { /*parse was cancelled */
+               return 0;
+             }
+           } else { 
+             FAIL_MISSING_ELEMENT(state,cur,NULL);
+           }
+         }
+       }
+     }
 
-    pop_state(state);
-  
-  }
+     pop_state(state);
 
-  
-  if (state->cb && state->cb->yajl_end_array) {
-    return state->cb->yajl_end_array(state->cbctx);
-  } else {
-    return 1;
-  }
-}
+   }
+
+
+   if (state->cb && state->cb->yajl_end_array) {
+     return state->cb->yajl_end_array(state->cbctx);
+   } else {
+     return 1;
+   }
+ }
 
 
 
