@@ -196,8 +196,9 @@ orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
           orderly_lex_increment_offset(lxr, erroffset); 
           *error_message = errmsg;
           return orderly_parse_s_regex_error + error_code;
+        } else {
+          pcre_free(regex);
         }
-
     }
 
   return orderly_parse_definition_suffix(alloc, schemaText, schemaTextLen, error_message, lxr, offset, n);

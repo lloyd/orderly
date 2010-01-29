@@ -27,6 +27,7 @@ ajv_alloc_schema(orderly_alloc_funcs *alloc, orderly_node *parsed) {
     memset((void *) ret, 0, sizeof(struct ajv_schema_t));
     ret->root = 
       ajv_alloc_tree((const orderly_alloc_funcs *)AF, parsed, NULL);
+    ret->oroot = parsed;
     ret->af = AF;
   }
 

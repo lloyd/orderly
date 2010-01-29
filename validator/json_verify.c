@@ -107,9 +107,11 @@ main(int argc, char ** argv)
       if (!n) {
         fprintf(stderr, "Schema is invalid: %s\n%s\n", orderly_get_error(r),
                 orderly_get_error_context(r, schema, strlen(schema)));
+        ajv_free(hand);
         return 2;
       }
       ajv_schema = ajv_alloc_schema(NULL, n);
+      orderly_reader_free(&r);
     }
     
         
@@ -151,7 +153,7 @@ main(int argc, char ** argv)
     }
     
     ajv_free(hand);
-
+    ajv_free_schema(ajv_schema);
     if (!quiet) {
         printf("JSON is %s\n", retval ? "invalid" : "valid");
     }
