@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -48,6 +48,11 @@ void orderly_reader_free(orderly_reader *w);
 const orderly_node * 
 orderly_read(orderly_reader r, orderly_format fmt,
              const char * schema, unsigned int len);
+
+/** claim responsibility for freeing an orderly_node * returned by orderly_read */
+orderly_node * 
+orderly_reader_claim(orderly_reader r, const orderly_node *);
+
 
 /** when NULL is returned from orderly_read, this function can return
  *  an english, developer readable error code.  */

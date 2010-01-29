@@ -96,6 +96,16 @@ orderly_reader_free(orderly_reader *r)
     }
 }
 
+orderly_node * 
+orderly_reader_claim(orderly_reader r, const orderly_node *claim) {
+  if (r == NULL) return NULL;
+
+  if (r->node != claim ) return NULL;
+
+  r->node = NULL;
+  return (orderly_node*)claim;
+}
+
 const orderly_node * 
 orderly_read(orderly_reader r, orderly_format fmt,
              const char * schema, unsigned int len)
