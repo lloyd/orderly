@@ -24,9 +24,10 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     [ "Valid case", f.sub(/orderly$/, "pass"),   verifyBin, 0 ]
   ].each { |testType|
     what, textfile, program, exitCode = *testType
+    wantFile = textfile + ".want"
     gotFile = textfile + ".got"
     got = ""
-    puts "#{what} for #{textfile}" ;
+    print "#{what} for #{textfile}:\t" ;
     ENV['ORDERLY_SCHEMA'] = IO.readlines(f,'').to_s
     IO.popen(program, "w+") { |lb|
       File.open(textfile, "r").each {|l| lb.write(l)}
@@ -35,10 +36,25 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     }
     if ($?.exitstatus != exitCode) 
       puts "FAIL";
-      puts "got wrong exit code #{$?.exitstatus}, expected #{exitCode}"
+      puts "got bad exit code '#{$?.exitstatus}', expected '#{exitCode}'"
     else
-      puts "ok"
-      passed += 1
+      if File.exist? wantFile
+        want = IO.read(wantFile)
+        if (got == want)
+          puts "ok"
+          passed += 1
+        else
+          puts "FAIL"
+          puts "<<<want<<<"
+          puts want
+          puts "========"
+          puts got
+          puts ">>got>>"
+        end
+      else
+        puts "ok"
+        passed += 1
+      end
     end
     total += 1
   }
