@@ -32,6 +32,7 @@
 
 #include <yajl/yajl_parse.h>
 #include <orderly/ajv_parse.h>
+#include <orderly/reader.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,7 +55,8 @@ main(int argc, char ** argv)
 {
     yajl_status stat;
     size_t rd;
-    yajl_handle hand;
+    ajv_handle hand;
+    ajv_schema ajv_schema; 
     static unsigned char fileData[65536];
     int quiet = 0;
 	int retval = 0, done = 0;
@@ -92,7 +94,24 @@ main(int argc, char ** argv)
       return 1;
     }
     /* allocate a parser */
-    hand = ajv_alloc(NULL, &cfg, NULL, NULL,getenv("ORDERLY_SCHEMA"));
+    hand = ajv_alloc(NULL, &cfg, NULL, NULL);
+
+    {
+      const char *schema = getenv("ORDERLY_SCHEMA");
+      orderly_reader r = orderly_reader_new(NULL);
+      orderly_node *n;
+      
+      n = orderly_reader_claim(r,
+                               orderly_read(r, ORDERLY_UNKNOWN, schema, strlen(schema)));
+      
+      if (!n) {
+        fprintf(stderr, "Schema is invalid: %s\n%s\n", orderly_get_error(r),
+                orderly_get_error_context(r, schema, strlen(schema)));
+        return 2;
+      }
+      ajv_schema = ajv_alloc_schema(NULL, n);
+    }
+    
         
     while (!done) {
         rd = fread((void *) fileData, 1, sizeof(fileData) - 1, stdin);
@@ -113,25 +132,25 @@ main(int argc, char ** argv)
         
         if (done)
             /* parse any remaining buffered data */
-            stat = yajl_parse_complete(hand);
+            stat = ajv_parse_complete(hand);
         else
             /* read file data, pass to parser */
-            stat = yajl_parse(hand, fileData, rd);
+          stat = ajv_parse_and_validate(hand, ajv_schema, fileData, rd);
 
         if (stat != yajl_status_ok &&
             stat != yajl_status_insufficient_data)
         {
             if (!quiet) {
                 unsigned char * str = ajv_get_error(hand, 1, fileData, rd);
-                fprintf(stderr, "%s", (const char *) str);
-                yajl_free_error(hand, str);
+                printf("%s", (const char *) str);
+                ajv_free_error(hand, str);
             }
             retval = 1;
             break;
         }
     }
     
-    yajl_free(hand);
+    ajv_free(hand);
 
     if (!quiet) {
         printf("JSON is %s\n", retval ? "invalid" : "valid");

@@ -30,6 +30,7 @@
 
 SET (SRCS
   ajv_state.c
+  ajv_schema.c
   ajv_util.c
   orderly_alloc.c 
   orderly_buf.c

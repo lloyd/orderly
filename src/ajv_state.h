@@ -31,7 +31,7 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
-#include <yajl/yajl_parse.h>
+#include "api/ajv_parse.h"
 #include "orderly_alloc.h"
 #include "api/node.h"
 #include <pcre.h>
@@ -54,24 +54,31 @@ typedef struct ajv_node_t {
   /* overrides the optional flag in the orderly node (for requires support)
    */
   int    required;
+  /*
+   * How deep into the parse of an 'any' node are we?
+   * array and object start increment, on end decrement
+   */
+  unsigned int            depth;
+
 } ajv_node;
 
 
-typedef enum {
-  ajv_e_no_error,  /* no error */
-  ajv_e_type_mismatch,
-  ajv_e_trailing_input,
-  ajv_e_out_of_range,
-  ajv_e_regex_failed, /* didn't match regex */
-  ajv_e_incomplete_container, /* incopmlete tuple-array or missing map key */
-  ajv_e_illegal_value, /* value found din't match enumerated list */
-  ajv_e_unexpected_key /* only valid if additional_properties == 0 XXX ?*/
-} ajv_error;
 
 
 /*
  * Enough information to describe an error
  */
+
+typedef enum {
+  ajv_e_no_error,
+  ajv_e_type_mismatch,
+  ajv_e_trailing_input,
+  ajv_e_out_of_range,
+  ajv_e_regex_failed, /* didn't match regex */
+  ajv_e_incomplete_container, /* incopmlete tuple-array, map, or document */
+  ajv_e_illegal_value, /* value found din't match enumerated list */
+  ajv_e_unexpected_key, /* only valid if additional_properties == 0 XXX ?*/
+} ajv_error;
 
 struct ajv_error_t  {
   ajv_error code;
@@ -80,32 +87,30 @@ struct ajv_error_t  {
 };
 
 typedef struct ajv_state_t {
+  yajl_handle             yajl;
+  ajv_schema              s;
   /* pointer into the node tree. if it is of type any, consult depth
-   **/
+  **/
   ajv_node                *node;
   /* populated with a orderly_node of type any, used for representing 
    * unknown map keys
    */
   ajv_node                any;
-  /*
-   * How deep into the schemaless parse are we?
-   * array and object start increment, on end decrement
-   */
-  unsigned int            depth;
 
-  /* 
-   * Have we matched the entire schema ? 
-   */
-
-  unsigned int            finished;
-
-  const orderly_alloc_funcs     *AF;
-  struct ajv_error_t       error;
-  const yajl_callbacks    *cb;
-  void                    *cbctx;
+  const orderly_alloc_funcs *AF;
+  struct ajv_error_t        error;
+  const yajl_callbacks      *cb;
+  void                      *cbctx;
 
 } * ajv_state;
 
+
+
+struct ajv_schema_t {
+  ajv_node *root;
+  orderly_node  *oroot;
+  const orderly_alloc_funcs *af;
+};
 
 ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
                           const orderly_node *n, ajv_node *parent);
@@ -113,7 +118,7 @@ ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
 ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc, 
                            const orderly_node *on,    ajv_node *parent ) ;
 
-void ajv_free_node (orderly_alloc_funcs * alloc, ajv_node ** n);
+void ajv_free_node (const orderly_alloc_funcs * alloc, ajv_node ** n);
 
 void ajv_reset_node( ajv_node * n);
 
