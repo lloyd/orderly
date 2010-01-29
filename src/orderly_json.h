@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -57,14 +57,14 @@ void orderly_write_json(const orderly_alloc_funcs * alloc,
  * generator */
 int orderly_write_json2(yajl_gen g, const orderly_json * j);
 
-void orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node);
+void orderly_free_json(const orderly_alloc_funcs * alloc, orderly_json ** node);
 
-orderly_json * orderly_alloc_json(orderly_alloc_funcs * alloc,
+orderly_json * orderly_alloc_json(const orderly_alloc_funcs * alloc,
                                   orderly_json_type t);
 
 /* make a deep copy of a json object, copying everything except sibling
  * pointers */
-orderly_json * orderly_clone_json(orderly_alloc_funcs * alloc,
+orderly_json * orderly_clone_json(const orderly_alloc_funcs * alloc,
                                   orderly_json * j);
 
 /* callbacks capable of building up orderly_json objects from yajl parse

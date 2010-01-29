@@ -41,7 +41,7 @@
 #include <string.h>
 
 void
-orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node)
+orderly_free_json(const orderly_alloc_funcs * alloc, orderly_json ** node)
 {
     if (node && *node) {
         if ((*node)->k) OR_FREE(alloc, (void *) (*node)->k);
@@ -59,7 +59,7 @@ orderly_free_json(orderly_alloc_funcs * alloc, orderly_json ** node)
 }
 
 orderly_json *
-orderly_clone_json(orderly_alloc_funcs * alloc, orderly_json * j)
+orderly_clone_json(const orderly_alloc_funcs * alloc, orderly_json * j)
 {
     orderly_json * copy = NULL;
     if (!j) return copy;
@@ -103,7 +103,7 @@ orderly_clone_json(orderly_alloc_funcs * alloc, orderly_json * j)
 }
 
 orderly_json *
-orderly_alloc_json(orderly_alloc_funcs * alloc, orderly_json_type t)
+orderly_alloc_json(const orderly_alloc_funcs * alloc, orderly_json_type t)
 {
     orderly_json * n = (orderly_json *) OR_MALLOC(alloc, sizeof(orderly_json));
     memset((void *) n, 0, sizeof(orderly_json));

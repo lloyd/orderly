@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,7 +37,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void orderly_free_node(orderly_alloc_funcs * alloc,
+void orderly_free_node(const orderly_alloc_funcs * alloc,
                        orderly_node ** node)
 {
     if (node && *node) {
@@ -65,7 +65,7 @@ void orderly_free_node(orderly_alloc_funcs * alloc,
     
 }
 
-orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,
+orderly_node * orderly_alloc_node(const orderly_alloc_funcs * alloc,
                                   orderly_node_type t)
 {
     orderly_node * n = (orderly_node *)

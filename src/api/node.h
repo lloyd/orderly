@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -124,10 +124,10 @@ typedef struct orderly_node_t {
     struct orderly_node_t * sibling;
 } orderly_node;
 
-void orderly_free_node(orderly_alloc_funcs * alloc,
+void orderly_free_node(const orderly_alloc_funcs * alloc,
                        orderly_node ** node);
 
-orderly_node * orderly_alloc_node(orderly_alloc_funcs * alloc,
+orderly_node * orderly_alloc_node(const orderly_alloc_funcs * alloc,
                                   orderly_node_type t);
 
 #endif
