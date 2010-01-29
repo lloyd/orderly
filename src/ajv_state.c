@@ -42,7 +42,10 @@ void ajv_free_node (const orderly_alloc_funcs * alloc, ajv_node ** n) {
   if (n && *n) {
     if ((*n)->sibling) ajv_free_node(alloc,&((*n)->sibling));
     if ((*n)->child) ajv_free_node(alloc,&((*n)->child));
-    /* XXX: We leak the orderly_node tree */
+    /* the orderly_node *  belongs to the schema, don't free it */
+    if ((*n)->regcomp) {
+      pcre_free((*n)->regcomp);
+    }
     OR_FREE(alloc, *n);
     *n = NULL;
   }
@@ -58,11 +61,12 @@ void ajv_reset_node (ajv_node * n) {
   
 void ajv_clear_error (ajv_state s) {
 
+  if (s->error.extra_info) OR_FREE(s->AF,s->error.extra_info);
+
   s->error.code       = ajv_e_no_error;
   s->error.extra_info = NULL;
   s->error.node       = NULL;
 
-  if (s->error.extra_info) OR_FREE(s->AF,s->error.extra_info);
 
 }
 
@@ -108,7 +112,7 @@ const char * ajv_error_to_string (ajv_error e) {
 unsigned char * ajv_get_error(ajv_handle hand, int verbose,
                               const unsigned char * jsonText,
                               unsigned int jsonTextLength) {
-  const char * yajl_err = "";
+  char * yajl_err;
   char * ret;
   ajv_state s = hand;
 
@@ -124,8 +128,8 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   /* include the yajl error message when verbose */
   if (verbose == 1) {
     yajl_err = 
-      (const char *)yajl_get_error(hand->yajl,verbose,
-                                   (unsigned char *)jsonText,jsonTextLength);
+      (char *)yajl_get_error(hand->yajl,verbose,
+                             (unsigned char *)jsonText,jsonTextLength);
 
     yajl_length = strlen(yajl_err);
   }
@@ -133,9 +137,11 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   max_length  = ERROR_BASE_LENGTH;
   max_length += e->extra_info ? strlen(e->extra_info) : 1;
   max_length += yajl_length;
-
+  if (e->node && e->node->node->name) {
+    max_length += strlen(e->node->node->name);
+  }
   ret = OR_MALLOC(s->AF, max_length+1);
-  ret[0] = '\n';
+  ret[0] = '\0';
   strcat(ret, "VALIDATION ERROR:");
   if (e->node && e->node->node->name) {
     strcat(ret," value for map key '");
@@ -145,7 +151,10 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   strcat(ret, (const char *)ajv_error_to_string(e->code));
   /** TODO: produce more details, info is available */
   strcat(ret,"\n");
-  strcat(ret,yajl_err);
+  if (yajl_err) {
+    strcat(ret,yajl_err);
+    yajl_free_error(hand->yajl, (unsigned char *)yajl_err);
+  }
   return (unsigned char *)ret;
 }
 
@@ -238,7 +247,11 @@ ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
 
 void ajv_free(ajv_handle hand) {
   const orderly_alloc_funcs *AF = hand->AF;
+
+  ajv_clear_error(hand);
+
   orderly_free_node(hand->AF,(orderly_node **)&(hand->any.node));
+
   yajl_free(hand->yajl);
   OR_FREE(AF,hand);
 
