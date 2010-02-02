@@ -96,9 +96,11 @@ static void check_tuple_typing(ajv_state state) {
   if (state->node->parent &&
       state->node->parent->node->t == orderly_node_array &&
       state->node->parent->node->tuple_typed) {
+#if 0
     if (state->node->seen) {
       state->node = state->node->sibling;
     }
+#endif
   }
 }
 
@@ -161,14 +163,14 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
 
 static int 
-ajv_do_typecheck(ajv_state state, orderly_node_type t, ajv_node *node) {
+ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
   const ajv_node * typecheck = node;                       
   if (state->error.code != ajv_e_no_error) {
     assert("got a yajl callback while in an error state" == 0);
     /* NORETURN */
   }
   
-  if (state->s->root->seen) { FAIL_TRAILING_INPUT(state) };
+  if (ajv_state_finished(state)) { FAIL_TRAILING_INPUT(state) };
   
   typecheck = orderly_subsumed_by(t, typecheck);
   
@@ -198,9 +200,9 @@ static int ajv_null(void * ctx) {
   DO_TYPECHECK(state,orderly_node_null, state->node);
 
   if (on->t == orderly_node_any) {
-    if (state->depth == 0) { state->node->seen = 1; }
+    if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
   } else {
-    state->node->seen = 1;
+    ajv_state_mark_seen(state, state->node);
   }
 
   AJV_SUFFIX_NOARGS(null);
@@ -213,9 +215,9 @@ static int ajv_boolean(void * ctx, int booleanValue) {
   DO_TYPECHECK(state,orderly_node_boolean, state->node);
 
   if (on->t == orderly_node_any) {
-    if (state->depth == 0) {  state->node->seen = 1; }
+    if (state->depth == 0) {  ajv_state_mark_seen(state, state->node); }
   } else {
-    state->node->seen = 1;
+    ajv_state_mark_seen(state, state->node);
   }
 
   AJV_SUFFIX(boolean,booleanValue);
@@ -227,7 +229,7 @@ static int ajv_double(void * ctx, double doubleval) {
   DO_TYPECHECK(state, orderly_node_number, state->node);
 
   if (on->t == orderly_node_any) {
-    if (state->depth == 0) { state->node->seen = 1; }
+    if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
   } else {
     const orderly_node *on = state->node->node;
   
@@ -248,7 +250,7 @@ static int ajv_double(void * ctx, double doubleval) {
         }
       }
     }
-    state->node->seen = 1;
+    ajv_state_mark_seen(state, state->node);
     
     if (on->values) {
       orderly_json *cur;
@@ -278,9 +280,9 @@ static int ajv_integer(void * ctx, long integerValue) {
   DO_TYPECHECK(state,orderly_node_integer, state->node);
 
   if (on->t == orderly_node_any) {
-    if (state->depth == 0) {  state->node->seen = 1; }
+    if (state->depth == 0) {  ajv_state_mark_seen(state, state->node); }
   } else {
-    state->node->seen = 1;
+    ajv_state_mark_seen(state, state->node);
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
         if (on->range.lhs.i > integerValue) {
@@ -334,9 +336,9 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
 
 
   if (on->t == orderly_node_any) {
-    if (state->depth == 0)  { state->node->seen = 1; }
+    if (state->depth == 0)  { ajv_state_mark_seen(state, state->node); }
   } else {
-    state->node->seen = 1;
+    ajv_state_mark_seen(state, state->node);
     if (on->t != orderly_node_string) {
       FAIL_TYPE_MISMATCH(state,state->node,orderly_node_string);
     }
@@ -393,7 +395,7 @@ static int ajv_start_array(void * ctx) {
    if (on->t == orderly_node_any) {
      state->depth++;
    } else {
-     ajv_state_push(state);
+     ajv_state_push(state,state->node);
    }
 
    AJV_SUFFIX_NOARGS(start_array);
@@ -407,12 +409,12 @@ static int ajv_start_array(void * ctx) {
    
    if (on->t == orderly_node_any) {
      state->depth--;
-     if (state->depth == 0 ) { state->node->seen = 1; }
+     if (state->depth == 0 ) { ajv_state_mark_seen(state, state->node); }
    } else {
      if (!ajv_state_array_complete(state,state->node->parent)) {
        return 0;
      }
-     state->node->seen = 1;
+     ajv_state_mark_seen(state, state->node);
    }   
    AJV_SUFFIX_NOARGS(end_array);
  }
@@ -428,7 +430,7 @@ static int ajv_start_map (void * ctx) {
   if (on->t == orderly_node_any) {
     state->depth++;
   }  else {
-    ajv_state_push(state);
+    ajv_state_push(state,state->node);
   }
 
   AJV_SUFFIX_NOARGS(start_map);
@@ -471,9 +473,9 @@ static int ajv_end_map(void * ctx) {
 
   if (state->node->node->t == orderly_node_any) {
     state->depth--;
-    if (state->depth == 0) { state->node->seen = 1; }
+    if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
   } else {
-    if (!ajv_state_map_complete(state, state->node->parent)) {
+    if (!ajv_state_map_complete(state,state->node->parent)) {
       return 0;
     }
   }

@@ -34,6 +34,7 @@
 #include "api/ajv_parse.h"
 #include "orderly_alloc.h"
 #include "api/node.h"
+#include "orderly_ptrstack.h"
 #include <pcre.h>
 
 
@@ -47,9 +48,8 @@ typedef struct ajv_node_t {
   const orderly_node *node;
   /* a compiled regex for string nodes */
   pcre *regcomp;
-  /* XXX: these need to move to ajv_state for reentrancy */
-  int    seen;
-  int    required;
+  /* a ptrstack of required elements */
+  orderly_ptrstack required;
 } ajv_node;
 
 
@@ -76,12 +76,18 @@ struct ajv_error_t  {
   char *extra_info; /* TODO union */
 };
 
+typedef struct ajv_node_state_t {
+  orderly_ptrstack seen;
+  orderly_ptrstack required;
+  const ajv_node   *node;
+} * ajv_node_state;
+
 typedef struct ajv_state_t {
   yajl_handle             yajl;
   ajv_schema              s;
   /* pointer into the node tree. if it is of type any, consult depth
   **/
-  ajv_node                *node;
+  const ajv_node                *node;
   /* populated with a orderly_node of type any, used for representing 
    * unknown map keys
    */
@@ -91,8 +97,8 @@ typedef struct ajv_state_t {
   struct ajv_error_t        error;
   const yajl_callbacks      *cb;
   void                      *cbctx;
-
   unsigned int            depth;
+  orderly_ptrstack        node_state;
 } * ajv_state;
 
 
@@ -102,7 +108,7 @@ struct ajv_schema_t {
   orderly_node  *oroot;
   const orderly_alloc_funcs *af;
 };
-void ajv_state_push(ajv_state state);
+void ajv_state_push(ajv_state state, ajv_node *n);
 void ajv_state_pop(ajv_state state);
 int ajv_state_map_complete (ajv_state state, ajv_node *map);
 int ajv_state_array_complete (ajv_state state, ajv_node *array);
@@ -124,5 +130,12 @@ void ajv_clear_error (ajv_state  s);
 
 const char * ajv_error_to_string (ajv_error e);
 
+void ajv_free_node_state( const orderly_alloc_funcs * alloc, 
+                          ajv_node_state *node);
 
+ajv_node_state ajv_alloc_node_state( const orderly_alloc_funcs * alloc, 
+                                     const ajv_node *node);
+
+void ajv_state_mark_seen(ajv_state s, const ajv_node *node) ;
+int ajv_state_finished(ajv_state state);
 #endif

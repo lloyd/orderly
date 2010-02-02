@@ -10,6 +10,7 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc,
 {
   ajv_node *n = (ajv_node *)OR_MALLOC(alloc, sizeof(ajv_node));
   memset((void *) n, 0, sizeof(ajv_node));
+  orderly_ps_init(n->required);
   const char *regerror = NULL;
   int erroffset;
   n->parent = parent;
@@ -21,7 +22,7 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc,
                               &erroffset,
                               NULL);
   }
-    
+
   return n;
 }
 
@@ -32,6 +33,14 @@ ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
 
   if (n->sibling) an->sibling = ajv_alloc_tree(alloc,n->sibling,parent);
   if (n->child)   an->child   = ajv_alloc_tree(alloc,n->child, an);
+  if (n->t == orderly_node_object) {
+    orderly_node *cur;
+    for (cur = n->child; cur; cur = cur->sibling) {
+      if (!cur->optional) {
+        orderly_ps_push(alloc, an->required, cur);
+      }
+    }
+  }
   
   return an;
 }
