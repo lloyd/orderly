@@ -45,21 +45,11 @@ typedef struct ajv_node_t {
   struct ajv_node_t * parent;
   /* the orderly node we wrap */
   const orderly_node *node;
-  /* a compiled regex */
+  /* a compiled regex for string nodes */
   pcre *regcomp;
-  /* have we seen data matching this node during this parse?
-   * (only valid on nodes whose parent is a map/object, or tuple array)
-   */
+  /* XXX: these need to move to ajv_state for reentrancy */
   int    seen;
-  /* overrides the optional flag in the orderly node (for requires support)
-   */
   int    required;
-  /*
-   * How deep into the parse of an 'any' node are we?
-   * array and object start increment, on end decrement
-   */
-  unsigned int            depth;
-
 } ajv_node;
 
 
@@ -102,6 +92,7 @@ typedef struct ajv_state_t {
   const yajl_callbacks      *cb;
   void                      *cbctx;
 
+  unsigned int            depth;
 } * ajv_state;
 
 
@@ -111,7 +102,10 @@ struct ajv_schema_t {
   orderly_node  *oroot;
   const orderly_alloc_funcs *af;
 };
-
+void ajv_state_push(ajv_state state);
+void ajv_state_pop(ajv_state state);
+int ajv_state_map_complete (ajv_state state, ajv_node *map);
+int ajv_state_array_complete (ajv_state state, ajv_node *array);
 ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
                           const orderly_node *n, ajv_node *parent);
 
