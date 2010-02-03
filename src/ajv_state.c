@@ -206,8 +206,16 @@ yajl_status ajv_validate(ajv_handle hand,
 }
 
 void ajv_state_mark_seen(ajv_state s, const ajv_node *node) {
-  ajv_node_state ns = s->node_state.stack[s->node_state.used - 1];
-  orderly_ps_push(s->AF, ns->seen, node->node);
+  ajv_node_state ns;
+  ns = (ajv_node_state)orderly_ps_current(s->node_state);
+  orderly_ps_push(s->AF, ns->seen, (void *)(node->node));
+  /* advance the current pointer if we're checking a tuple typed array */
+  if (node->parent &&
+      node->parent->node->t == orderly_node_array &&
+      node->parent->node->tuple_typed &&
+      node->sibling) {
+    s->node = s->node->sibling;
+  }
 
 }
 
@@ -282,7 +290,7 @@ int ajv_state_map_complete (ajv_state state, ajv_node *map) {
   int i = 0, j;
   int maxreq = orderly_ps_length(ns->required);
   int maxseen = orderly_ps_length(ns->seen);
-  /* XXX: this must die */
+  /* XXX: n^2 */
   for (i = 0 ; i < maxreq ; i++) {
     int found = 0;
     ajv_node *req = ns->required.stack[i];
@@ -340,11 +348,14 @@ int ajv_state_map_complete (ajv_state state, ajv_node *map) {
 
 int ajv_state_array_complete (ajv_state state, ajv_node *array) {
   /* with tuple typed nodes, we need to check that we've seen things */
-#if 0
   if (array->node->tuple_typed) {
-    ajv_node *cur;
-    for (cur = state->node->parent->child; cur; cur = cur->sibling) {
-      if (!cur->seen) {
+    assert(state->node->parent == array);
+    if (orderly_ps_current(
+                           ((ajv_node_state)
+                            orderly_ps_current(state->node_state))->seen)
+        != state->node->node) {
+      const ajv_node *cur = state->node;
+      do {
         if (cur->node->default_value) {
           int ret;
           ret = orderly_synthesize_callbacks(state->cb, state->cbctx,
@@ -356,10 +367,10 @@ int ajv_state_array_complete (ajv_state state, ajv_node *array) {
           ajv_set_error(state,ajv_e_incomplete_container,cur,NULL);
           return 0;
         }
-      }
+        cur = cur->sibling;
+      } while (cur);
     }
   }
-#endif
   ajv_state_pop(state); 
   return 1;
 }
@@ -370,3 +381,6 @@ int ajv_state_finished(ajv_state state) {
                         state->node_state.stack[0])->seen) != 0);
 
 }
+
+
+

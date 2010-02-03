@@ -92,19 +92,6 @@ static const ajv_node * orderly_subsumed_by (const orderly_node_type a,
 }
 
 
-static void check_tuple_typing(ajv_state state) {
-  if (state->node->parent &&
-      state->node->parent->node->t == orderly_node_array &&
-      state->node->parent->node->tuple_typed) {
-#if 0
-    if (state->node->seen) {
-      state->node = state->node->sibling;
-    }
-#endif
-  }
-}
-
-
 
 int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
@@ -146,7 +133,6 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
 #define DO_TYPECHECK(st, t, n) do { if (!ajv_do_typecheck(st,t,n)) return 0;  } while(0);
 
 #define AJV_SUFFIX(type,...)                                    \
-  check_tuple_typing(state);                                    \
   if (state->cb && state->cb->yajl_##type) {                    \
     return state->cb->yajl_##type(state->cbctx, __VA_ARGS__);   \
   } else {                                                      \
@@ -154,7 +140,6 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
   }                                                             \
 
 #define AJV_SUFFIX_NOARGS(type)                                 \
-  check_tuple_typing(state);                                    \
   if (state->cb && state->cb->yajl_##type) {                    \
     return state->cb->yajl_##type(state->cbctx);                \
   } else {                                                      \
