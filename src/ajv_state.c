@@ -261,8 +261,18 @@ ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
 
 void ajv_free(ajv_handle hand) {
   const orderly_alloc_funcs *AF = hand->AF;
-
-  ajv_clear_error(hand);
+  ajv_node_state        cur;
+ 
+   ajv_clear_error(hand);
+ 
+   orderly_free_node(hand->AF,(orderly_node **)&(hand->any.node));
+  
+  while (orderly_ps_length(hand->node_state)) {
+    cur = orderly_ps_current(hand->node_state);
+    ajv_free_node_state(hand->AF,&cur);
+    orderly_ps_pop(hand->node_state);
+  }
+  orderly_ps_free(hand->AF,hand->node_state);
 
   orderly_free_node(hand->AF,(orderly_node **)&(hand->any.node));
 
