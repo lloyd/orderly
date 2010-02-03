@@ -19,11 +19,12 @@ void ajv_state_push(ajv_state state, ajv_node *n) {
 }
 
 void ajv_state_pop(ajv_state state) {
-  ajv_node_state s;
-  s = state->node_state.stack[state->node_state.used - 1];  
-  ajv_free_node_state(state->AF,&s);
+  ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
   orderly_ps_pop(state->node_state);
+
   state->node = s->node;
+
+  ajv_free_node_state(state->AF,&s);
 
   return;
 }
@@ -164,9 +165,11 @@ yajl_status ajv_parse_and_validate(ajv_handle hand,
   yajl_status stat;
 
   if (schema) {
+    ajv_node_state s = ajv_alloc_node_state(hand->AF, schema->root);
     ajv_clear_error(hand);
     hand->s = schema;
     hand->node = schema->root;
+    orderly_ps_push(hand->AF, hand->node_state, s);
   } 
 
   stat = yajl_parse(hand->yajl, jsonText, jsonTextLength);
@@ -186,6 +189,9 @@ yajl_status ajv_validate(ajv_handle hand,
   ajv_clear_error(hand);
   hand->s = schema;
   hand->node = schema->root;
+  ajv_node_state s = ajv_alloc_node_state(hand->AF, schema->root);
+  orderly_ps_push(hand->AF, hand->node_state, s);
+
 
   cancelled = orderly_synthesize_callbacks(&ajv_callbacks,hand,json);
   if (cancelled == 1) {
@@ -201,7 +207,7 @@ yajl_status ajv_validate(ajv_handle hand,
 
 void ajv_state_mark_seen(ajv_state s, const ajv_node *node) {
   ajv_node_state ns = s->node_state.stack[s->node_state.used - 1];
-  orderly_ps_push(s->AF, ns->seen, node);
+  orderly_ps_push(s->AF, ns->seen, node->node);
 
 }
 
@@ -240,10 +246,6 @@ ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
                                (void *)ajv_state);
 
   orderly_ps_init(ajv_state->node_state);
-  ajv_node_state s = ajv_alloc_node_state(ajv_state->AF, NULL);
-
-  orderly_ps_push(ajv_state->AF, ajv_state->node_state, s);
-
   
   return ajv_state;
 }
