@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,10 @@
 #ifndef __ORDERLY_WRITER_H__
 #define __ORDERLY_WRITER_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif    
+
 #include "node.h"
 
 typedef struct orderly_writer_t * orderly_writer;
@@ -54,4 +58,7 @@ const char *
 orderly_write(orderly_writer w, orderly_format fmt,
               const orderly_node * node);
 
+#ifdef __cplusplus
+}
+#endif    
 #endif

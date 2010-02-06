@@ -42,9 +42,9 @@ ORDERLY_API yajl_status ajv_validate(ajv_handle hand,
                                     orderly_json *json);
 
 ORDERLY_API yajl_status ajv_parse_and_validate(ajv_handle hand,
-                                              ajv_schema schema,
-                                              const unsigned char * jsonText,
-                                              unsigned int jsonTextLength);
+                                               const unsigned char * jsonText,
+                                               unsigned int jsonTextLength,
+                                               ajv_schema schema);
 
 
 ORDERLY_API unsigned char * ajv_get_error(ajv_handle hand, int verbose,

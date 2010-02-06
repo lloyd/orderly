@@ -164,9 +164,9 @@ void ajv_free_error(ajv_handle hand, unsigned char *str) {
 
 
 yajl_status ajv_parse_and_validate(ajv_handle hand,
-                                   ajv_schema schema,
                                    const unsigned char * jsonText,
-                                   unsigned int jsonTextLength) {
+                                   unsigned int jsonTextLength,
+                                   ajv_schema schema) {
   yajl_status stat;
 
   if (schema) {

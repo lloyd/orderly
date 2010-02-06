@@ -234,7 +234,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     int error_code = 0;
                     BUF_STRDUP((*n)->regex, alloc, k->v.s, strlen(k->v.s));
                     regex = pcre_compile2((*n)->regex,
-                                         PCRE_JAVASCRIPT_COMPAT,
+                                          0,
                                           &error_code,
                                           &regerror,
                                           &erroffset,

@@ -32,6 +32,9 @@
 
 #ifndef __ORDERLY_NODE_H__
 #define __ORDERLY_NODE_H__
+#ifdef __cplusplus
+extern "C" {
+#endif    
 
 #include "common.h"
 #include "json.h"
@@ -130,4 +133,7 @@ void orderly_free_node(const orderly_alloc_funcs * alloc,
 orderly_node * orderly_alloc_node(const orderly_alloc_funcs * alloc,
                                   orderly_node_type t);
 
+#ifdef __cplusplus
+};
+#endif
 #endif

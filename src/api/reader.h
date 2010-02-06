@@ -35,6 +35,9 @@
 
 #include "common.h"
 #include "node.h"
+#ifdef __cplusplus
+extern "C" {
+#endif    
 
 typedef struct orderly_reader_t * orderly_reader;
 
@@ -71,4 +74,7 @@ const char * orderly_get_error_context(orderly_reader r,
  *  schema buffer */
 unsigned int orderly_get_error_offset(orderly_reader r);
 
+#ifdef __cplusplus
+}
+#endif    
 #endif

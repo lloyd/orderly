@@ -187,7 +187,7 @@ orderly_parse_string_suffix(orderly_alloc_funcs * alloc,
         assert(outLen >= 2);
         BUF_STRDUP(n->regex, alloc, outBuf + 1, outLen - 2);        
         regex = pcre_compile2(n->regex,
-                              PCRE_JAVASCRIPT_COMPAT|PCRE_UTF8,
+                              PCRE_UTF8,
                               &error_code,
                               &errmsg,
                               &erroffset,
