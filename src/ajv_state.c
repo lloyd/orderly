@@ -7,57 +7,29 @@
 #include <stdio.h>
 #include <assert.h>
 
-ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc, 
-                           const orderly_node *on,    ajv_node *parent ) 
-{
-  ajv_node *n = (ajv_node *)OR_MALLOC(alloc, sizeof(ajv_node));
-  memset((void *) n, 0, sizeof(ajv_node));
-  const char *regerror = NULL;
-  int erroffset;
-  n->parent = parent;
-  n->node   = on;
-  if (on->regex) {
-    n->regcomp = pcre_compile(on->regex,
-                              0,
-                              &regerror,
-                              &erroffset,
-                              NULL);
-  }
-    
-  return n;
+void ajv_state_push(ajv_state state, ajv_node *n) {
+  ajv_node_state s = ajv_alloc_node_state(state->AF, n);
+  /* only maps and array have children */
+  assert(state->node->node->t == orderly_node_object
+         || state->node->node->t == orderly_node_array);
+  s->node = state->node;
+  orderly_ps_push(state->AF, state->node_state, s);
+
+  state->node = state->node->child;
 }
 
-ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
-                          const orderly_node *n, ajv_node *parent) {
+void ajv_state_pop(ajv_state state) {
+  ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
+  orderly_ps_pop(state->node_state);
 
-  ajv_node *an = ajv_alloc_node(alloc, n, parent);
+  state->node = s->node;
 
-  if (n->sibling) an->sibling = ajv_alloc_tree(alloc,n->sibling,parent);
-  if (n->child)   an->child   = ajv_alloc_tree(alloc,n->child, an);
-  
-  return an;
+  ajv_free_node_state(state->AF,&s);
+
+  return;
 }
-
-void ajv_free_node (const orderly_alloc_funcs * alloc, ajv_node ** n) {
-  if (n && *n) {
-    if ((*n)->sibling) ajv_free_node(alloc,&((*n)->sibling));
-    if ((*n)->child) ajv_free_node(alloc,&((*n)->child));
-    /* the orderly_node *  belongs to the schema, don't free it */
-    if ((*n)->regcomp) {
-      pcre_free((*n)->regcomp);
-    }
-    OR_FREE(alloc, *n);
-    *n = NULL;
-  }
-}
-
-void ajv_reset_node (ajv_node * n) {
-  n->required = 0;
-  n->seen     = 0;
-
-  if (n->sibling) ajv_reset_node(n->sibling);
-  if (n->child) ajv_reset_node(n->child);
-}
+ 
+   
   
 void ajv_clear_error (ajv_state s) {
 
@@ -68,6 +40,29 @@ void ajv_clear_error (ajv_state s) {
   s->error.node       = NULL;
 
 
+}
+
+ajv_node_state ajv_alloc_node_state( const orderly_alloc_funcs * alloc, 
+                                     const ajv_node *node)
+{
+  ajv_node_state n = (ajv_node_state)OR_MALLOC(alloc, 
+                                               sizeof(struct ajv_node_state_t));
+  memset((void *) n, 0, sizeof(struct ajv_node_state_t));
+  orderly_ps_init(n->required);
+  orderly_ps_init(n->seen);
+  n->node = node;
+  return n;
+}
+
+void ajv_free_node_state( const orderly_alloc_funcs * alloc, 
+                          ajv_node_state *node)
+{
+  if (node && *node) {
+    orderly_ps_free(alloc, (*node)->seen);
+    orderly_ps_free(alloc, (*node)->required);
+    OR_FREE(alloc,*node);
+    *node = NULL;
+  }
 }
 
 void ajv_set_error ( ajv_state s, ajv_error e,
@@ -170,10 +165,11 @@ yajl_status ajv_parse_and_validate(ajv_handle hand,
   yajl_status stat;
 
   if (schema) {
+    ajv_node_state s = ajv_alloc_node_state(hand->AF, schema->root);
     ajv_clear_error(hand);
     hand->s = schema;
     hand->node = schema->root;
-    ajv_reset_node(hand->node);
+    orderly_ps_push(hand->AF, hand->node_state, s);
   } 
 
   stat = yajl_parse(hand->yajl, jsonText, jsonTextLength);
@@ -193,8 +189,9 @@ yajl_status ajv_validate(ajv_handle hand,
   ajv_clear_error(hand);
   hand->s = schema;
   hand->node = schema->root;
+  ajv_node_state s = ajv_alloc_node_state(hand->AF, schema->root);
+  orderly_ps_push(hand->AF, hand->node_state, s);
 
-  ajv_reset_node(hand->node);
 
   cancelled = orderly_synthesize_callbacks(&ajv_callbacks,hand,json);
   if (cancelled == 1) {
@@ -206,6 +203,20 @@ yajl_status ajv_validate(ajv_handle hand,
   }
   
   return ret;
+}
+
+void ajv_state_mark_seen(ajv_state s, const ajv_node *node) {
+  ajv_node_state ns;
+  ns = (ajv_node_state)orderly_ps_current(s->node_state);
+  orderly_ps_push(s->AF, ns->seen, (void *)(node->node));
+  /* advance the current pointer if we're checking a tuple typed array */
+  if (node->parent &&
+      node->parent->node->t == orderly_node_array &&
+      node->parent->node->tuple_typed &&
+      node->sibling) {
+    s->node = s->node->sibling;
+  }
+
 }
 
 ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
@@ -241,14 +252,27 @@ ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
                                config,
                                allocFuncs,
                                (void *)ajv_state);
+
+  orderly_ps_init(ajv_state->node_state);
+  
   return ajv_state;
 }
 
 
 void ajv_free(ajv_handle hand) {
   const orderly_alloc_funcs *AF = hand->AF;
-
-  ajv_clear_error(hand);
+  ajv_node_state        cur;
+ 
+   ajv_clear_error(hand);
+ 
+   orderly_free_node(hand->AF,(orderly_node **)&(hand->any.node));
+  
+  while (orderly_ps_length(hand->node_state)) {
+    cur = orderly_ps_current(hand->node_state);
+    ajv_free_node_state(hand->AF,&cur);
+    orderly_ps_pop(hand->node_state);
+  }
+  orderly_ps_free(hand->AF,hand->node_state);
 
   orderly_free_node(hand->AF,(orderly_node **)&(hand->any.node));
 
@@ -261,12 +285,112 @@ yajl_status ajv_parse_complete(ajv_handle hand) {
   yajl_status stat = yajl_parse_complete(hand->yajl);
 
   if (stat == yajl_status_ok || stat == yajl_status_insufficient_data) {
-    if (! hand->s->root->seen ) {
+    if ( !ajv_state_finished(hand) ) {
       ajv_set_error(hand, ajv_e_incomplete_container, NULL, "Empty root");
       stat = yajl_status_error;
-    }   
+    }
   }
-
-
   return stat;
 }
+
+
+int ajv_state_map_complete (ajv_state state, ajv_node *map) {
+  ajv_node *cur;
+  ajv_node_state ns = state->node_state.stack[state->node_state.used - 1];
+  int i = 0, j;
+  int maxreq = orderly_ps_length(ns->required);
+  int maxseen = orderly_ps_length(ns->seen);
+  /* XXX: n^2 */
+  for (i = 0 ; i < maxreq ; i++) {
+    int found = 0;
+    ajv_node *req = ns->required.stack[i];
+    for (j = 0 ; j < maxseen; j++) {
+      ajv_node *seen = ns->seen.stack[j];
+      if (req == seen) {
+        found = 1;
+        break;
+      }
+    }
+    if (found == 0) {
+      if (req->node->default_value) {    
+        int ret;
+        ret = orderly_synthesize_callbacks(state->cb, state->cbctx, 
+                                           cur->node->default_value);
+        if (ret == 0) {
+          return 0;
+        }
+      } else {
+        ajv_set_error(state,ajv_e_incomplete_container,map,cur->node->name);
+        return 0;
+      }
+    }
+  }
+  maxreq = orderly_ps_length(ns->node->required);
+  for (i = 0 ; i < maxreq ; i++) {
+    int found = 0;
+    ajv_node *req = ns->node->required.stack[i];
+    for (j = 0 ; j < maxseen; j++) {
+      ajv_node *seen = ns->seen.stack[j];
+      if (req == seen) {
+        found = 1;
+        break;
+      }
+    }
+    if (found == 0) {
+      if (req->node->default_value) {    
+        int ret;
+        ret = orderly_synthesize_callbacks(state->cb, state->cbctx, 
+                                           req->node->default_value);
+        if (ret == 0) {
+          return 0;
+        }
+      } else {
+        ajv_set_error(state,ajv_e_incomplete_container,map,cur->node->name);
+        return 0;
+      }
+    }
+  }
+  ajv_state_pop(state);
+  ajv_state_mark_seen(state,map);
+  return 1;
+}
+
+
+int ajv_state_array_complete (ajv_state state, ajv_node *array) {
+  /* with tuple typed nodes, we need to check that we've seen things */
+  if (array->node->tuple_typed) {
+    assert(state->node->parent == array);
+    if (orderly_ps_current(
+                           ((ajv_node_state)
+                            orderly_ps_current(state->node_state))->seen)
+        != state->node->node) {
+      const ajv_node *cur = state->node;
+      do {
+        if (cur->node->default_value) {
+          int ret;
+          ret = orderly_synthesize_callbacks(state->cb, state->cbctx,
+                                             cur->node->default_value);
+          if (ret == 0) { /*parse was cancelled */
+            return 0;
+          }
+        } else { 
+          ajv_set_error(state,ajv_e_incomplete_container,cur,NULL);
+          return 0;
+        }
+        cur = cur->sibling;
+      } while (cur);
+    }
+  }
+  ajv_state_pop(state); 
+  return 1;
+}
+
+int ajv_state_finished(ajv_state state) {
+  return 
+    (orderly_ps_length(((ajv_node_state)
+                        state->node_state.stack[0])->seen) != 0);
+
+}
+
+
+

@@ -352,3 +352,136 @@ orderly_write_json(const orderly_alloc_funcs * alloc,
     int rv = orderly_write_json2(g, json);
     yajl_gen_free(g);
 }
+
+/*
+ *
+ */
+int orderly_synthesize_callbacks (const yajl_callbacks *cb, 
+                                         void *cbctx,
+                                         orderly_json *value) {
+  int ret = 1; 
+    
+  switch (value->t) {
+
+    /*
+     * NULL
+     */
+  case orderly_json_null:
+    if (cb->yajl_null) {
+      ret = cb->yajl_null(cbctx);
+    }
+    break;
+
+    /*
+     * boolean
+     */
+  case orderly_json_boolean:
+    if (cb->yajl_boolean) {
+      ret = cb->yajl_boolean(cbctx,value->v.b);
+    }
+    break;
+    
+    /*
+     * string
+     */
+  case orderly_json_string:
+
+    if (cb->yajl_string) {
+      ret = cb->yajl_string(cbctx,
+                                   (unsigned char *)value->v.s,
+                                   strlen(value->v.s));
+    }
+    break;
+
+    /*
+     * object / map
+     */
+  case orderly_json_object:
+    /* call the start callback */
+    if (cb->yajl_start_map) {
+      ret = cb->yajl_start_map(cbctx);
+      if (ret == 0) {
+        return 0;
+      }
+    }
+    /* recurse - XXX: stack depth limit */
+    {
+      orderly_json *kiditr;
+      for (kiditr = value->v.children.first; kiditr; kiditr = kiditr->next) {
+        ret = orderly_synthesize_callbacks(cb,cbctx, kiditr);
+        if (ret == 0) {
+          return 0;
+        }
+      }
+    }
+    /* call end callback */
+    if (cb->yajl_end_map) {
+      ret = cb->yajl_end_map(cbctx);
+      if (ret == 0) {
+        return 0;
+      }
+    }
+    break;
+
+
+    /*
+     * array
+     */
+  case orderly_json_array:
+    /* call start callback */
+    if (cb->yajl_start_array) {
+      ret = cb->yajl_start_array(cbctx);
+      if (ret == 0) break;
+    }
+    /* recurse */
+    {
+      orderly_json *kiditr;
+      for (kiditr = value->v.children.first; kiditr; kiditr = kiditr->next) {
+        ret = orderly_synthesize_callbacks(cb,cbctx, kiditr);
+        if (ret == 0) break;
+      }
+    }
+    /* call end callback */
+    if (cb->yajl_end_array) {
+      ret = cb->yajl_end_array(cbctx);
+    }
+
+    break;
+
+    /* 
+     * integer
+     */
+  case orderly_json_integer:
+    if (cb->yajl_number) {
+      assert("unimplemented" == 0);
+    } else if (cb->yajl_integer) {
+      ret = cb->yajl_integer(cbctx, value->v.i);
+    }
+
+    break;
+
+    /* 
+     * "number" -- float
+     */
+  case orderly_json_number:
+    if (cb->yajl_number) {
+      assert("unimplemented" == 0);
+    } else if (cb->yajl_double) {
+      ret = cb->yajl_double(cbctx, value->v.n);
+    }
+
+    break;
+
+
+
+    /* XXX: orderly_json_none appears to be for internal accounting
+       only, should never find a default of this type */
+  case orderly_json_none:
+  default:
+    assert("unreachable"==0);
+  }
+
+
+  return ret;
+}
+
