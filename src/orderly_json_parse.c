@@ -54,6 +54,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
     }
 
     *n = orderly_alloc_node(alloc, orderly_node_empty);
+    (*n)->additional_properties = orderly_node_any;
 
     for (k=j->v.children.first; k != NULL; k=k->next) {
         if (k->k != NULL) {

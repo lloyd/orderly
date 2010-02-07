@@ -419,7 +419,7 @@ orderly_parse_optional_additional(orderly_alloc_funcs * alloc,
     {
         (void) orderly_lex_lex(lxr, schemaText, schemaTextLen, offset,
                                NULL, NULL);
-        n->additional_properties = 1;
+        n->additional_properties = orderly_node_any;
     }
     return orderly_parse_s_ok;
 }

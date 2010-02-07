@@ -72,7 +72,7 @@ orderly_node * orderly_alloc_node(const orderly_alloc_funcs * alloc,
         OR_MALLOC(alloc, sizeof(orderly_node));
     memset((void *) n, 0, sizeof(orderly_node));
     n->t = t;
-    n->additional_properties = orderly_node_any;
+    n->additional_properties = orderly_node_empty;
     return n;
 }
 
