@@ -23,5 +23,6 @@
         "baz"
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }
