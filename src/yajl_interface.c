@@ -394,8 +394,8 @@ static int ajv_start_array(void * ctx) {
    const orderly_node *on = state->node ? state->node->node : NULL;
 
    
-   if (on && on->t == orderly_node_any) {
-     if (state->depth > 0)  state->depth--;
+   if (on && on->t == orderly_node_any && state->depth > 0) {
+     state->depth--;
      if (state->depth == 0 ) { ajv_state_mark_seen(state, state->node); }
    } else {
      if (!ajv_state_array_complete(state)) {
