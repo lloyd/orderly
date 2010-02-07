@@ -23,43 +23,44 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     [ "Invalid case", f.sub(/orderly$/, "fail"), verifyBin, 1 ],
     [ "Valid case", f.sub(/orderly$/, "pass"),   verifyBin, 0 ]
   ].each { |testType|
-    what, textfile, program, exitCode = *testType
-    wantFile = textfile + ".want"
-    gotFile = textfile + ".got"
-    got = ""
-    print "#{what} for #{textfile}:\t" ;
-    ENV['ORDERLY_SCHEMA'] = IO.readlines(f,'').to_s
-    IO.popen(program, "w+") { |lb|
-      File.open(textfile, "r").each {|l| lb.write(l)}
-      lb.close_write
-      got = lb.read
-    }
-    if ($?.exitstatus != exitCode) 
-      puts "FAIL";
-      puts "got bad exit code '#{$?.exitstatus}', expected '#{exitCode}'"
-    else
-      if File.exist? wantFile
-        want = IO.read(wantFile)
-        if (got == want)
+    what, pfDir, program, exitCode = *testType
+    Dir.glob(File.join(pfDir, "*.test")).each { |textfile| 
+      wantFile = textfile + ".want"
+      gotFile = textfile + ".got"
+      got = ""
+      print "#{what} for #{textfile}:\t" ;
+      ENV['ORDERLY_SCHEMA'] = IO.readlines(f,'').to_s
+      IO.popen(program, "w+") { |lb|
+        File.open(textfile, "r").each {|l| lb.write(l)}
+        lb.close_write
+        got = lb.read
+      }
+      if ($?.exitstatus != exitCode) 
+        puts "FAIL";
+        puts "got bad exit code '#{$?.exitstatus}', expected '#{exitCode}'"
+      else
+        if File.exist? wantFile
+          want = IO.read(wantFile)
+          if (got == want)
+            puts "ok"
+            passed += 1
+          else
+            puts "FAIL"
+            puts "<<<want<<<"
+            puts want
+            puts "========"
+            puts got
+            puts ">>got>>"
+          end
+        else
           puts "ok"
           passed += 1
-        else
-          puts "FAIL"
-          puts "<<<want<<<"
-          puts want
-          puts "========"
-          puts got
-          puts ">>got>>"
         end
-      else
-        puts "ok"
-        passed += 1
       end
-    end
-    total += 1
+      total += 1
+    }
   }
 }
-
 puts "#{passed}/#{total} tests successful"
 exit passed == total
 

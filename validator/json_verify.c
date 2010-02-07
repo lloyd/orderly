@@ -137,7 +137,7 @@ main(int argc, char ** argv)
             stat = ajv_parse_complete(hand);
         else
             /* read file data, pass to parser */
-          stat = ajv_parse_and_validate(hand, ajv_schema, fileData, rd);
+          stat = ajv_parse_and_validate(hand, fileData, rd, ajv_schema);
 
         if (stat != yajl_status_ok &&
             stat != yajl_status_insufficient_data)
