@@ -10,8 +10,7 @@
         "title": {
           "type": "string"
         }
-      },
-      "additionalProperties": true
+      }
     },
     "myOpenTupleTypedArray": {
       "type": "array",
@@ -22,8 +21,8 @@
         {
           "type": "string"
         }
-      ],
-      "additionalProperties": true
+      ]
     }
-  }
+  },
+  "additionalProperties": false
 }
