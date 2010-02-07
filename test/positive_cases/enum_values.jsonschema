@@ -16,5 +16,6 @@
         42
       ]
     }
-  }
+  },
+  "additionalProperties": false
 }

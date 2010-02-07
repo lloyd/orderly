@@ -5,7 +5,8 @@
       "type": "array",
       "items": {
         "type": "integer"
-      }
+      },
+      "additionalProperties": false
     },
     "tupleTypedArrayOfOneInteger": {
       "type": "array",
@@ -13,7 +14,8 @@
         {
           "type": "integer"
         }
-      ]
+      ],
+      "additionalProperties": false
     },
     "tupleTypedArrayOfOneIntegerFollowedByAnything": {
       "type": "array",
@@ -21,8 +23,8 @@
         {
           "type": "integer"
         }
-      ],
-      "additionalProperties": true
+      ]
     }
-  }
+  },
+  "additionalProperties": false
 }

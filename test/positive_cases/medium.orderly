@@ -3,5 +3,5 @@ object {
   object {
     string first;
     string last;
-  } name;
-};
+  }* name;
+}*;
