@@ -1,5 +1,5 @@
 /*
- * Copyright 2009, Lloyd Hilaiel.
+ * Copyright 2009, 2010, Lloyd Hilaiel.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -135,9 +135,15 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         
         if ((n->t == orderly_node_array ||
              n->t == orderly_node_object) &&
-            n->additional_properties)
-        {
-            orderly_buf_append_string(w->b, "*");
+            n->additional_properties != orderly_node_empty) {
+          if (n->additional_properties == orderly_node_any) {
+            orderly_buf_append_string(w->b, "*");            
+          } else {
+            orderly_buf_append_string(w->b, "`");
+            orderly_buf_append_string(w->b,
+                                      orderly_node_type_to_string(n->additional_properties));
+            orderly_buf_append_string(w->b, "`");
+          }
         }
 
         /* optional range */
@@ -359,9 +365,20 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         } 
 
         /* additionalProperties */
-        if (n->additional_properties) { 
+        if (n->additional_properties != orderly_node_any
+            && ((n->t == orderly_node_array)||
+                (n->t == orderly_node_object))) { 
+          if (n->additional_properties == orderly_node_empty) {
             YAJL_GEN_STRING_WLEN(yg, "additionalProperties");
-            yajl_gen_bool(yg, 1);
+            yajl_gen_bool(yg, 0);
+          } else {
+            YAJL_GEN_STRING_WLEN(yg, "additionalProperties");
+            yajl_gen_map_open(yg);
+            YAJL_GEN_STRING_WLEN(yg, "type");
+            YAJL_GEN_STRING_WLEN(yg, orderly_node_type_to_string(
+                                                                 n->additional_properties));
+            yajl_gen_map_close(yg);
+          }
         } 
         
          /* requires value */
