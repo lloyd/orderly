@@ -404,7 +404,7 @@ int ajv_state_array_complete (ajv_state state) {
     if (orderly_ps_current(
                            ((ajv_node_state)
                             orderly_ps_current(state->node_state))->seen)
-        != state->node->node) {
+        != state->node) {
       const ajv_node *cur = state->node;
       do {
         if (cur->node->default_value) {
