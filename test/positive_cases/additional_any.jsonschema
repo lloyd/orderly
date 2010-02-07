@@ -1,3 +1,6 @@
 {
-  "type": "array"
+  "type": "array",
+  "items": {
+    "type": "any"
+  }
 }

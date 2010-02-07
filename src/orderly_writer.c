@@ -31,6 +31,7 @@
  */
 
 #include "api/writer.h"
+#include "api/json.h"
 #include "orderly_buf.h"
 #include "orderly_lex.h"
 #include "orderly_json.h"
@@ -135,15 +136,8 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         
         if ((n->t == orderly_node_array ||
              n->t == orderly_node_object) &&
-            n->additional_properties != orderly_node_empty) {
-          if (n->additional_properties == orderly_node_any) {
-            orderly_buf_append_string(w->b, "*");            
-          } else {
-            orderly_buf_append_string(w->b, "`");
-            orderly_buf_append_string(w->b,
-                                      orderly_node_type_to_string(n->additional_properties));
-            orderly_buf_append_string(w->b, "`");
-          }
+            n->additional_properties == orderly_node_any) {
+          orderly_buf_append_string(w->b, "*");            
         }
 
         /* optional range */
@@ -226,17 +220,61 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         if (n->optional) {
             orderly_buf_append_string(w->b, "?");
         }
+        
+        orderly_json *pp = n->passthrough_properties;
+        if (pp) {
+          pp = orderly_clone_json(w->cfg.alloc,pp);
+        }
+        /* if we're an array or an object which isn't closed */
+        if ((n->t == orderly_node_array 
+             || n->t == orderly_node_object)
+            && n->additional_properties != orderly_node_empty) {
+          /* and we're not an open (tupled typed array|object) */
+          if (n->additional_properties != orderly_node_any) {
+            orderly_json *ap, *map, *type, *key;
 
+            if (!pp) {
+              pp = orderly_alloc_json(w->cfg.alloc,orderly_json_object);
+            } 
+            ap = orderly_alloc_json(w->cfg.alloc,orderly_json_string);
+            type = orderly_alloc_json(w->cfg.alloc,orderly_json_string);
+            key = orderly_alloc_json(w->cfg.alloc,orderly_json_string);
+            map = orderly_alloc_json(w->cfg.alloc,orderly_json_object);
+            
+            BUF_STRDUP(ap->v.s, w->cfg.alloc, "additionalProperties", 
+                       strlen("additionalProperties")+1); 
+            BUF_STRDUP(type->v.s, w->cfg.alloc, "type", 
+                       strlen("type")+1); 
+            BUF_STRDUP(key->v.s,w->cfg.alloc,
+                       orderly_node_type_to_string(n->additional_properties),
+                       strlen(orderly_node_type_to_string(n->additional_properties)) + 1);
+        
+            if (pp->v.children.last) {
+              pp->v.children.last->next = ap;
+            }
+            ap->next = map;
+            pp->v.children.last = map;
+            if (!pp->v.children.first) {
+              pp->v.children.first = ap;
+            }
+            map->v.children.first = type;
+            map->v.children.last = key;
+            type->next = key;
+          }
+        }
+        
          /* passthrough properties? */
-        if (n->passthrough_properties) { 
+        if (pp) {
             if (w->cfg.pretty) orderly_buf_append_string(w->b, " ");
             orderly_buf_append_string(w->b, "`");
-            orderly_write_json(w->cfg.alloc, n->passthrough_properties,
+            orderly_write_json(w->cfg.alloc, pp,
                                w->b, w->cfg.pretty);
             /* pretty can involve a trailing newline */
             orderly_buf_chomp(w->b);
             orderly_buf_append_string(w->b, "`");
+            orderly_free_json(w->cfg.alloc,&pp);
         }
+
 
         if (!omitSemi) orderly_buf_append_string(w->b, ";");        
         if (w->cfg.pretty) orderly_buf_append_string(w->b, "\n");        

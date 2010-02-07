@@ -278,8 +278,7 @@ The Normative Grammar
         'any'
         # a tuple-typed array 
         'array'  '{' unnamed_entries '}' optional_additional_marker optional_range 
-        # a simple-typed array (notice the '*' marker is disallowed)
-        'array'  '[' unnamed_entry ']' optional_range   
+        'array'  '[' unnamed_entry ']' optional_additional_marker optional_range   
         'object' '{' named_entries '}' optional_additional_marker   
         'union'  '{' unnamed_entries '}'
     
