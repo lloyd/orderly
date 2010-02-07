@@ -99,6 +99,7 @@ typedef struct ajv_state_t {
   void                      *cbctx;
   unsigned int            depth;
   orderly_ptrstack        node_state;
+  const yajl_parser_config *ypc;
 } * ajv_state;
 
 
@@ -111,7 +112,7 @@ struct ajv_schema_t {
 void ajv_state_push(ajv_state state, ajv_node *n);
 void ajv_state_pop(ajv_state state);
 int ajv_state_map_complete (ajv_state state, ajv_node *map);
-int ajv_state_array_complete (ajv_state state, ajv_node *array);
+int ajv_state_array_complete (ajv_state state);
 ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
                           const orderly_node *n, ajv_node *parent);
 
@@ -124,7 +125,7 @@ void ajv_reset_node( ajv_node * n);
 
 
 void ajv_set_error ( ajv_state s, ajv_error e,
-                     const ajv_node * node, const char *info );
+                     const ajv_node * node, const char *info, int length );
 
 void ajv_clear_error (ajv_state  s);
 
@@ -138,4 +139,7 @@ ajv_node_state ajv_alloc_node_state( const orderly_alloc_funcs * alloc,
 
 void ajv_state_mark_seen(ajv_state s, const ajv_node *node) ;
 int ajv_state_finished(ajv_state state);
+ajv_node * ajv_state_parent(ajv_state state);
+void ajv_state_require(ajv_state state, ajv_node *req) ;
+
 #endif

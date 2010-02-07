@@ -205,10 +205,22 @@ parse_json_schema(orderly_alloc_funcs * alloc,
             }
             else if (!strcmp(k->k, "additionalProperties")) {
                 if (k->t == orderly_json_boolean) {
-                    (*n)->additional_properties = k->v.b;
+                    (*n)->additional_properties = 
+                      k->v.b 
+                      ? orderly_node_any
+                      : orderly_node_empty;
+                } else if (k->t == orderly_json_object
+                           && !strcmp(k->v.children.first->k, "type")) {
+                  if (k->v.children.first->t == orderly_json_string) {
+                      (*n)->additional_properties = 
+                        orderly_string_to_node_type(k->v.children.first->v.s, 
+                                                    strlen(k->v.children.first->v.s));
+                    } else {
+                      s = orderly_json_parse_s_invalid_type_value;
+                      goto toErrIsHuman;
+                    }
                 } else {
-                    s = orderly_json_parse_s_addprop_requires_boolean;
-                    goto toErrIsHuman;
+                  s = orderly_json_parse_s_addprop_requires_boolean;
                 }
             }
             else if (!strcmp(k->k, "default")) {

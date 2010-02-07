@@ -34,9 +34,9 @@ ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
   if (n->sibling) an->sibling = ajv_alloc_tree(alloc,n->sibling,parent);
   if (n->child)   an->child   = ajv_alloc_tree(alloc,n->child, an);
   if (n->t == orderly_node_object) {
-    orderly_node *cur;
-    for (cur = n->child; cur; cur = cur->sibling) {
-      if (!cur->optional) {
+    ajv_node *cur;
+    for (cur = an->child; cur; cur = cur->sibling) {
+      if (!cur->node->optional) {
         orderly_ps_push(alloc, an->required, cur);
       }
     }

@@ -81,7 +81,6 @@ typedef struct
     } rhs;
 } orderly_range;
     
-
 typedef struct orderly_node_t {
     orderly_node_type t;
     const char * name;
@@ -101,7 +100,7 @@ typedef struct orderly_node_t {
     unsigned int optional;
     /* for an array or object, should properties or elements not
      * explicitly mentioned be allowed */
-    unsigned int additional_properties;
+   orderly_node_type additional_properties;
     /* an array may be "simple typed" or "tuple typed",
      * simple typed arrays have a single single child schema
      * that constrains all members of the array.  Tuple typed

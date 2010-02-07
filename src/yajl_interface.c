@@ -100,34 +100,35 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
 #define FAIL_TYPE_MISMATCH(s, node, type) do {                  \
     ajv_set_error(s,ajv_e_type_mismatch,                        \
-                  node, orderly_node_type_to_string(type));     \
-    return 0; } while (0);                                      \
+                  node, orderly_node_type_to_string(type),      \
+                  strlen(orderly_node_type_to_string(type)));   \
+                  return 0; } while (0);                        \
 
 #define FAIL_REGEX_NOMATCH(s, node,regex) do {                   \
     ajv_set_error(s,ajv_e_regex_failed,                          \
-                  node, regex);                                  \
+                  node, regex, strlen(regex));                   \
     return 0; } while (0);                                       \
 
 
 #define FAIL_TRAILING_INPUT(s) do {                             \
     ajv_set_error(s, ajv_e_trailing_input,                      \
-                  NULL,NULL);                                   \
+                  NULL,NULL,0);                                 \
     return 0; } while (0);
 
-#define FAIL_NOT_IN_LIST(s,n,k) do {                              \
-    ajv_set_error(s, ajv_e_illegal_value, n, k);                  \
+#define FAIL_NOT_IN_LIST(s,n,k) do {                                    \
+    ajv_set_error(s, ajv_e_illegal_value, n, k, k ? strlen(k) : 0);     \
       return 0;} while (0);
 
 #define FAIL_OUT_OF_RANGE(s,n) do {        \
-    ajv_set_error(s, ajv_e_out_of_range, n, NULL);  \
+    ajv_set_error(s, ajv_e_out_of_range, n, NULL,0);     \
     return 0;} while (0);
 
-#define FAIL_UNEXPECTED_KEY(s,n,k) do {                       \
-    ajv_set_error(s,ajv_e_unexpected_key,n,(const char *)k);  \
+#define FAIL_UNEXPECTED_KEY(s,n,k,kl) do {                      \
+    ajv_set_error(s,ajv_e_unexpected_key,n,(const char *)k,kl); \
     return 0;} while (0);
 
 #define FAIL_MISSING_ELEMENT(s,n,k) do {             \
-    ajv_set_error(s,ajv_e_incomplete_container,n,k); \
+    ajv_set_error(s,ajv_e_incomplete_container,n,k,strlen(k));  \
     return 0;} while (0);
   
 #define DO_TYPECHECK(st, t, n) do { if (!ajv_do_typecheck(st,t,n)) return 0;  } while(0);
@@ -159,7 +160,7 @@ ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
   
   typecheck = orderly_subsumed_by(t, typecheck);
   
-  if (! typecheck ) { FAIL_TYPE_MISMATCH(state, state->node, t); }
+  if (! typecheck ) { FAIL_TYPE_MISMATCH(state, state->node->node->name ? state->node : NULL, t); }
 
   return 1;
 }
@@ -339,7 +340,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
         }
       }
     }
-
+    
     if (on->values) {
       orderly_json *cur;
       int found = 0;
@@ -380,6 +381,7 @@ static int ajv_start_array(void * ctx) {
    if (on->t == orderly_node_any) {
      state->depth++;
    } else {
+
      ajv_state_push(state,state->node);
    }
 
@@ -389,14 +391,14 @@ static int ajv_start_array(void * ctx) {
 
  static int ajv_end_array(void * ctx) {
    AJV_STATE(ctx);
-   const orderly_node *on = state->node->node;
+   const orderly_node *on = state->node ? state->node->node : NULL;
 
    
-   if (on->t == orderly_node_any) {
-     state->depth--;
+   if (on && on->t == orderly_node_any) {
+     if (state->depth > 0)  state->depth--;
      if (state->depth == 0 ) { ajv_state_mark_seen(state, state->node); }
    } else {
-     if (!ajv_state_array_complete(state,state->node->parent)) {
+     if (!ajv_state_array_complete(state)) {
        return 0;
      }
      ajv_state_mark_seen(state, state->node);
@@ -426,27 +428,37 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
                        unsigned int stringLen) {
   AJV_STATE(ctx);
   ajv_node *cur;
-  if (state->node->node->t == orderly_node_any
+  if (state->node && state->node->node->t == orderly_node_any
       && state->depth != 0) {
     /* skip straight to return section */ 
   } else {
     const char *this_is_utf8_dont_do_math = (const char *)key;
-    assert(orderly_node_object == state->node->parent->node->t);
-    cur = ajv_find_key(state->node->parent, this_is_utf8_dont_do_math,
+    cur = ajv_find_key(ajv_state_parent(state), this_is_utf8_dont_do_math,
                        stringLen);
-    
+
     if ( cur ){
       state->node = cur;
+      if (cur->node->requires) {
+        const char **n;
+        for (n = cur->node->requires; *n; n++) {
+          ajv_node *req = ajv_find_key(ajv_state_parent(state), 
+                                       *n,
+                                       strlen(*n));
+          ajv_state_require(state,req);
+        }
+      }
     } else {
-      if ( state->node->parent->node->additional_properties )  {
+      if ( ajv_state_parent(state)->node->additional_properties == orderly_node_empty )  {
         /* we found a key which we don't have an associated schema for
          * if the object forbids this, throw an error */
-        FAIL_UNEXPECTED_KEY(state, state->node->parent, key);
+        FAIL_UNEXPECTED_KEY(state, ajv_state_parent(state), key,stringLen);
+      } else {  
+        /* otherwise, put us into schemaless mode */
+        ((orderly_node *)(state->any.node))->t = ajv_state_parent(state)->node->additional_properties; 
+        state->depth = 0;
+        state->any.parent = ajv_state_parent(state);
+        state->node = &(state->any);
       }
-      /* otherwise, put us into schemaless mode */
-      state->depth = 0;
-      state->any.parent = state->node->parent;
-      state->node = &(state->any);
     }
   }
 
@@ -456,11 +468,12 @@ static int ajv_map_key(void * ctx, const unsigned char * key,
 static int ajv_end_map(void * ctx) {
   AJV_STATE(ctx);
 
-  if (state->node->node->t == orderly_node_any) {
+  if (state->node && state->node->node->t == orderly_node_any
+      && state->depth > 0) {
     state->depth--;
     if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
   } else {
-    if (!ajv_state_map_complete(state,state->node->parent)) {
+    if (!ajv_state_map_complete(state,ajv_state_parent(state))) {
       return 0;
     }
   }
