@@ -53,6 +53,8 @@ ORDERLY_API unsigned char * ajv_get_error(ajv_handle hand, int verbose,
 
 ORDERLY_API yajl_status ajv_parse_complete(ajv_handle hand);
 ORDERLY_API void ajv_free_error(ajv_handle hand, unsigned char *err);
+ORDERLY_API unsigned int ajv_get_bytes_consumed(ajv_handle hand);
+  
 #ifdef __cplusplus
 };
 #endif

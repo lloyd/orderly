@@ -6,6 +6,7 @@ int orderly_synthesize_callbacks (const yajl_callbacks *cb,
                                   orderly_json *value);
   
 extern const yajl_callbacks ajv_callbacks;
+extern const yajl_callbacks ajv_passthrough;
 
 
 #endif

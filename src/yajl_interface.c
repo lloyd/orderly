@@ -59,6 +59,19 @@ static int ajv_start_array(void * ctx);
 static int ajv_end_array(void * ctx);
 static int ajv_null(void * ctx);
 static int ajv_boolean(void * ctx, int booleanValue);
+static int pass_ajv_map_key(void * ctx, const unsigned char * key, 
+                       unsigned int stringLen);
+static int pass_ajv_start_map (void * ctx);
+static int pass_ajv_end_map(void * ctx);
+static int pass_ajv_integer(void * ctx, long integerValue);
+static int pass_ajv_double(void * ctx, double value);
+
+static int pass_ajv_string(void * ctx, const unsigned char * stringVal,
+               unsigned int stringLen);
+static int pass_ajv_start_array(void * ctx);
+static int pass_ajv_end_array(void * ctx);
+static int pass_ajv_null(void * ctx);
+static int pass_ajv_boolean(void * ctx, int booleanValue);
 static const ajv_node * orderly_subsumed_by (const orderly_node_type a, 
                                              const ajv_node *b);
 
@@ -178,6 +191,65 @@ const yajl_callbacks ajv_callbacks = {
   ajv_start_array,
   ajv_end_array
 };
+
+
+const yajl_callbacks ajv_passthrough = {
+  pass_ajv_null,
+  pass_ajv_boolean, 
+  pass_ajv_integer, 
+  pass_ajv_double, 
+  NULL,
+  pass_ajv_string,
+  pass_ajv_start_map,
+  pass_ajv_map_key,
+  pass_ajv_end_map,
+  pass_ajv_start_array,
+  pass_ajv_end_array
+};
+
+static int pass_ajv_null(void * ctx) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX_NOARGS(null);
+}
+static int pass_ajv_boolean(void * ctx, int booleanValue) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX(boolean,booleanValue);
+}
+static int pass_ajv_double(void * ctx, double doubleval) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX(double,doubleval);
+}
+
+static int pass_ajv_integer(void * ctx, long integerValue) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX(integer,integerValue);
+}
+static int pass_ajv_string(void * ctx, const unsigned char * stringVal,
+                           unsigned int stringLen) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX(string,stringVal,stringLen);
+}
+static int pass_ajv_start_array(void * ctx) {
+   AJV_STATE(ctx);
+   AJV_SUFFIX_NOARGS(start_array);
+}
+static int pass_ajv_end_array(void * ctx) {
+   AJV_STATE(ctx);
+   AJV_SUFFIX_NOARGS(end_array);
+}
+static int pass_ajv_start_map(void * ctx) {
+   AJV_STATE(ctx);
+   AJV_SUFFIX_NOARGS(start_map);
+}
+static int pass_ajv_end_map(void * ctx) {
+   AJV_STATE(ctx);
+   AJV_SUFFIX_NOARGS(end_map);
+}
+static int pass_ajv_map_key(void * ctx, const unsigned char * key, 
+                            unsigned int stringLen) {
+  AJV_STATE(ctx);
+  AJV_SUFFIX(map_key,key,stringLen);
+}
 
 
 static int ajv_null(void * ctx) {
@@ -381,7 +453,6 @@ static int ajv_start_array(void * ctx) {
    if (on->t == orderly_node_any) {
      state->depth++;
    } else {
-
      ajv_state_push(state,state->node);
    }
 

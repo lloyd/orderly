@@ -92,10 +92,11 @@ typedef struct ajv_state_t {
    * unknown map keys
    */
   ajv_node                any;
-
+  yajl_callbacks            ourcb;
   const orderly_alloc_funcs *AF;
   struct ajv_error_t        error;
   const yajl_callbacks      *cb;
+
   void                      *cbctx;
   unsigned int            depth;
   orderly_ptrstack        node_state;

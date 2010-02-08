@@ -185,11 +185,9 @@ yajl_status ajv_parse_and_validate(ajv_handle hand,
     hand->s = schema;
     hand->node = schema->root;
     orderly_ps_push(hand->AF, hand->node_state, s);
+    memcpy(&hand->ourcb, &ajv_callbacks,sizeof(yajl_callbacks));
   } else {
-    yh = yajl_alloc(hand->cb,
-                    hand->ypc,
-                    hand->AF,
-                    (void *)hand->cbctx);
+    memcpy(&hand->ourcb, &ajv_passthrough,sizeof(yajl_callbacks));
   }
   stat = yajl_parse(yh, jsonText, jsonTextLength);
   if (hand->error.code != ajv_e_no_error) {
@@ -267,7 +265,7 @@ ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
   ajv_state->cb = callbacks;
   ajv_state->cbctx = ctx;
   ajv_state->ypc = config;
-  ajv_state->yajl = yajl_alloc(&ajv_callbacks,
+  ajv_state->yajl = yajl_alloc(&(ajv_state->ourcb),
                                config,
                                allocFuncs,
                                (void *)ajv_state);
@@ -437,4 +435,8 @@ int ajv_state_finished(ajv_state state) {
 void ajv_state_require(ajv_state state, ajv_node *req) {
  ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
  orderly_ps_push(state->AF, s->required, req);
+}
+
+unsigned int ajv_get_bytes_consumed(ajv_state state) {
+  return yajl_get_bytes_consumed(state->yajl);
 }
