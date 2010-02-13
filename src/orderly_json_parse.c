@@ -40,6 +40,29 @@
 #include <string.h>
 #include <pcre.h>
 
+static void
+interject_defaults(orderly_alloc_funcs *alloc, orderly_node *node) {
+  orderly_node *d;
+  switch (node->t) {
+  case orderly_node_empty: 
+  case orderly_node_null: 
+  case orderly_node_string:
+  case orderly_node_boolean:
+  case orderly_node_any:
+  case orderly_node_integer:
+  case orderly_node_number:
+  case orderly_node_object:
+    break;
+  case orderly_node_union: /* XXX: eek? */
+    break;
+  case orderly_node_array:
+    if (! node->child ) {
+      d = orderly_alloc_node(alloc,orderly_node_any);
+      node->child = d;
+    }
+  }
+}
+
 static orderly_json_parse_status
 parse_json_schema(orderly_alloc_funcs * alloc,
                   orderly_json * j, orderly_node ** n)
@@ -315,6 +338,9 @@ parse_json_schema(orderly_alloc_funcs * alloc,
         }
     }
     
+    /* json schema has some implied defaults, insert them */
+    interject_defaults(alloc,*n);
+
     return s;
 
   toErrIsHuman:
