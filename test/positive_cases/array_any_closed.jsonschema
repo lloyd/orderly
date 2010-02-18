@@ -1,4 +1,7 @@
 {
   "type": "array",
+  "items": {
+    "type": "any"
+  },
   "additionalProperties": false
 }
