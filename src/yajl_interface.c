@@ -323,9 +323,14 @@ static int ajv_double(void * ctx, double doubleval) {
       int found = 0;
       assert(on->values->t == orderly_json_array); /* docs say so */
       for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-        assert(cur->t == orderly_json_number);
-        if (doubleval == cur->v.n) {
-          found = 1;
+        if (cur->t == orderly_json_number) {
+          if (doubleval == cur->v.n) {
+            found = 1;
+          }
+        } else {
+          if (doubleval == (double)cur->v.i) {
+            found = 1;
+          }
         }
       }
       if (found == 0) {
@@ -354,9 +359,16 @@ static int ajv_integer(void * ctx, long integerValue) {
       int found = 0;
       assert(on->values->t == orderly_json_array); /* docs say so */
       for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-        assert(cur->t == orderly_json_integer);
-        if (integerValue == cur->v.i) {
-          found = 1;
+        if (cur->t == orderly_json_integer) {
+          if (integerValue == cur->v.i) {
+            found = 1;
+            break;
+          }
+        } else {
+          if ((double)integerValue == cur->v.n) {
+            found = 1;
+            break;
+          }
         }
       }
       if (found == 0) {
