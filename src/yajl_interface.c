@@ -291,7 +291,6 @@ static int ajv_boolean(void * ctx, int booleanValue) {
     int found = 0;
     assert(on->values->t == orderly_json_array); /* docs say so */
     for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-      assert(cur->t == orderly_node_boolean);
       if (cur->v.b == booleanValue) {
         found = 1;
       }
@@ -425,21 +424,6 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
       return 0;
     }
     
-    if (on->values) {
-      orderly_json *cur;
-      int found = 0;
-      assert(on->values->t == orderly_json_array); /* docs say so */
-      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-        assert(cur->t == orderly_json_string);
-        if (!ick_strcmp(cur->v.s, (const char *)stringVal, stringLen)) {
-          found = 1;
-        }
-      }
-      if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node, NULL);
-      }
-    }
-
     if (state->node->regcomp) {
       int pcrecode;
       pcrecode = pcre_exec(state->node->regcomp,NULL,
@@ -452,6 +436,23 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     }
 
   }
+  
+  if (on->values) {
+    orderly_json *cur;
+    int found = 0;
+    assert(on->values->t == orderly_json_array); /* docs say so */
+    for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+      if (cur->t == orderly_json_string) {
+        if (!ick_strcmp(cur->v.s, (const char *)stringVal, stringLen)) {
+          found = 1;
+        }
+      }
+    }
+    if (found == 0) {
+      FAIL_NOT_IN_LIST(state,state->node, NULL);
+    }
+  }
+
 
   AJV_SUFFIX(string,stringVal,stringLen);
 }

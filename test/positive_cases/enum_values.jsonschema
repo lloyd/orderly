@@ -15,6 +15,13 @@
         7,
         42
       ]
+    },
+    "oof": {
+      "type": "any",
+      "enum": [
+        "yada",
+        1
+      ]
     }
   },
   "additionalProperties": false
