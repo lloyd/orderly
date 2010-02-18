@@ -128,7 +128,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     ajv_set_error(s, ajv_e_illegal_value, n, k, kl);                    \
       return 0;} while (0);
 
-#define FAIL_OUT_OF_RANGE(s,n) do {        \
+#define FAIL_OUT_OF_RANGE(s,n) do {                      \
     ajv_set_error(s, ajv_e_out_of_range, n, NULL,0);     \
     return 0;} while (0);
 
