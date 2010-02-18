@@ -411,10 +411,9 @@ int ajv_state_array_complete (ajv_state state) {
   /* with tuple typed nodes, we need to check that we've seen things */
   if (array->node->tuple_typed) {
     assert(state->node->parent == array);
-    if (orderly_ps_current(
-                           ((ajv_node_state)
-                            orderly_ps_current(state->node_state))->seen)
-        != state->node
+    ajv_node_state s  = orderly_ps_current(state->node_state);
+    if ((! orderly_ps_length(s->seen) /* seen nothing */
+        || orderly_ps_current(s->seen) != state->node)
         && state->node != &(state->any)) {
       const ajv_node *cur = state->node;
       do {
