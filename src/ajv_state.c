@@ -10,8 +10,8 @@
 void ajv_state_push(ajv_state state, ajv_node *n) {
   ajv_node_state s = ajv_alloc_node_state(state->AF, n);
   /* only maps and array have children */
-  assert(state->node->node->t == orderly_node_object
-         || state->node->node->t == orderly_node_array);
+  assert(n->node->t == orderly_node_object
+         || n->node->t == orderly_node_array);
   s->node = state->node;
   orderly_ps_push(state->AF, state->node_state, s);
 
@@ -225,7 +225,11 @@ yajl_status ajv_validate(ajv_handle hand,
 void ajv_state_mark_seen(ajv_state s, const ajv_node *node) {
   ajv_node_state ns;
   ns = (ajv_node_state)orderly_ps_current(s->node_state);
-  orderly_ps_push(s->AF, ns->seen, (void *)(node));
+  if (node->parent && node->parent->node->t == orderly_node_union) {
+    orderly_ps_push(s->AF, ns->seen, (void *)(node->parent));
+  } else {
+    orderly_ps_push(s->AF, ns->seen, (void *)(node));
+  }
   /* advance the current pointer if we're checking a tuple typed array */
   if (node->parent &&
       node->parent->node->t == orderly_node_array &&

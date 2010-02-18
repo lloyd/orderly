@@ -140,8 +140,12 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     ajv_set_error(s,ajv_e_incomplete_container,n,k,strlen(k));  \
     return 0;} while (0);
   
-#define DO_TYPECHECK(st, t, n) do {                             \
-    if (!(on = ajv_do_typecheck(st,t,n))) return 0;  } while(0);        \
+#define DO_TYPECHECK(st, t, n) do {                                     \
+    ajv_node *tcn;                                                      \
+    if (!(tcn = ajv_do_typecheck(st,t,n))) return 0;                    \
+    n = tcn;                                                            \
+    on = tcn->node;                                                     \
+  } while(0);                                                           \
 
 #define AJV_SUFFIX(type,...)                                    \
   if (state->cb && state->cb->yajl_##type) {                    \
@@ -158,7 +162,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
   }                                                             \
 
 
-static const orderly_node *  
+static const ajv_node *
 ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
   const ajv_node * typecheck = node;                       
   if (state->error.code != ajv_e_no_error) {
@@ -179,7 +183,7 @@ ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
     return NULL;
   }
 
-  return typecheck->node;
+  return typecheck;
 }
 
 const yajl_callbacks ajv_callbacks = {
