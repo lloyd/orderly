@@ -291,8 +291,10 @@ static int ajv_boolean(void * ctx, int booleanValue) {
     int found = 0;
     assert(on->values->t == orderly_json_array); /* docs say so */
     for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-      if (cur->v.b == booleanValue) {
-        found = 1;
+      if (cur->t == orderly_json_boolean) {
+        if (cur->v.b == booleanValue) {
+          found = 1;
+        }
       }
     }
     if (found == 0) {
@@ -331,24 +333,24 @@ static int ajv_double(void * ctx, double doubleval) {
     }
     ajv_state_mark_seen(state, state->node);
     
-    if (on->values) {
-      orderly_json *cur;
-      int found = 0;
-      assert(on->values->t == orderly_json_array); /* docs say so */
-      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-        if (cur->t == orderly_json_number) {
-          if (doubleval == cur->v.n) {
-            found = 1;
-          }
-        } else {
-          if (doubleval == (double)cur->v.i) {
-            found = 1;
-          }
+  }
+  if (on->values) {
+    orderly_json *cur;
+    int found = 0;
+    assert(on->values->t == orderly_json_array); /* docs say so */
+    for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+      if (cur->t == orderly_json_number) {
+        if (doubleval == cur->v.n) {
+          found = 1;
+        }
+      } else {
+        if (doubleval == (double)cur->v.i) {
+          found = 1;
         }
       }
-      if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse number? */
-      }
+    }
+    if (found == 0) {
+      FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse number? */
     }
   }
   
@@ -367,26 +369,26 @@ static int ajv_integer(void * ctx, long integerValue) {
     if (!ajv_check_integer_range(state,on->range,integerValue)) {
       return 0;
     }
-    if (on->values) {
-      orderly_json *cur;
-      int found = 0;
-      assert(on->values->t == orderly_json_array); /* docs say so */
-      for (cur = on->values->v.children.first; cur ; cur = cur->next) {
-        if (cur->t == orderly_json_integer) {
-          if (integerValue == cur->v.i) {
-            found = 1;
-            break;
-          }
-        } else {
-          if ((double)integerValue == cur->v.n) {
-            found = 1;
-            break;
-          }
+  }
+  if (on->values) {
+    orderly_json *cur;
+    int found = 0;
+    assert(on->values->t == orderly_json_array); /* docs say so */
+    for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+      if (cur->t == orderly_json_integer) {
+        if (integerValue == cur->v.i) {
+          found = 1;
+          break;
+        }
+      } else {
+        if ((double)integerValue == cur->v.n) {
+          found = 1;
+          break;
         }
       }
-      if (found == 0) {
-        FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse int ? */
-      }
+    }
+    if (found == 0) {
+      FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse int ? */
     }
   }
 
