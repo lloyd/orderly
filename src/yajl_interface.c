@@ -286,6 +286,20 @@ static int ajv_boolean(void * ctx, int booleanValue) {
   } else {
     ajv_state_mark_seen(state, state->node);
   }
+  if (on->values) {
+    orderly_json *cur;
+    int found = 0;
+    assert(on->values->t == orderly_json_array); /* docs say so */
+    for (cur = on->values->v.children.first; cur ; cur = cur->next) {
+      assert(cur->t == orderly_node_boolean);
+      if (cur->v.b == booleanValue) {
+        found = 1;
+      }
+    }
+    if (found == 0) {
+      FAIL_NOT_IN_LIST(state,state->node,NULL);
+    }
+  }
 
   AJV_SUFFIX(boolean,booleanValue);
 }
