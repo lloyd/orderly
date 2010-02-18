@@ -91,7 +91,7 @@ const char * ajv_error_to_string (ajv_error e) {
   case ajv_e_incomplete_container: 
     outbuf = "incomplete structure"; break;
   case ajv_e_illegal_value:  
-    outbuf = "value not permitted"; break;
+    outbuf = "illegal value encountered"; break;
   case ajv_e_regex_failed:  
     outbuf = "string did not match regular expression"; break;
   case ajv_e_unexpected_key: 
@@ -143,6 +143,9 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   if (e->extra_info) {
     if (e->code == ajv_e_incomplete_container) {
       strcat(ret, ", object missing required property");
+    }
+    if (e->code == ajv_e_illegal_value) {
+      strcat(ret, ":");
     }
     strcat(ret, " '");
     strcat(ret, e->extra_info);
@@ -461,13 +464,13 @@ int ajv_check_integer_range(ajv_state state, orderly_range r, long l) {
 
   if (ORDERLY_RANGE_SPECIFIED(r)) {
     if (ORDERLY_RANGE_HAS_LHS(r)) {
-      if (r.lhs.i > l) {
+      if (((ORDERLY_RANGE_LHS_DOUBLE & r.info) ? r.lhs.d : r.lhs.i) > l) {
         ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
         return 0;
       }
     }
     if (ORDERLY_RANGE_HAS_RHS(r)) {
-      if (r.rhs.i < l) {
+      if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) ? r.rhs.d : r.rhs.i) < l) {
         ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
         return 0;
       }

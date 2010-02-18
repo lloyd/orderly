@@ -124,8 +124,8 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     return 0; } while (0);                                       \
 
 
-#define FAIL_NOT_IN_LIST(s,n,k) do {                                    \
-    ajv_set_error(s, ajv_e_illegal_value, n, k, k ? strlen(k) : 0);     \
+#define FAIL_NOT_IN_LIST(s,n,k,kl) do {                                 \
+    ajv_set_error(s, ajv_e_illegal_value, n, k, kl);                    \
       return 0;} while (0);
 
 #define FAIL_OUT_OF_RANGE(s,n) do {        \
@@ -298,7 +298,9 @@ static int ajv_boolean(void * ctx, int booleanValue) {
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node,NULL);
+      FAIL_NOT_IN_LIST(state,state->node,
+                       booleanValue ? "true" : "false",
+                       booleanValue ? 4 : 5);
     }
   }
 
@@ -321,12 +323,12 @@ static int ajv_double(void * ctx, double doubleval) {
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
         /* Strictly greater than, orderly spec is vague,
          * json-schema.org is source */
-        if (on->range.lhs.i > doubleval) {
+        if (on->range.lhs.d > doubleval) {
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
       if (ORDERLY_RANGE_HAS_RHS(on->range)) {
-        if (on->range.rhs.i < doubleval) {
+        if (on->range.rhs.d < doubleval) {
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
@@ -350,7 +352,10 @@ static int ajv_double(void * ctx, double doubleval) {
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse number? */
+#define BUFSIZE 50
+      char doublestr[BUFSIZE];
+      snprintf(doublestr,BUFSIZE,"%g",doubleval);
+      FAIL_NOT_IN_LIST(state,state->node,doublestr,strlen(doublestr)); 
     }
   }
   
@@ -388,7 +393,7 @@ static int ajv_integer(void * ctx, long integerValue) {
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node,NULL); /* XXX: deparse int ? */
+      FAIL_NOT_IN_LIST(state,state->node,NULL,0); /* XXX: deparse int ? */
     }
   }
 
@@ -451,7 +456,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node, NULL);
+      FAIL_NOT_IN_LIST(state,state->node, stringVal,stringLen);
     }
   }
 
