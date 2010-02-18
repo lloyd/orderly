@@ -109,7 +109,7 @@ static const ajv_node * orderly_subsumed_by (const orderly_node_type a,
 int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
 #define AJV_STATE(x)                    \
-  struct ajv_state_t *state = (struct ajv_state_t *) x; \
+  struct ajv_state_t *state = (struct ajv_state_t *) x; 
 
 #define FAIL_TYPE_MISMATCH(s, node, type) do {                  \
     ajv_set_error(s,ajv_e_type_mismatch,                        \
@@ -117,16 +117,12 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
                   strlen(orderly_node_type_to_string(type)));   \
                   return 0; } while (0);                        \
 
+
 #define FAIL_REGEX_NOMATCH(s, node,regex) do {                   \
     ajv_set_error(s,ajv_e_regex_failed,                          \
                   node, regex, strlen(regex));                   \
     return 0; } while (0);                                       \
 
-
-#define FAIL_TRAILING_INPUT(s) do {                             \
-    ajv_set_error(s, ajv_e_trailing_input,                      \
-                  NULL,NULL,0);                                 \
-    return 0; } while (0);
 
 #define FAIL_NOT_IN_LIST(s,n,k) do {                                    \
     ajv_set_error(s, ajv_e_illegal_value, n, k, k ? strlen(k) : 0);     \
@@ -144,7 +140,8 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     ajv_set_error(s,ajv_e_incomplete_container,n,k,strlen(k));  \
     return 0;} while (0);
   
-#define DO_TYPECHECK(st, t, n) do { if (!ajv_do_typecheck(st,t,n)) return 0;  } while(0);
+#define DO_TYPECHECK(st, t, n) do {                             \
+    if (!(on = ajv_do_typecheck(st,t,n))) return 0;  } while(0);        \
 
 #define AJV_SUFFIX(type,...)                                    \
   if (state->cb && state->cb->yajl_##type) {                    \
@@ -161,7 +158,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
   }                                                             \
 
 
-static int 
+static const orderly_node *  
 ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
   const ajv_node * typecheck = node;                       
   if (state->error.code != ajv_e_no_error) {
@@ -169,13 +166,20 @@ ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
     /* NORETURN */
   }
   
-  if (ajv_state_finished(state)) { FAIL_TRAILING_INPUT(state) };
+  if (ajv_state_finished(state)) { 
+    ajv_set_error(state, ajv_e_trailing_input, NULL, NULL, 0);
+  }
   
   typecheck = orderly_subsumed_by(t, typecheck);
   
-  if (! typecheck ) { FAIL_TYPE_MISMATCH(state, state->node->node->name ? state->node : NULL, t); }
+  if (! typecheck ) { 
+    ajv_set_error(state,ajv_e_type_mismatch,node->node->name ? node : NULL, 
+                  orderly_node_type_to_string(t),      
+                  strlen(orderly_node_type_to_string(t)));   
+    return NULL;
+  }
 
-  return 1;
+  return typecheck->node;
 }
 
 const yajl_callbacks ajv_callbacks = {
@@ -254,8 +258,9 @@ static int pass_ajv_map_key(void * ctx, const unsigned char * key,
 
 static int ajv_null(void * ctx) {
   AJV_STATE(ctx);
-  const orderly_node *on = state->node->node;
+  const orderly_node *on;
   DO_TYPECHECK(state,orderly_node_null, state->node);
+
 
   if (on->t == orderly_node_any) {
     if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
@@ -269,7 +274,7 @@ static int ajv_null(void * ctx) {
 
 static int ajv_boolean(void * ctx, int booleanValue) {
   AJV_STATE(ctx);
-  const orderly_node *on = state->node->node;
+  const orderly_node *on;
   DO_TYPECHECK(state,orderly_node_boolean, state->node);
 
   if (on->t == orderly_node_any) {
@@ -289,7 +294,6 @@ static int ajv_double(void * ctx, double doubleval) {
   if (on->t == orderly_node_any) {
     if (state->depth == 0) { ajv_state_mark_seen(state, state->node); }
   } else {
-    const orderly_node *on = state->node->node;
   
     if (on->t != orderly_node_number) {
       FAIL_TYPE_MISMATCH(state,state->node, orderly_node_number);
@@ -329,9 +333,6 @@ static int ajv_double(void * ctx, double doubleval) {
   AJV_SUFFIX(double,doubleval);
 }
 
-
-
-
 static int ajv_integer(void * ctx, long integerValue) {
   AJV_STATE(ctx);
   const orderly_node *on = state->node->node;
@@ -341,19 +342,9 @@ static int ajv_integer(void * ctx, long integerValue) {
     if (state->depth == 0) {  ajv_state_mark_seen(state, state->node); }
   } else {
     ajv_state_mark_seen(state, state->node);
-    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
-      if (ORDERLY_RANGE_HAS_LHS(on->range)) {
-        if (on->range.lhs.i > integerValue) {
-          FAIL_OUT_OF_RANGE(state,state->node);
-        }
-      }
-      if (ORDERLY_RANGE_HAS_RHS(on->range)) {
-        if (on->range.rhs.i < integerValue) {
-          FAIL_OUT_OF_RANGE(state,state->node);
-        }
-      }
+    if (!ajv_check_integer_range(state,on->range,integerValue)) {
+      return 0;
     }
-
     if (on->values) {
       orderly_json *cur;
       int found = 0;
@@ -400,17 +391,8 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     if (on->t != orderly_node_string) {
       FAIL_TYPE_MISMATCH(state,state->node,orderly_node_string);
     }
-    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
-      if (ORDERLY_RANGE_HAS_LHS(on->range)) {
-        if (on->range.lhs.i > stringLen) {
-          FAIL_OUT_OF_RANGE(state,state->node);
-        }
-      }
-      if (ORDERLY_RANGE_HAS_RHS(on->range)) {
-        if (on->range.rhs.i < stringLen) {
-          FAIL_OUT_OF_RANGE(state,state->node);
-        }
-      }
+    if (!ajv_check_integer_range(state,on->range,stringLen)) {
+      return 0;
     }
     
     if (on->values) {
@@ -463,8 +445,6 @@ static int ajv_start_array(void * ctx) {
  static int ajv_end_array(void * ctx) {
    AJV_STATE(ctx);
    const orderly_node *on = state->node ? state->node->node : NULL;
-
-   
    if (on && on->t == orderly_node_any && state->depth > 0) {
      state->depth--;
      if (state->depth == 0 ) { ajv_state_mark_seen(state, state->node); }

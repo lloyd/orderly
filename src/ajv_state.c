@@ -229,11 +229,19 @@ void ajv_state_mark_seen(ajv_state s, const ajv_node *node) {
   /* advance the current pointer if we're checking a tuple typed array */
   if (node->parent &&
       node->parent->node->t == orderly_node_array &&
-      node->parent->node->tuple_typed &&
-      node->sibling) {
-    s->node = s->node->sibling;
+      node->parent->node->tuple_typed) {
+    if (node->sibling) {
+      s->node = s->node->sibling;
+    } else {
+      /* otherwise, put us into schemaless mode */
+      ((orderly_node *)(s->any.node))->t = 
+        ajv_state_parent(s)->node->additional_properties; 
+      s->any.sibling = &(s->any);
+      s->depth = 0;
+      s->any.parent = ajv_state_parent(s);
+      s->node = &(s->any);
+    }
   }
-
 }
 
 ajv_handle ajv_alloc(const yajl_callbacks * callbacks,
@@ -396,13 +404,18 @@ int ajv_state_array_complete (ajv_state state) {
   ajv_node *array;
   ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
   array = s->node;
+  if (!ajv_check_integer_range(state,array->node->range,
+                               orderly_ps_length(s->seen))) {
+    return 0;
+  }
   /* with tuple typed nodes, we need to check that we've seen things */
   if (array->node->tuple_typed) {
     assert(state->node->parent == array);
     if (orderly_ps_current(
                            ((ajv_node_state)
                             orderly_ps_current(state->node_state))->seen)
-        != state->node) {
+        != state->node
+        && state->node != &(state->any)) {
       const ajv_node *cur = state->node;
       do {
         if (cur->node->default_value) {
@@ -440,3 +453,26 @@ void ajv_state_require(ajv_state state, ajv_node *req) {
 unsigned int ajv_get_bytes_consumed(ajv_state state) {
   return yajl_get_bytes_consumed(state->yajl);
 }
+
+int ajv_check_integer_range(ajv_state state, orderly_range r, long l) {
+
+  if (ORDERLY_RANGE_SPECIFIED(r)) {
+    if (ORDERLY_RANGE_HAS_LHS(r)) {
+      if (r.lhs.i > l) {
+        ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
+        return 0;
+      }
+    }
+    if (ORDERLY_RANGE_HAS_RHS(r)) {
+      if (r.rhs.i < l) {
+        ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
+        return 0;
+      }
+    }
+  }
+  return 1;
+}
+
+
+
+
