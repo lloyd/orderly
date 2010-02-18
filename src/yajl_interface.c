@@ -320,15 +320,18 @@ static int ajv_double(void * ctx, double doubleval) {
       FAIL_TYPE_MISMATCH(state,state->node, orderly_node_number);
     }
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
+      orderly_range r = on->range;
       if (ORDERLY_RANGE_HAS_LHS(on->range)) {
         /* Strictly greater than, orderly spec is vague,
          * json-schema.org is source */
-        if (on->range.lhs.d > doubleval) {
+        if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) 
+             ? r.lhs.d : (double)r.lhs.i) > doubleval) { 
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
       if (ORDERLY_RANGE_HAS_RHS(on->range)) {
-        if (on->range.rhs.d < doubleval) {
+        if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) 
+             ? r.rhs.d : (double)r.rhs.i) < doubleval) { 
           FAIL_OUT_OF_RANGE(state,state->node);
         }
       }
@@ -345,7 +348,7 @@ static int ajv_double(void * ctx, double doubleval) {
         if (doubleval == cur->v.n) {
           found = 1;
         }
-      } else {
+      } else if (cur->t == orderly_json_integer) {
         if (doubleval == (double)cur->v.i) {
           found = 1;
         }
