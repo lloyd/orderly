@@ -1,5 +1,5 @@
 /*
- * Copyright 2007-2010, Lloyd Hilaiel.
+ * Copyright 2007-2010, Greg Olszewski and Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -13,7 +13,7 @@
  *     the documentation and/or other materials provided with the
  *     distribution.
  * 
- *  3. Neither the name of Lloyd Hilaiel nor the names of its
+ *  3. Neither the name of Greg Olszewski and Lloyd Hilaiel nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  * 

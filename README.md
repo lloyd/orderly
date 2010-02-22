@@ -37,7 +37,7 @@ Contributing
 All the cruft you find here is covered under a BSD style license, even if it's not approprately marked.  The act of forking this project on github is implicit permission to pull back your contributions and redistribute them under this same license.
 
 <pre>
- Copyright 2009, Lloyd Hilaiel.
+ Copyright 2009, Greg Olszewski and Lloyd Hilaiel.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are
@@ -51,7 +51,7 @@ All the cruft you find here is covered under a BSD style license, even if it's n
      the documentation and/or other materials provided with the
      distribution.
  
-  3. Neither the name of Lloyd Hilaiel nor the names of its
+  3. Neither the name of Greg Olszewski and Lloyd Hilaiel nor the names of its
      contributors may be used to endorse or promote products derived
      from this software without specific prior written permission.
  

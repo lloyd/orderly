@@ -1,7 +1,5 @@
-#ifndef __AJV_STATE_H__
-#define __AJV_STATE_H__
 /*
- * Copyright 2009, 2010, LLoyd Hilaiel.
+ * Copyright 2010, Greg Olszewski and Lloyd Hilaiel.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -15,7 +13,7 @@
  *     the documentation and/or other materials provided with the
  *     distribution.
 < * 
- *  3. Neither the name of Lloyd Hilaiel nor the names of its
+ *  3. Neither the name of Greg Olszewski and Lloyd Hilaiel nor the names of its
  *     contributors may be used to endorse or promote products derived
  *     from this software without specific prior written permission.
  * 
@@ -31,6 +29,10 @@
  * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */ 
+
+#ifndef __AJV_STATE_H__
+#define __AJV_STATE_H__
+
 #include "api/ajv_parse.h"
 #include "orderly_alloc.h"
 #include "api/node.h"
