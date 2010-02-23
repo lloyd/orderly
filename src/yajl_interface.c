@@ -141,7 +141,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     return 0;} while (0);
   
 #define DO_TYPECHECK(st, t, n) do {                                     \
-    ajv_node *tcn;                                                      \
+    const ajv_node *tcn;                                                      \
     if (!(tcn = ajv_do_typecheck(st,t,n))) return 0;                    \
     n = tcn;                                                            \
     on = tcn->node;                                                     \
