@@ -130,7 +130,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
 
 #define FAIL_OUT_OF_RANGE(s,n,d) do {                           \
     char buf[128];                                              \
-    snprintf(buf,128,"%99g",d);                                 \
+    snprintf(buf,128,"%.15g",d);                                 \
     ajv_set_error(s, ajv_e_out_of_range, n, buf,strlen(buf));   \
     return 0;} while (0);
 
@@ -358,7 +358,7 @@ static int ajv_double(void * ctx, double doubleval) {
     }
     if (found == 0) {
       char doublestr[128];
-      snprintf(doublestr,128,"%99g",doubleval);
+      snprintf(doublestr,128,"%.15g",doubleval);
       FAIL_NOT_IN_LIST(state,state->node,doublestr,strlen(doublestr)); 
     }
   }

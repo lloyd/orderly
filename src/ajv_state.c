@@ -151,14 +151,14 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
       orderly_buf_append_string(ret, "{");
       buf[0] = 0;
       if (ORDERLY_RANGE_LHS_DOUBLE & on->range.info)
-        sprintf(buf, "%g", on->range.lhs.d);
+        sprintf(buf, "%.15g", on->range.lhs.d);
       else if (ORDERLY_RANGE_LHS_INT & on->range.info)
         sprintf(buf, "%ld", on->range.lhs.i);
       if (buf[0]) orderly_buf_append_string(ret, buf);
       orderly_buf_append_string(ret, ",");
       buf[0] = 0;
       if (ORDERLY_RANGE_RHS_DOUBLE & on->range.info)
-        sprintf(buf, "%g", on->range.rhs.d);
+        sprintf(buf, "%.15g", on->range.rhs.d);
       else if (ORDERLY_RANGE_RHS_INT & on->range.info)
         sprintf(buf, "%ld", on->range.rhs.i);
       if (buf[0]) orderly_buf_append_string(ret, buf);

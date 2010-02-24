@@ -146,14 +146,14 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
             orderly_buf_append_string(w->b, "{");
             buf[0] = 0;
             if (ORDERLY_RANGE_LHS_DOUBLE & n->range.info)
-                sprintf(buf, "%g", n->range.lhs.d);
+                sprintf(buf, "%.15g", n->range.lhs.d);
             else if (ORDERLY_RANGE_LHS_INT & n->range.info)
                 sprintf(buf, "%ld", n->range.lhs.i);
             if (buf[0]) orderly_buf_append_string(w->b, buf);
             orderly_buf_append_string(w->b, ",");
             buf[0] = 0;
             if (ORDERLY_RANGE_RHS_DOUBLE & n->range.info)
-                sprintf(buf, "%g", n->range.rhs.d);
+                sprintf(buf, "%.15g", n->range.rhs.d);
             else if (ORDERLY_RANGE_RHS_INT & n->range.info)
                 sprintf(buf, "%ld", n->range.rhs.i);
             if (buf[0]) orderly_buf_append_string(w->b, buf);
