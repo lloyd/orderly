@@ -50,7 +50,7 @@
 typedef struct orderly_buf_t * orderly_buf;
 
 /* allocate a new buffer */
-orderly_buf orderly_buf_alloc(orderly_alloc_funcs * alloc);
+orderly_buf orderly_buf_alloc(const orderly_alloc_funcs * alloc);
 
 /* free the buffer */
 void orderly_buf_free(orderly_buf buf);

@@ -128,8 +128,10 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen);
     ajv_set_error(s, ajv_e_illegal_value, n, k, kl);                    \
       return 0;} while (0);
 
-#define FAIL_OUT_OF_RANGE(s,n) do {                      \
-    ajv_set_error(s, ajv_e_out_of_range, n, NULL,0);     \
+#define FAIL_OUT_OF_RANGE(s,n,d) do {                           \
+    char buf[128];                                              \
+    snprintf(buf,128,"%g",d);                                   \
+    ajv_set_error(s, ajv_e_out_of_range, n, buf,strlen(buf));   \
     return 0;} while (0);
 
 #define FAIL_UNEXPECTED_KEY(s,n,k,kl) do {                      \
@@ -326,13 +328,13 @@ static int ajv_double(void * ctx, double doubleval) {
          * json-schema.org is source */
         if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) 
              ? r.lhs.d : (double)r.lhs.i) > doubleval) { 
-          FAIL_OUT_OF_RANGE(state,state->node);
+          FAIL_OUT_OF_RANGE(state,state->node,doubleval);
         }
       }
       if (ORDERLY_RANGE_HAS_RHS(on->range)) {
         if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) 
              ? r.rhs.d : (double)r.rhs.i) < doubleval) { 
-          FAIL_OUT_OF_RANGE(state,state->node);
+          FAIL_OUT_OF_RANGE(state,state->node,doubleval);
         }
       }
     }
@@ -447,7 +449,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     if (state->node->checker) {
       if (!state->node->checker((const char *)stringVal,stringLen)) {
         ajv_set_error(state, ajv_e_invalid_format, state->node, 
-                      stringVal, stringLen);
+                      (char *)stringVal, stringLen);
         return 0;
       }
     }

@@ -42,7 +42,7 @@ struct orderly_buf_t {
     unsigned int len;
     unsigned int used;
     unsigned char * data;
-    orderly_alloc_funcs * alloc;
+    const orderly_alloc_funcs * alloc;
 };
 
 static
@@ -69,7 +69,7 @@ void orderly_buf_ensure_available(orderly_buf buf, unsigned int want)
     }
 }
 
-orderly_buf orderly_buf_alloc(orderly_alloc_funcs * alloc)
+orderly_buf orderly_buf_alloc(const orderly_alloc_funcs * alloc)
 {
     orderly_buf b = OR_MALLOC(alloc, sizeof(struct orderly_buf_t));
     memset((void *) b, 0, sizeof(struct orderly_buf_t));

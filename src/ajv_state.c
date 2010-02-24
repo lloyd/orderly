@@ -3,6 +3,7 @@
 #include "yajl_interface.h"
 #include "api/ajv_parse.h"
 #include "orderly_json.h"
+#include "ajv_schema.h"
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -106,21 +107,20 @@ const char * ajv_error_to_string (ajv_error e) {
 }
 
 
-
-
-#define ERROR_BASE_LENGTH 1024
 unsigned char * ajv_get_error(ajv_handle hand, int verbose,
                               const unsigned char * jsonText,
                               unsigned int jsonTextLength) {
   char * yajl_err;
-  char * ret;
+  orderly_buf ret = orderly_buf_alloc(hand->AF);
   ajv_state s = hand;
-
+  const unsigned char *cret;
   struct ajv_error_t *e = &(s->error);
 
   int yajl_length;
-  int max_length;
-
+  const char *fn;
+  if (e->node) {
+    fn = ajv_node_format(e->node->node);
+  }
   if (e->code == ajv_e_no_error) { 
     return yajl_get_error(hand->yajl,verbose,jsonText,jsonTextLength);
   } 
@@ -134,50 +134,79 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
     yajl_length = strlen(yajl_err);
   }
 
-  max_length  = ERROR_BASE_LENGTH;
-  max_length += e->extra_info ? strlen(e->extra_info) : 1;
-  if (e->node && e->node->node->name) {
-    max_length += strlen(e->node->node->name);
+  if (e->code == ajv_e_out_of_range) {
+    const orderly_node *on = e->node->node;
+    const char *type = orderly_node_type_to_string(on->t);
+    orderly_buf_append_string(ret,type);
+    if (e->node->node->t == orderly_node_array) {
+      orderly_buf_append_string(ret," length");
+    }
+    orderly_buf_append_string(ret," ");
+    orderly_buf_append_string(ret,e->extra_info);
+    orderly_buf_append_string(ret," out of range ");
+    /* optional range */
+    if (ORDERLY_RANGE_SPECIFIED(on->range)) {
+      char buf[128];
+      orderly_buf_append_string(ret, "{");
+      buf[0] = 0;
+      if (ORDERLY_RANGE_LHS_DOUBLE & on->range.info)
+        sprintf(buf, "%g", on->range.lhs.d);
+      else if (ORDERLY_RANGE_LHS_INT & on->range.info)
+        sprintf(buf, "%ld", on->range.lhs.i);
+      if (buf[0]) orderly_buf_append_string(ret, buf);
+      orderly_buf_append_string(ret, ",");
+      buf[0] = 0;
+      if (ORDERLY_RANGE_RHS_DOUBLE & on->range.info)
+        sprintf(buf, "%g", on->range.rhs.d);
+      else if (ORDERLY_RANGE_RHS_INT & on->range.info)
+        sprintf(buf, "%ld", on->range.rhs.i);
+      if (buf[0]) orderly_buf_append_string(ret, buf);
+      orderly_buf_append_string(ret, "}");
+    }
+  } else {
+    orderly_buf_append_string(ret, (const char *)ajv_error_to_string(e->code));
   }
-  ret = OR_MALLOC(s->AF, max_length+1);
-  ret[0] = '\0';
-  strcat(ret, (const char *)ajv_error_to_string(e->code));
+
   if (e->code == ajv_e_invalid_format) {
-    const char *fn = ajv_node_format(e->node->node);
-    strcat(ret, " '");
-    strcat(ret, fn);
-    strcat(ret, "':");
+    orderly_buf_append_string(ret, " '");
+    orderly_buf_append_string(ret, fn);
+    orderly_buf_append_string(ret, "':");
   }
 
   if (e->extra_info) {
     if (e->code == ajv_e_incomplete_container) {
-      strcat(ret, ", object missing required property");
+      orderly_buf_append_string(ret, ", object missing required property");
     }
     if (e->code == ajv_e_illegal_value) {
-      strcat(ret, ":");
+      orderly_buf_append_string(ret, ":");
     }
-    strcat(ret, " '");
-    strcat(ret, e->extra_info);
-    strcat(ret, "'");
+    if (e->code != ajv_e_out_of_range) {
+      orderly_buf_append_string(ret, " '");
+      orderly_buf_append_string(ret, e->extra_info);
+      orderly_buf_append_string(ret, "'");
+    }
   }
 
   if (e->node) {
       if (e->code == ajv_e_type_mismatch) {
         if (e->node->node->name) {
-          strcat(ret, " for property '");
-          strcat(ret, e->node->node->name);
-          strcat(ret, "'");
+          orderly_buf_append_string(ret, " for property '");
+          orderly_buf_append_string(ret, e->node->node->name);
+          orderly_buf_append_string(ret, "'");
         }
-        strcat(ret, ", expected '");
-        strcat(ret, orderly_node_type_to_string(e->node->node->t));
-        strcat(ret, "'");
+        orderly_buf_append_string(ret, ", expected '");
+        orderly_buf_append_string(ret, orderly_node_type_to_string(e->node->node->t));
+        orderly_buf_append_string(ret, "'");
       }
   }
   if (e->code == ajv_e_unexpected_key) {
-        strcat(ret, ", while additionalProperties forbidden");
+        orderly_buf_append_string(ret, ", while additionalProperties forbidden");
   }
-  strcat(ret,".");
-  return (unsigned char *)ret;
+  orderly_buf_append_string(ret,".");
+  BUF_STRDUP(cret, hand->AF, orderly_buf_data(ret),
+             orderly_buf_len(ret));
+  orderly_buf_free(ret);
+  return cret;
 }
 
 void ajv_free_error(ajv_handle hand, unsigned char *str) {
@@ -472,17 +501,19 @@ unsigned int ajv_get_bytes_consumed(ajv_state state) {
 }
 
 int ajv_check_integer_range(ajv_state state, orderly_range r, long l) {
-
+  char buf[128];
   if (ORDERLY_RANGE_SPECIFIED(r)) {
     if (ORDERLY_RANGE_HAS_LHS(r)) {
       if (((ORDERLY_RANGE_LHS_DOUBLE & r.info) ? r.lhs.d : r.lhs.i) > l) {
-        ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
+        snprintf(buf,128,"%ld",l);
+        ajv_set_error(state, ajv_e_out_of_range, state->node, buf,strlen(buf));
         return 0;
       }
     }
     if (ORDERLY_RANGE_HAS_RHS(r)) {
       if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) ? r.rhs.d : r.rhs.i) < l) {
-        ajv_set_error(state, ajv_e_out_of_range, state->node, NULL,0);
+        snprintf(buf,128,"%ld",l);
+        ajv_set_error(state, ajv_e_out_of_range, state->node, buf,strlen(buf));
         return 0;
       }
     }
