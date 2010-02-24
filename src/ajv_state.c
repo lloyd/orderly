@@ -96,6 +96,8 @@ const char * ajv_error_to_string (ajv_error e) {
     outbuf = "string did not match regular expression"; break;
   case ajv_e_unexpected_key: 
     outbuf = "encountered unknown property"; break;
+  case ajv_e_invalid_format: 
+    outbuf = "string was not of required format"; break;
   default:                   
     outbuf = "Internal error: unrecognized error code"; 
   };
@@ -140,6 +142,13 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   ret = OR_MALLOC(s->AF, max_length+1);
   ret[0] = '\0';
   strcat(ret, (const char *)ajv_error_to_string(e->code));
+  if (e->code == ajv_e_invalid_format) {
+    const char *fn = ajv_node_format(e->node->node);
+    strcat(ret, " '");
+    strcat(ret, fn);
+    strcat(ret, "':");
+  }
+
   if (e->extra_info) {
     if (e->code == ajv_e_incomplete_container) {
       strcat(ret, ", object missing required property");

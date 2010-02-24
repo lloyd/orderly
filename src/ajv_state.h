@@ -72,6 +72,7 @@ typedef enum {
   ajv_e_incomplete_container, /* incopmlete tuple-array, map, or document */
   ajv_e_illegal_value, /* value found din't match enumerated list */
   ajv_e_unexpected_key, /* only valid if additional_properties == 0 XXX ?*/
+  ajv_e_invalid_format, /* format checker returned invalid */
 } ajv_error;
 
 struct ajv_error_t  {

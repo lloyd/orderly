@@ -28,23 +28,33 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc,
                               &erroffset,
                               NULL);
   }
+  {
+    const char *formatname = ajv_node_format(on);
+    int i;
+    if (formatname) {
+      for (i = 0; i < orderly_ps_length(format_checkers); i++) {
+        checker_tuple *chk = format_checkers.stack[i];
+        if (!strcmp(formatname, chk->name)) {
+          n->checker = chk->checker;
+        }
+      }
+    }
+  }
+  return n;
+}
+
+const char *ajv_node_format(const orderly_node *on) {
   if (on->passthrough_properties
       && on->passthrough_properties->t == orderly_json_object ) {
     orderly_json *cur;
     
     for (cur = on->passthrough_properties->v.children.first; cur; cur = cur->next) {
       if (!strcmp(cur->k, "format")) {
-        int i;
-        for (i = 0; i < orderly_ps_length(format_checkers); i++) {
-          checker_tuple *chk = format_checkers.stack[i];
-          if (!strcmp(cur->v.s, chk->name)) {
-            n->checker = chk->checker;
-          }
-        }
+        return cur->v.s;
       }
     }
   }
-  return n;
+  return NULL;
 }
 
 ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,

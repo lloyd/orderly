@@ -446,7 +446,9 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     }
     if (state->node->checker) {
       if (!state->node->checker((const char *)stringVal,stringLen)) {
-        FAIL_NOT_IN_LIST(state,state->node, (const char *)stringVal,stringLen);
+        ajv_set_error(state, ajv_e_invalid_format, state->node, 
+                      stringVal, stringLen);
+        return 0;
       }
     }
 
