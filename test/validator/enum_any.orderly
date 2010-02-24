@@ -1,2 +1,2 @@
-any [ "fuck", 1, false ];
+any [ "foo", 1, false ];
 

@@ -413,7 +413,7 @@ int ick_strcmp(const char *a, const char *b, unsigned int blen) {
     if (*a != *b) { return 1; }
     a++; b++; blen--;
   }
-  if (*a != '\0') { return 1; }
+  if (*a != '\0' || blen != 0) { return 1; }
   return 0;
 }
 

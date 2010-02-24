@@ -195,6 +195,13 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
           orderly_buf_append_string(ret, e->node->node->name);
           orderly_buf_append_string(ret, "'");
         }
+        if (e->node->parent->node->tuple_typed == 1) {
+          ajv_node_state ns = (ajv_node_state)orderly_ps_current(s->node_state);
+          char buf[128];
+          orderly_buf_append_string(ret, " for array element ");
+          snprintf(buf,128,"%d",orderly_ps_length(ns->seen)+1);
+          orderly_buf_append_string(ret,buf);
+        }
         orderly_buf_append_string(ret, ", expected '");
         orderly_buf_append_string(ret, orderly_node_type_to_string(e->node->node->t));
         orderly_buf_append_string(ret, "'");
