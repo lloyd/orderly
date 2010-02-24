@@ -18,16 +18,18 @@ end
 
 passed = 0
 total = 0
+files = Dir.glob(File.join(casesDir, "*.orderly"))
+puts "1..#{files.length * 2}"
+puts "#Running parse/lex tests: "
+puts "#(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
 
-puts "Running parse/lex tests: "
-puts "(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
-
-Dir.glob(File.join(casesDir, "*.orderly")).each { |f| 
+files.each { |f| 
   next if substrpat && substrpat.length > 0 && !f.include?(substrpat)
   [
     [ "Lexing", f.sub(/orderly$/, "lexed"), lexBinary ],
     [ "Parsing", f.sub(/orderly$/, "parsed"), parseBinary ]
   ].each { |testType|
+    total += 1
     what, wantFile, program = *testType
     gotFile = wantFile + ".got"
     got = ""
@@ -37,28 +39,27 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
       got = lb.read
     }
 
-    print "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>:\t "
+    explanation = "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>"
     if !File.exist? wantFile
-      puts "skipped"    
+      puts "not ok #{total} - # TODO no file #{explanation}"    
       passed += 1
     else
       want = IO.read(wantFile)
       if (got == want)
-        puts "ok"
+        puts "ok #{total} - #{explanation}"
         passed += 1
       else
-        puts "FAIL"
-        puts "<<<want<<<"
-        puts want
-        puts "========"
-        puts got
-        puts ">>got>>"
+        puts "not ok #{total}"
+        puts "#<<<want<<<"
+        puts want.gsub(/^/,"#")
+        puts "#========"
+        puts got.gsub(/^/,"#")
+        puts "#>>got>>"
       end
     end
-    total += 1
   }
 }
 
-puts "#{passed}/#{total} tests successful"
+puts "##{passed}/#{total} tests successful"
 exit passed == total
 

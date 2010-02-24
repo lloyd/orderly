@@ -13,12 +13,10 @@ if !File.executable? reformatBinary
 end
 
 passed = 0
-total = 0
 skipped = 0
-
-puts "Running round trip tests: "
-puts "(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
-
+total = 0
+cur = 0
+#puts "TAP version 13"
 tests = Hash.new
 
 Dir.glob(File.join(casesDir, "*")).each { |f| 
@@ -28,13 +26,23 @@ Dir.glob(File.join(casesDir, "*")).each { |f|
   tests[key] = Array.new if !tests.has_key? key
   tests[key].push f
 }
+total = tests.length * 4
+puts "1..#{total}"
+puts "#Running round trip tests: "
+puts "#(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
+
 
 tests.each { |k,v|
   if v.length != 2
-    print "Skipping #{k}:\t "
-    puts " (can't find both jsonschema and orderly files)"
-    total += 4
     skipped += 4
+    cur += 1
+    puts "not ok #{cur} - #{k} (either jsonschema or orderly missing) # TODO "
+    cur += 1
+    puts "not ok #{cur} - #{k} (either jsonschema or orderly missing) # TODO "
+    cur += 1
+    puts "not ok #{cur} - #{k} (either jsonschema or orderly missing) # TODO "
+    cur += 1
+    puts "not ok #{cur} - #{k} (either jsonschema or orderly missing) # TODO "
   else 
     order = [ "orderly", k + ".orderly" ]
     chaos = [ "jsonschema", k + ".jsonschema" ]
@@ -45,9 +53,10 @@ tests.each { |k,v|
       [ chaos, order ],
       [ chaos, chaos ]
     ].each { |x|
-      print "test '#{k.sub(/^.*\/([^\/]*)$/, '\1')}' (#{x[0][0]} -> #{x[1][0]}):\t "
+      explanation = "'#{k.sub(/^.*\/([^\/]*)$/, '\1')}' (#{x[0][0]}->#{x[1][0]})"
       cmd = "#{reformatBinary} -i #{x[0][0]} -o #{x[1][0]}"
       got = nil
+      cur += 1
       IO.popen(cmd, "w+") { |lb|      
         File.open(x[0][1], "r").each {|l| lb.write(l)}
         lb.close_write
@@ -55,20 +64,19 @@ tests.each { |k,v|
       }
       want = IO.read(x[1][1])
       if (got == want)
-        puts "ok"
+        puts "ok #{cur} - #{explanation}"
         passed += 1
       else 
-        puts "FAIL"
-        puts "<<<want<<<"
-p        puts want
-        puts "========"
-        puts got
-        puts ">>got>>"
+        puts "not ok #{cur} - #{explanation}"
+        puts "#<<<want<<<"
+        puts want.gsub(/^/,"#")
+        puts "#========"
+        puts got.gsub(/^/,"#")
+        puts "#>>got>>"
       end
-      total += 1
     }
   end
 }
 
-puts "(#{passed}+#{skipped} skipped)/#{total} tests successful"
+puts "# (#{passed}+#{skipped} skipped)/#{total} tests successful"
 exit ((ENV["NO_SKIPPING"]) ? passed == total : (passed + skipped) == total)

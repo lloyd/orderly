@@ -14,11 +14,15 @@ end
 
 passed = 0
 total = 0
+tests = Dir.glob(File.join(casesDir, "*.orderly"))
+puts "1..#{tests.length}"
+puts "#Running error reporting tests: "
+puts "#(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
 
-puts "Running error reporting tests: "
-puts "(containing '#{substrpat}' in name)" if substrpat && substrpat.length > 0
 
-Dir.glob(File.join(casesDir, "*.orderly")).each { |f| 
+
+tests.each { |f| 
+  total += 1
   next if substrpat && substrpat.length > 0 && !f.include?(substrpat)
 
   program = checkBinary
@@ -26,7 +30,7 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
   wantFile = f.sub(/orderly$/, "output")
   gotFile = wantFile + ".got"
   got = ""
-  print "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}>:\t "
+  explanation = "#{what} <#{f.sub(/^.*?([^\/]+)\.orderly$/, '\1')}> "
   IO.popen(program, "w+") { |lb|
     File.open(f, "r").each {|l| lb.write(l)}
     lb.close_write
@@ -35,29 +39,28 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
   if !File.exist? wantFile
     todoFile = f + ".todo"
     if File.exist? todoFile
-      puts "TODO"    
+      todoexp = IO.read(todoFile)
+      explanation += "# TODO - #{todoexp}"    
       passed += 1
     else
-      puts "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
+      explanation += "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
       File.open(gotFile, "w+") { |gf| gf.write got }
-      puts got
     end
+    want = ""
   else
     want = IO.read(wantFile)
-    if (got == want)
-      puts "ok"
-      passed += 1
-    else
-      puts "FAIL"
-        puts "<<<want<<<"
-        puts want
-        puts "========"
-        puts got
-        puts ">>got>>"
-    end
   end
-  total += 1
+  if (got == want)
+    puts "ok #{total} - #{explanation}"
+    passed += 1
+  else
+      puts "not ok #{total} - #{explanation}"
+      puts "#<<<want<<<"
+      puts want.gsub(/^/,"#")
+      puts "#========"
+      puts got.gsub(/^/,"#")
+      puts "#>>got>>"
+  end
 }
 
-puts "#{passed}/#{total} tests successful"
 exit passed == total
