@@ -1,0 +1,4 @@
+object {
+        array [ any ] {0,5} short;
+        array [ any ] {5,10} long;      
+};

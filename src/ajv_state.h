@@ -148,6 +148,6 @@ void ajv_state_mark_seen(ajv_state s, const ajv_node *node) ;
 int ajv_state_finished(ajv_state state);
 const ajv_node * ajv_state_parent(ajv_state state);
 void ajv_state_require(ajv_state state, ajv_node *req) ;
-int ajv_check_integer_range(ajv_state state, orderly_range r, long l);
+int ajv_check_integer_range(ajv_state state, const ajv_node *an, long l);
 
 #endif

@@ -376,7 +376,7 @@ static int ajv_integer(void * ctx, long integerValue) {
     if (state->depth == 0) {  ajv_state_mark_seen(state, state->node); }
   } else {
     ajv_state_mark_seen(state, state->node);
-    if (!ajv_check_integer_range(state,on->range,integerValue)) {
+    if (!ajv_check_integer_range(state,state->node,integerValue)) {
       return 0;
     }
   }
@@ -432,7 +432,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
     if (on->t != orderly_node_string) {
       FAIL_TYPE_MISMATCH(state,state->node,orderly_node_string);
     }
-    if (!ajv_check_integer_range(state,on->range,stringLen)) {
+    if (!ajv_check_integer_range(state,state->node,stringLen)) {
       return 0;
     }
     

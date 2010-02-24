@@ -138,7 +138,8 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
     const orderly_node *on = e->node->node;
     const char *type = orderly_node_type_to_string(on->t);
     orderly_buf_append_string(ret,type);
-    if (e->node->node->t == orderly_node_array) {
+    if (on->t == orderly_node_array
+        || on->t == orderly_node_string) {
       orderly_buf_append_string(ret," length");
     }
     orderly_buf_append_string(ret," ");
@@ -451,7 +452,7 @@ int ajv_state_array_complete (ajv_state state) {
   const ajv_node *array;
   ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
   array = s->node;
-  if (!ajv_check_integer_range(state,array->node->range,
+  if (!ajv_check_integer_range(state,array,
                                orderly_ps_length(s->seen))) {
     return 0;
   }
@@ -500,20 +501,21 @@ unsigned int ajv_get_bytes_consumed(ajv_state state) {
   return yajl_get_bytes_consumed(state->yajl);
 }
 
-int ajv_check_integer_range(ajv_state state, orderly_range r, long l) {
+int ajv_check_integer_range(ajv_state state, const ajv_node *an, long l) {
   char buf[128];
+  orderly_range r = an->node->range;
   if (ORDERLY_RANGE_SPECIFIED(r)) {
     if (ORDERLY_RANGE_HAS_LHS(r)) {
       if (((ORDERLY_RANGE_LHS_DOUBLE & r.info) ? r.lhs.d : r.lhs.i) > l) {
         snprintf(buf,128,"%ld",l);
-        ajv_set_error(state, ajv_e_out_of_range, state->node, buf,strlen(buf));
+        ajv_set_error(state, ajv_e_out_of_range, an, buf,strlen(buf));
         return 0;
       }
     }
     if (ORDERLY_RANGE_HAS_RHS(r)) {
       if (((ORDERLY_RANGE_RHS_DOUBLE & r.info) ? r.rhs.d : r.rhs.i) < l) {
         snprintf(buf,128,"%ld",l);
-        ajv_set_error(state, ajv_e_out_of_range, state->node, buf,strlen(buf));
+        ajv_set_error(state, ajv_e_out_of_range, an, buf,strlen(buf));
         return 0;
       }
     }
