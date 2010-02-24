@@ -6,10 +6,15 @@
       "minLength": 3,
       "maxLength": 12
     },
-    "mynum": {
+    "myint": {
       "type": "number",
       "minimum": 0,
       "maximum": 42
+    },
+    "mynum": {
+      "type": "number",
+      "minimum": 1.1,
+      "maximum": 42.1
     },
     "myarray": {
       "type": "array",

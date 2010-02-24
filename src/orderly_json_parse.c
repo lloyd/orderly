@@ -170,7 +170,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
                     (*n)->range.lhs.i = k->v.i;
                 } else if (k->t == orderly_json_number) {
-                    (*n)->range.info |= ORDERLY_RANGE_LHS_INT;
+                    (*n)->range.info |= ORDERLY_RANGE_LHS_DOUBLE;
                     (*n)->range.lhs.d = k->v.n;
                 } else {
                     s = orderly_json_parse_s_minimum_requires_number;
@@ -182,7 +182,7 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
                     (*n)->range.rhs.i = k->v.i;
                 } else if (k->t == orderly_json_number) {
-                    (*n)->range.info |= ORDERLY_RANGE_RHS_INT;
+                    (*n)->range.info |= ORDERLY_RANGE_RHS_DOUBLE;
                     (*n)->range.rhs.d = k->v.n;
                 } else {
                     s = orderly_json_parse_s_maximum_requires_number;
