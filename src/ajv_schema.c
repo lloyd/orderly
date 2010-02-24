@@ -4,6 +4,12 @@
 #include "orderly_alloc.h"
 #include <string.h>
 #include <assert.h>
+typedef struct { 
+  char *name;
+  ajv_format_checker checker;
+} checker_tuple;
+
+orderly_ptrstack format_checkers = { NULL, 0, 0};
 
 ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc, 
                            const orderly_node *on,    ajv_node *parent ) 
@@ -22,7 +28,22 @@ ajv_node * ajv_alloc_node( const orderly_alloc_funcs * alloc,
                               &erroffset,
                               NULL);
   }
-
+  if (on->passthrough_properties
+      && on->passthrough_properties->t == orderly_json_object ) {
+    orderly_json *cur;
+    
+    for (cur = on->passthrough_properties->v.children.first; cur; cur = cur->next) {
+      if (!strcmp(cur->k, "format")) {
+        int i;
+        for (i = 0; i < orderly_ps_length(format_checkers); i++) {
+          checker_tuple *chk = format_checkers.stack[i];
+          if (!strcmp(cur->v.s, chk->name)) {
+            n->checker = chk->checker;
+          }
+        }
+      }
+    }
+  }
   return n;
 }
 
@@ -97,7 +118,7 @@ void ajv_free_schema(ajv_schema schema) {
 }  
 
 
-ajv_node *ajv_find_key(ajv_node *map, const char *key, unsigned int len) {
+ajv_node *ajv_find_key(const ajv_node *map, const char *key, unsigned int len) {
   ajv_node *cur;
   
   for (cur = map->child; cur; cur = cur->sibling) {
@@ -107,4 +128,19 @@ ajv_node *ajv_find_key(ajv_node *map, const char *key, unsigned int len) {
       }
   }
   return cur;
+}
+
+void ajv_register_format(const char *name, ajv_format_checker checker) {
+  static orderly_alloc_funcs orderlyAllocFuncBuffer;
+  checker_tuple *chk;  
+  static orderly_alloc_funcs * orderlyAllocFuncBufferPtr = NULL;
+
+  if (orderlyAllocFuncBufferPtr == NULL) {
+    orderly_set_default_alloc_funcs(&orderlyAllocFuncBuffer);
+    orderlyAllocFuncBufferPtr = &orderlyAllocFuncBuffer;
+  }
+  chk = OR_MALLOC(orderlyAllocFuncBufferPtr,sizeof(checker_tuple));
+  BUF_STRDUP(chk->name, orderlyAllocFuncBufferPtr, name, strlen(name));
+  chk->checker = checker;
+  orderly_ps_push(orderlyAllocFuncBufferPtr, format_checkers, chk);
 }

@@ -50,6 +50,17 @@ usage(const char * progname)
     exit(1);
 }
 
+static int check_orderly(const char *orderly, unsigned int length) {
+  return length == 7
+    && orderly[0] == 'o'
+    && orderly[1] == 'r'
+    && orderly[2] == 'd'
+    && orderly[3] == 'e'
+    && orderly[4] == 'r'
+    && orderly[5] == 'l'
+    && orderly[6] == 'y';
+}
+
 int 
 main(int argc, char ** argv)
 {
@@ -61,7 +72,7 @@ main(int argc, char ** argv)
     int quiet = 0;
 	int retval = 0, done = 0;
     yajl_parser_config cfg = { 0, 1 };
-
+    ajv_register_format("orderly",&check_orderly);
     /* check arguments.*/
     int a = 1;
     while ((a < argc) && (argv[a][0] == '-') && (strlen(argv[a]) > 1)) {

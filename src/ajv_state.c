@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <assert.h>
 
-void ajv_state_push(ajv_state state, ajv_node *n) {
+void ajv_state_push(ajv_state state, const ajv_node *n) {
   ajv_node_state s = ajv_alloc_node_state(state->AF, n);
   /* only maps and array have children */
   assert(n->node->t == orderly_node_object
@@ -326,7 +326,7 @@ yajl_status ajv_parse_complete(ajv_handle hand) {
 }
 
 
-int ajv_state_map_complete (ajv_state state, ajv_node *map) {
+int ajv_state_map_complete (ajv_state state, const ajv_node *map) {
   ajv_node_state ns = state->node_state.stack[state->node_state.used - 1];
   int i = 0, j;
   int maxreq = orderly_ps_length(ns->required);
@@ -348,7 +348,8 @@ int ajv_state_map_complete (ajv_state state, ajv_node *map) {
         if (state->cb->yajl_map_key) {
           ret = state->cb->yajl_map_key(
                                         state->cbctx,
-                                        req->node->name, strlen(req->node->name));
+                                        (const unsigned char *)req->node->name,
+                                        strlen(req->node->name));
           if (ret == 0) {
             return 0;
           }
@@ -381,7 +382,8 @@ int ajv_state_map_complete (ajv_state state, ajv_node *map) {
         if (state->cb->yajl_map_key) {
           ret = state->cb->yajl_map_key(
                                         state->cbctx,
-                                        req->node->name, strlen(req->node->name));
+                                        (const unsigned char *)req->node->name,
+                                        strlen(req->node->name));
           if (ret == 0) {
             return 0;
           }
@@ -402,13 +404,13 @@ int ajv_state_map_complete (ajv_state state, ajv_node *map) {
   return 1;
 }
 
-ajv_node * ajv_state_parent(ajv_state state) {
+const ajv_node * ajv_state_parent(ajv_state state) {
   ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
   return s->node;
 }
 
 int ajv_state_array_complete (ajv_state state) {
-  ajv_node *array;
+  const ajv_node *array;
   ajv_node_state s = state->node_state.stack[state->node_state.used - 1];  
   array = s->node;
   if (!ajv_check_integer_range(state,array->node->range,

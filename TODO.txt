@@ -1,9 +1,9 @@
 1. sh1ttons of broken jsonschemas!
-2. simple CGI reformatter program?
-3. orderly-json.org udpate
+2. sh1ttons of invalid, but legal json
+3. track down 64-bit double error validator problem
 
 other/later (add explicit support for?):
 1. extends
 2. disallow
 3. maxDecimal
-4. format
+4. jsonschema "format" -- support via backticks currently, add to orderly?

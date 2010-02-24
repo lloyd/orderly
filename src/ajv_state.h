@@ -45,9 +45,11 @@ typedef struct ajv_node_t {
   struct ajv_node_t * sibling;
   struct ajv_node_t * child;
   /* all children point to their parents */
-  struct ajv_node_t * parent;
+  const struct ajv_node_t * parent;
   /* the orderly node we wrap */
   const orderly_node *node;
+  /* a "format" callback */
+  ajv_format_checker checker;
   /* a compiled regex for string nodes */
   pcre *regcomp;
   /* a ptrstack of required elements */
@@ -111,10 +113,11 @@ struct ajv_schema_t {
   ajv_node *root;
   orderly_node  *oroot;
   const orderly_alloc_funcs *af;
+  
 };
-void ajv_state_push(ajv_state state, ajv_node *n);
+void ajv_state_push(ajv_state state, const ajv_node *n);
 void ajv_state_pop(ajv_state state);
-int ajv_state_map_complete (ajv_state state, ajv_node *map);
+int ajv_state_map_complete (ajv_state state, const ajv_node *map);
 int ajv_state_array_complete (ajv_state state);
 ajv_node * ajv_alloc_tree(const orderly_alloc_funcs * alloc,
                           const orderly_node *n, ajv_node *parent);
@@ -142,7 +145,7 @@ ajv_node_state ajv_alloc_node_state( const orderly_alloc_funcs * alloc,
 
 void ajv_state_mark_seen(ajv_state s, const ajv_node *node) ;
 int ajv_state_finished(ajv_state state);
-ajv_node * ajv_state_parent(ajv_state state);
+const ajv_node * ajv_state_parent(ajv_state state);
 void ajv_state_require(ajv_state state, ajv_node *req) ;
 int ajv_check_integer_range(ajv_state state, orderly_range r, long l);
 

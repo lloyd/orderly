@@ -444,6 +444,11 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
         }
       }
     }
+    if (state->node->checker) {
+      if (!state->node->checker((const char *)stringVal,stringLen)) {
+        FAIL_NOT_IN_LIST(state,state->node, (const char *)stringVal,stringLen);
+      }
+    }
 
   }
   
@@ -459,7 +464,7 @@ static int ajv_string(void * ctx, const unsigned char * stringVal,
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node, stringVal,stringLen);
+      FAIL_NOT_IN_LIST(state,state->node, (const char *)stringVal,stringLen);
     }
   }
 
