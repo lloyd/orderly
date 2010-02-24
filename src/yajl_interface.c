@@ -357,9 +357,8 @@ static int ajv_double(void * ctx, double doubleval) {
       }
     }
     if (found == 0) {
-#define BUFSIZE 50
-      char doublestr[BUFSIZE];
-      snprintf(doublestr,BUFSIZE,"%g",doubleval);
+      char doublestr[128];
+      snprintf(doublestr,128,"%g",doubleval);
       FAIL_NOT_IN_LIST(state,state->node,doublestr,strlen(doublestr)); 
     }
   }
@@ -398,7 +397,9 @@ static int ajv_integer(void * ctx, long integerValue) {
       }
     }
     if (found == 0) {
-      FAIL_NOT_IN_LIST(state,state->node,NULL,0); /* XXX: deparse int ? */
+      char buf[128];
+      snprintf(buf,128,"%ld",integerValue);
+      FAIL_NOT_IN_LIST(state,state->node,buf,strlen(buf));
     }
   }
 
