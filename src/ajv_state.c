@@ -143,7 +143,7 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
     }
     orderly_buf_append_string(ret," ");
     orderly_buf_append_string(ret,e->extra_info);
-    orderly_buf_append_string(ret," out of range ");
+    orderly_buf_append_string(ret," not in range ");
     /* optional range */
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       char buf[128];
