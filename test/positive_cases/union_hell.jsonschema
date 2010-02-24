@@ -1,12 +1,12 @@
 {
   "type": [
     {
-      type: "string",
+      "type": "string",
       "minLength": 10,
       "maxLength": 20
     },
     {
-      type: "number",
+      "type": "number",
       "minimum": 100,
       "maximum": 110
     }

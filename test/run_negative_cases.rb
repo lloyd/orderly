@@ -33,10 +33,15 @@ Dir.glob(File.join(casesDir, "*.orderly")).each { |f|
     got = lb.read
   }
   if !File.exist? wantFile
-    puts "FAIL"    
-    puts "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
-    File.open(gotFile, "w+") { |gf| gf.write got }
-    puts got
+    todoFile = f + ".todo"
+    if File.exist? todoFile
+      puts "TODO"    
+      passed += 1
+    else
+      puts "'goldfile' doesn't exist: #{wantFile} (left #{gotFile})"
+      File.open(gotFile, "w+") { |gf| gf.write got }
+      puts got
+    end
   else
     want = IO.read(wantFile)
     if (got == want)
