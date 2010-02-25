@@ -179,7 +179,7 @@ ajv_do_typecheck(ajv_state state, orderly_node_type t, const ajv_node *node) {
   typecheck = orderly_subsumed_by(t, typecheck);
   
   if (! typecheck ) { 
-    ajv_set_error(state,ajv_e_type_mismatch,node->node->name ? node : NULL, 
+    ajv_set_error(state,ajv_e_type_mismatch,node,
                   orderly_node_type_to_string(t),      
                   strlen(orderly_node_type_to_string(t)));   
     return NULL;

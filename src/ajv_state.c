@@ -113,7 +113,7 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
   char * yajl_err;
   orderly_buf ret = orderly_buf_alloc(hand->AF);
   ajv_state s = hand;
-  const unsigned char *cret;
+  unsigned char *cret;
   struct ajv_error_t *e = &(s->error);
 
   int yajl_length;
@@ -195,7 +195,7 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
           orderly_buf_append_string(ret, e->node->node->name);
           orderly_buf_append_string(ret, "'");
         }
-        if (e->node->parent->node->tuple_typed == 1) {
+        if (e->node->parent && e->node->parent->node->tuple_typed == 1) {
           ajv_node_state ns = (ajv_node_state)orderly_ps_current(s->node_state);
           char buf[128];
           orderly_buf_append_string(ret, " for array element ");
