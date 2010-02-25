@@ -145,7 +145,6 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
     orderly_buf_append_string(ret," ");
     orderly_buf_append_string(ret,e->extra_info);
     orderly_buf_append_string(ret," not in range ");
-    /* optional range */
     if (ORDERLY_RANGE_SPECIFIED(on->range)) {
       char buf[128];
       orderly_buf_append_string(ret, "{");
@@ -176,7 +175,15 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
 
   if (e->extra_info) {
     if (e->code == ajv_e_incomplete_container) {
-      orderly_buf_append_string(ret, ", object missing required property");
+      if (e->node) {
+        if (e->node->node->t == orderly_node_object) {
+          orderly_buf_append_string(ret, ", object missing required property");
+        } else {
+          orderly_buf_append_string(ret, ", tuple missing ");
+          orderly_buf_append_string(ret, e->extra_info);
+          orderly_buf_append_string(ret, " elements.");
+        }
+      }
     }
     if (e->code == ajv_e_illegal_value) {
       orderly_buf_append_string(ret, ":");
@@ -480,7 +487,11 @@ int ajv_state_array_complete (ajv_state state) {
             return 0;
           }
         } else { 
-          ajv_set_error(state,ajv_e_incomplete_container,cur,NULL,0);
+          int remaining = 0;
+          char buf[128];
+          do {remaining++; } while ((cur = cur->sibling));
+          snprintf(buf,128,"%d",remaining);
+          ajv_set_error(state,ajv_e_incomplete_container,array,buf,strlen(buf));
           return 0;
         }
         cur = cur->sibling;
