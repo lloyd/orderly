@@ -373,7 +373,7 @@ yajl_status ajv_parse_complete(ajv_handle hand) {
   yajl_status stat = yajl_parse_complete(hand->yajl);
 
   if (stat == yajl_status_ok || stat == yajl_status_insufficient_data) {
-    if ( !ajv_state_finished(hand) ) {
+    if ( hand->s && !ajv_state_finished(hand) ) {
       ajv_set_error(hand, ajv_e_incomplete_container, NULL, "Empty root", strlen("Empty root"));
       stat = yajl_status_error;
     }
