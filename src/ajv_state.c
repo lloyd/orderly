@@ -189,7 +189,9 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
       orderly_buf_append_string(ret, ":");
     }
     if (e->code != ajv_e_out_of_range 
-        && !(e->node && e->node->node->t == orderly_node_array)) {
+        && !(e->code == ajv_e_incomplete_container 
+             && e->node 
+             && e->node->node->t == orderly_node_array)) {
       orderly_buf_append_string(ret, " '");
       orderly_buf_append_string(ret, e->extra_info);
       orderly_buf_append_string(ret, "'");
