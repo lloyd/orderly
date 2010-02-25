@@ -136,7 +136,7 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
         
         if ((n->t == orderly_node_array ||
              n->t == orderly_node_object) &&
-            n->additional_properties == orderly_node_any) {
+            n->additional_properties != orderly_node_empty) {
           orderly_buf_append_string(w->b, "*");            
         }
 
