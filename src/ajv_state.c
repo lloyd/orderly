@@ -181,7 +181,7 @@ unsigned char * ajv_get_error(ajv_handle hand, int verbose,
         } else {
           orderly_buf_append_string(ret, ", tuple missing ");
           orderly_buf_append_string(ret, e->extra_info);
-          orderly_buf_append_string(ret, " elements.");
+          orderly_buf_append_string(ret, " elements");
         }
       }
     }
