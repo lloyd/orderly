@@ -721,15 +721,21 @@ orderly_parse_entry(orderly_alloc_funcs * alloc,
                                                             lxr, offset, *n)))
             {
                 orderly_free_node(alloc, n);                            
+            } else if ((*n)->t == orderly_node_union) {
+              /* count to two */
+              if (!(*n)->child || !( (*n)->child->sibling)) {
+                orderly_free_node(alloc, n);                            
+                s = orderly_parse_s_ununion;
+              }
             }
+            
         }
     }
     else
     {
         s = orderly_parse_s_expected_schema_entry; /* a.k.a. named_entry */
     }
-
-    return s;
+    return s;    
 }
 
 

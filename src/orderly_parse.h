@@ -43,6 +43,8 @@ typedef enum {
     /** A property name was expected, but none was found */
     orderly_parse_s_prop_name_expected,
     /** A '>' was expected (as after specification of a 'required' parameter: 'string foo <bar>;') */
+    orderly_parse_s_ununion,
+    /** Less than two members found in a union */
     orderly_parse_s_gt_expected,
     /** A syntax error was discovered in the name of a property */
     orderly_parse_s_prop_name_syntax_error,

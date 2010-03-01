@@ -183,6 +183,9 @@ orderly_get_error(orderly_reader r)
                 case orderly_parse_s_integer_overflow:
                     err = "integer overflow!  woah.  big number!";
                     break;
+                case orderly_parse_s_ununion:
+                    err = "must have at least two members in a union!";
+                    break;
                 case orderly_parse_s_numeric_parse_error:
                     err = "numeric parse error.  thems some funny lookin' digits.";
                     break;
