@@ -320,7 +320,12 @@ parse_json_schema(orderly_alloc_funcs * alloc,
                     }
                 }
             }
-            else {
+            else if (!strcmp(k->k, "$schema")) {
+              /* XXX: detect schema version, and store it somewhere!?,
+                 then go back and adjust things */
+              
+
+            } else {
                 orderly_json ** jPtr;
                     
                 /* all unexpected properties are passed through using

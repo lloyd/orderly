@@ -1,9 +1,32 @@
-1. sh1ttons of broken jsonschemas!
-2. sh1ttons of invalid, but legal json
-3. track down 64-bit double error validator problem
+In priority order
+High
+1. merge in language agnostic test suite
+2. add conversion between the various standards for json schema :D
+3. update to support all 3 draft versions (2,3, and 4 upon release).
+   we'll need to add a flag to orderly_writer_config to control
+   what version gets emitted
+== incompatability notes ==
+   g2, we said "optional" : "true"
+   v3, that became default and we now say "required" : "false"
+================
+medium
+4. extends
+   - implement merging of the extended schema
+     at ajv-alloc_schema() call.
+   - get lloyd to remind me what we discussed
+     here about binding to http and keeping a cache.
+5. Verify we're using yajl version 2.
+6. track down 64-bit double error validator problem
+
+================
+low
+================
+6. jsonschema "format" -- 
+   support via backticks currently, add to orderly?
+7. disallow  I'm thinking WONTFIX
 
 other/later (add explicit support for?):
-1. extends
-2. disallow
-3. maxDecimal
-4. jsonschema "format" -- support via backticks currently, add to orderly?
+8. disallow
+9. diviibleBy
+8. maxDecimal << not in V4 or V3
+

@@ -42,6 +42,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#define JSON_SCHEMA_V_2 "http://json-schema.org/schema"
+
+
 struct orderly_writer_t
 {
     struct orderly_writer_config cfg;
@@ -289,8 +292,10 @@ dumpNodeAsOrderly(orderly_writer w, const orderly_node * n, unsigned int indent,
 #define YAJL_GEN_STRING_WLEN(yg, s) \
     yajl_gen_string((yg), (const unsigned char *) (s), strlen(s));
 
+
 static int
-dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
+dumpNodeAsJSONSchema1(orderly_writer w, const orderly_node * n, 
+                      yajl_gen yg,      int needs_schema_reference)
 {
     if (n) {
         const char * type = orderly_node_type_to_string(n->t);
@@ -298,7 +303,10 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
         
         /* open up this entry */
         yajl_gen_map_open(yg);
-        
+        if (needs_schema_reference) {
+          YAJL_GEN_STRING_WLEN(yg, "$schema");
+          YAJL_GEN_STRING_WLEN(yg, JSON_SCHEMA_V_2);
+        }
         /* dump the type */
         if (n->t != orderly_node_union) {
             YAJL_GEN_STRING_WLEN(yg, "type");
@@ -312,11 +320,11 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                     const orderly_node * k = NULL;
                     yajl_gen_array_open(yg);
                     for (k = n->child; k; k = k->sibling) {
-                        dumpNodeAsJSONSchema(w, k, yg);
+                      dumpNodeAsJSONSchema1(w, k, yg, 0);
                     }
                     yajl_gen_array_close(yg);
                 } else {
-                    dumpNodeAsJSONSchema(w, n->child, yg);                
+                  dumpNodeAsJSONSchema1(w, n->child, yg, 0);                
                 }
             } else if (n->t == orderly_node_object) {
                 const orderly_node * kid = n->child;
@@ -325,7 +333,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                 for (kid = n->child; kid != NULL; kid = kid->sibling) {
                     if (!kid->name) return 0;
                     YAJL_GEN_STRING_WLEN(yg, kid->name);
-                    dumpNodeAsJSONSchema(w, kid, yg);
+                    dumpNodeAsJSONSchema1(w, kid, yg, 0);
                 }
                 yajl_gen_map_close(yg);
             } else if (n->t == orderly_node_union) {
@@ -334,7 +342,7 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
                 YAJL_GEN_STRING_WLEN(yg, "type");
                 yajl_gen_array_open(yg);
                 for (k = n->child; k; k = k->sibling) {
-                    dumpNodeAsJSONSchema(w, k, yg);
+                  dumpNodeAsJSONSchema1(w, k, yg, 0);
                 }
                 yajl_gen_array_close(yg);
             }
@@ -448,6 +456,12 @@ dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
     return 1;
 }
 
+
+static int
+dumpNodeAsJSONSchema(orderly_writer w, const orderly_node * n, yajl_gen yg)
+{
+  return dumpNodeAsJSONSchema1(w,n,yg,1);
+}
 
 static void
 bufAppendCallback(void * ctx, const char * str, unsigned int len)

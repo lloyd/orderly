@@ -30,7 +30,8 @@ History
 * (2009.10.05) "v0" -- "orderly-json.org":http://orderly-json.org was erected and a more fully baked proposal put together thanks to feedback.
 * (2009.10.07) "v1" -- editorial review, small additions 
 * (2009.12.24) "v2" -- Major revisions.  Complete reference implmeentation.
-
+* (2009-2011)       -- Fall behind the rapidly changing json schema standard
+ 
 Contributing
 ------------
 
